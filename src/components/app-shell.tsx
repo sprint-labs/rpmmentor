@@ -2,7 +2,8 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, Database, FolderOpen, BellRing, Calendar, BarChart3, Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/goalkeepers", label: "Goalkeepers", icon: Users },
   { to: "/mentors", label: "Mentors", icon: UserCog },
@@ -13,7 +14,7 @@ const NAV = [
   { to: "/alerts", label: "Alerts", icon: BellRing },
   { to: "/calendar", label: "Calendar", icon: Calendar },
   { to: "/executive", label: "Executive", icon: BarChart3 },
-] as const;
+];
 
 export function AppShell() {
   const path = useRouterState({ select: (s) => s.location.pathname });
