@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MentorsRouteImport } from './routes/mentors'
 import { Route as MediaRouteImport } from './routes/media'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InteractionsRouteImport } from './routes/interactions'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as GoalkeepersRouteImport } from './routes/goalkeepers'
@@ -34,6 +35,11 @@ const MentorsRoute = MentorsRouteImport.update({
 const MediaRoute = MediaRouteImport.update({
   id: '/media',
   path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InteractionsRoute = InteractionsRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/interactions': typeof InteractionsRoute
+  '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
   '/reports': typeof ReportsRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/interactions': typeof InteractionsRoute
+  '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
   '/reports': typeof ReportsRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
   '/intelligence': typeof IntelligenceRoute
   '/interactions': typeof InteractionsRoute
+  '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
   '/reports': typeof ReportsRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/goalkeepers'
     | '/intelligence'
     | '/interactions'
+    | '/login'
     | '/media'
     | '/mentors'
     | '/reports'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/goalkeepers'
     | '/intelligence'
     | '/interactions'
+    | '/login'
     | '/media'
     | '/mentors'
     | '/reports'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/goalkeepers'
     | '/intelligence'
     | '/interactions'
+    | '/login'
     | '/media'
     | '/mentors'
     | '/reports'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   GoalkeepersRoute: typeof GoalkeepersRouteWithChildren
   IntelligenceRoute: typeof IntelligenceRoute
   InteractionsRoute: typeof InteractionsRoute
+  LoginRoute: typeof LoginRoute
   MediaRoute: typeof MediaRoute
   MentorsRoute: typeof MentorsRoute
   ReportsRoute: typeof ReportsRoute
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/media'
       fullPath: '/media'
       preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interactions': {
@@ -274,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoalkeepersRoute: GoalkeepersRouteWithChildren,
   IntelligenceRoute: IntelligenceRoute,
   InteractionsRoute: InteractionsRoute,
+  LoginRoute: LoginRoute,
   MediaRoute: MediaRoute,
   MentorsRoute: MentorsRoute,
   ReportsRoute: ReportsRoute,
