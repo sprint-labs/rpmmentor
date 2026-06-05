@@ -103,16 +103,23 @@ function TagPicker({ value, onChange }: { value: string[]; onChange: (v: string[
 
 function InteractionForm({ onDone }: { onDone: () => void }) {
   const [done, setDone] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [gkId, setGkId] = useState("");
+  const gk = goalkeepers.find((g) => g.id === gkId);
   if (done) return <Submitted message="Interaction logged successfully." onDone={onDone} />;
   return (
     <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Goalkeeper"><select className={selectCls} required defaultValue=""><option value="" disabled>Select…</option>{goalkeepers.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></Field>
+        <Field label="Goalkeeper"><select className={selectCls} required value={gkId} onChange={(e) => setGkId(e.target.value)}><option value="" disabled>Select…</option>{goalkeepers.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></Field>
         <Field label="Interaction Type"><select className={selectCls} required>{["Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"].map((t) => <option key={t}>{t}</option>)}</select></Field>
         <Field label="Date"><input type="date" className={inputCls} defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
         <Field label="Outcome"><select className={selectCls}>{["On track", "Above expectation", "Below expectation", "Needs follow-up", "Action plan agreed"].map((t) => <option key={t}>{t}</option>)}</select></Field>
       </div>
-      <Field label="Notes"><textarea rows={4} className={taCls} placeholder="What did you observe?" required /></Field>
+      <HandwrittenNotesField
+        context={gk ? `Session notes about ${gk.name} (${gk.club})` : undefined}
+        onTranscribed={(text, mode) => setNotes((prev) => mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`)}
+      />
+      <Field label="Notes"><textarea rows={5} className={taCls} placeholder="What did you observe? Or use the camera above to transcribe handwritten notes." required value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
       <Field label="Follow-up Action"><input className={inputCls} placeholder="e.g. Schedule video review next week" /></Field>
       <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm">Cancel</button><button type="submit" className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">Save Interaction</button></div>
     </form>
