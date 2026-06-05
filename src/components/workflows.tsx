@@ -28,7 +28,9 @@ export function WorkflowDialog({ kind, onClose }: { kind: WorkflowKind | null; o
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
           <div>
             <h3 className="text-base font-semibold">{TITLES[kind]}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Saved locally to this session</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {kind === "media" ? "Stored in Lovable Cloud and linked to the goalkeeper profile" : "Saved locally to this session"}
+            </p>
           </div>
           <button onClick={onClose} className="size-8 grid place-items-center rounded-md hover:bg-accent"><X className="size-4" /></button>
         </div>
