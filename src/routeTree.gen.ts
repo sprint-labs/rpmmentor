@@ -18,6 +18,7 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as GoalkeepersRouteImport } from './routes/goalkeepers'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GoalkeepersGkIdRouteImport } from './routes/goalkeepers.$gkId'
@@ -67,6 +68,11 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AlertsRoute = AlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
@@ -86,6 +92,7 @@ const GoalkeepersGkIdRoute = GoalkeepersGkIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/alerts'
+    | '/audit'
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/alerts'
+    | '/audit'
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/alerts'
+    | '/audit'
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlertsRoute: typeof AlertsRoute
+  AuditRoute: typeof AuditRoute
   CalendarRoute: typeof CalendarRoute
   ExecutiveRoute: typeof ExecutiveRoute
   GoalkeepersRoute: typeof GoalkeepersRouteWithChildren
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/alerts': {
       id: '/alerts'
       path: '/alerts'
@@ -289,6 +309,7 @@ const GoalkeepersRouteWithChildren = GoalkeepersRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlertsRoute: AlertsRoute,
+  AuditRoute: AuditRoute,
   CalendarRoute: CalendarRoute,
   ExecutiveRoute: ExecutiveRoute,
   GoalkeepersRoute: GoalkeepersRouteWithChildren,
@@ -302,3 +323,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
