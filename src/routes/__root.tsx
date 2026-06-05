@@ -64,7 +64,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppShell />
+        <NotificationsProvider>
+          <AppShell />
+          <Toaster richColors closeButton position="top-right" />
+        </NotificationsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
