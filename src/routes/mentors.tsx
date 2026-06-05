@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, Card, Avatar, ProgressBar, SectionTitle, Pill } from "@/components/primitives";
-import { mentors, goalkeepers, interactions, formatRelative } from "@/lib/mock-data";
+import { PageHeader, Card, Avatar, ProgressBar, SectionTitle, Pill, DutyBadge, TrafficLight } from "@/components/primitives";
+import { mentors, goalkeepers, interactions, formatRelative, dutyStatusForMentor, dutyStatusForGk } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/mentors")({ component: MentorsPage });
 
