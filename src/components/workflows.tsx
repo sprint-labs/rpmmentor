@@ -107,7 +107,7 @@ function InteractionForm({ onDone }: { onDone: () => void }) {
     <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Goalkeeper"><select className={selectCls} required defaultValue=""><option value="" disabled>Select…</option>{goalkeepers.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></Field>
-        <Field label="Interaction Type"><select className={selectCls} required>{["Live Match", "Training Observation", "Face to Face", "Video Review", "Phone Call", "WhatsApp", "Other"].map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <Field label="Interaction Type"><select className={selectCls} required>{["Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"].map((t) => <option key={t}>{t}</option>)}</select></Field>
         <Field label="Date"><input type="date" className={inputCls} defaultValue={new Date().toISOString().slice(0, 10)} required /></Field>
         <Field label="Outcome"><select className={selectCls}>{["On track", "Above expectation", "Below expectation", "Needs follow-up", "Action plan agreed"].map((t) => <option key={t}>{t}</option>)}</select></Field>
       </div>
@@ -502,10 +502,10 @@ function GoalkeeperForm({ onDone }: { onDone: () => void }) {
         <Field label="Club"><input className={inputCls} placeholder="e.g. Shamrock Rovers" /></Field>
         <Field label="League"><input className={inputCls} placeholder="e.g. League of Ireland" /></Field>
         <Field label="Height"><input className={inputCls} placeholder="e.g. 192cm" /></Field>
-        <Field label="Tier"><select className={selectCls}>{["Tier 1", "Tier 2", "Tier 3"].map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <Field label="Status"><select className={selectCls}>{["Prospect", "Development", "First Team", "Elite", "Free Agent"].map((t) => <option key={t}>{t}</option>)}</select></Field>
         <Field label="Assign Mentor"><select className={selectCls}><option value="">— Unassigned —</option>{mentors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
         <Field label="Contract Until"><input type="date" className={inputCls} /></Field>
-        <Field label="Recommendation"><select className={selectCls}>{["Monitor", "Sign", "Loan", "Pass"].map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <Field label="Recommendation"><select className={selectCls}>{["Monitor", "Sign", "Loan", "Develop", "Retain", "Pass"].map((t) => <option key={t}>{t}</option>)}</select></Field>
       </div>
       <Field label="Initial Scouting Notes"><textarea rows={4} className={taCls} placeholder="Profile summary, source, context…" /></Field>
       <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm">Cancel</button><button type="submit" className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">Add Goalkeeper</button></div>

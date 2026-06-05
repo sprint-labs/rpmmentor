@@ -14,20 +14,25 @@ function GoalkeepersLayout() {
 
 function GoalkeepersList() {
   const [q, setQ] = useState("");
-  const [tier, setTier] = useState<string>("all");
+  const [cat, setCat] = useState<string>("All");
   const filtered = goalkeepers.filter((g) => {
-    if (tier !== "all" && g.tier !== tier) return false;
-    if (q && !`${g.name} ${g.club} ${g.nationality}`.toLowerCase().includes(q.toLowerCase())) return false;
+    if (cat === "UK Based" && g.region !== "UK Based") return false;
+    if (cat === "Overseas" && g.region !== "Overseas") return false;
+    if (cat === "Free Agents" && g.status !== "Free Agent") return false;
+    if (cat === "Prospects" && g.status !== "Prospect") return false;
+    if (cat === "First Team Professionals" && g.status !== "First Team" && g.status !== "Elite") return false;
+    if (q && !`${g.name} ${g.club} ${g.nationality} ${g.league}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
+  const CATS = ["All", "UK Based", "Overseas", "Prospects", "First Team Professionals", "Free Agents"] as const;
   return (
     <div className="space-y-5">
-      <PageHeader title="Goalkeepers" description={`${goalkeepers.length} goalkeepers under management across all tiers.`} />
+      <PageHeader title="Goalkeepers" description={`${goalkeepers.length} RPM clients under management across the UK and internationally.`} />
       <div className="flex flex-wrap items-center gap-2">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by name, club, nationality…" className="h-9 px-3 rounded-md bg-input/60 border border-border text-sm w-72" />
-        <div className="flex rounded-md border border-border overflow-hidden text-xs">
-          {(["all", "Tier 1", "Tier 2", "Tier 3"] as const).map((t) => (
-            <button key={t} onClick={() => setTier(t)} className={`px-3 py-1.5 transition-colors ${tier === t ? "bg-accent text-accent-foreground" : "hover:bg-accent/40 text-muted-foreground"}`}>{t === "all" ? "All" : t}</button>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by name, club, league, nationality…" className="h-9 px-3 rounded-md bg-input/60 border border-border text-sm w-80" />
+        <div className="flex flex-wrap rounded-md border border-border overflow-hidden text-xs">
+          {CATS.map((t) => (
+            <button key={t} onClick={() => setCat(t)} className={`px-3 py-1.5 transition-colors border-r border-border last:border-r-0 ${cat === t ? "bg-accent text-accent-foreground" : "hover:bg-accent/40 text-muted-foreground"}`}>{t}</button>
           ))}
         </div>
         <div className="ml-auto text-xs text-muted-foreground tabular-nums">{filtered.length} results</div>
@@ -38,14 +43,14 @@ function GoalkeepersList() {
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
               <th className="font-medium px-4 py-2.5">Goalkeeper</th>
-              <th className="font-medium px-2 py-2.5">Tier</th>
+              <th className="font-medium px-2 py-2.5">Status</th>
               <th className="font-medium px-2 py-2.5">Club</th>
+              <th className="font-medium px-2 py-2.5">League</th>
               <th className="font-medium px-2 py-2.5">Age</th>
               <th className="font-medium px-2 py-2.5">Nationality</th>
               <th className="font-medium px-2 py-2.5">Mentor</th>
               <th className="font-medium px-2 py-2.5">Contract</th>
               <th className="font-medium px-2 py-2.5">Last</th>
-              <th className="font-medium px-2 py-2.5">Next</th>
               <th className="font-medium px-4 py-2.5 text-right">Rating</th>
             </tr>
           </thead>
@@ -61,14 +66,14 @@ function GoalkeepersList() {
                       <span className="font-medium">{gk.name}</span>
                     </Link>
                   </td>
-                  <td className="px-2"><TierBadge tier={gk.tier} /></td>
+                  <td className="px-2"><TierBadge tier={gk.status} /></td>
                   <td className="px-2 text-muted-foreground">{gk.club}</td>
+                  <td className="px-2 text-muted-foreground text-xs">{gk.league}</td>
                   <td className="px-2 tabular-nums">{gk.age}</td>
                   <td className="px-2 text-muted-foreground">{gk.nationality}</td>
                   <td className="px-2 text-muted-foreground">{m?.name}</td>
-                  <td className="px-2 text-muted-foreground tabular-nums">{gk.contractUntil.slice(0, 4)}</td>
+                  <td className="px-2 text-muted-foreground tabular-nums">{gk.contractUntil === "—" ? "—" : gk.contractUntil.slice(0, 4)}</td>
                   <td className="px-2"><Pill tone={overdue ? "destructive" : "muted"}>{formatRelative(gk.lastInteraction)}</Pill></td>
-                  <td className="px-2 text-muted-foreground">{formatRelative(gk.nextInteraction)}</td>
                   <td className="px-4 text-right tabular-nums font-medium">{gk.rating}</td>
                 </tr>
               );
