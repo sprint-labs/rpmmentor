@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { PageHeader, Card, TierBadge, Avatar, Pill, TrafficLight, DutyBadge, StatCard } from "@/components/primitives";
+import { PageHeader, Card, TierBadge, Avatar, TrafficLight, DutyBadge, StatCard } from "@/components/primitives";
 import { goalkeepers, getMentor, formatRelative, dutyStatusForGk, dutyOverview } from "@/lib/mock-data";
 import { useState } from "react";
 
