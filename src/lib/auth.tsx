@@ -18,6 +18,7 @@ export const DEMO_USERS: SessionUser[] = [
   { id: "u-sam", name: "Sam Winstanley", email: "sam@rpmgk.com", role: "director", initials: "SW", title: "Co-Founder & Director", mentorId: "m-sam" },
   { id: "u-david-r", name: "David Rouse", email: "david.rouse@rpmgk.com", role: "admin", initials: "DR", title: "Managing Director" },
   { id: "u-matt-g", name: "Matt GKU", email: "matt.gku@rpmgk.com", role: "scout", initials: "MG", title: "Goalkeeper Intelligence Scout" },
+  { id: "u-mentor", name: "Mark Halsey", email: "mark.halsey@rpmgk.com", role: "mentor", initials: "MH", title: "Goalkeeper Mentor", mentorId: "m-mark-h" },
 ];
 
 // Permission catalogue
