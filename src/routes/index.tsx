@@ -30,6 +30,57 @@ function Dashboard() {
         <StatCard label="Reports This Week" value={stats.reportsThisWeek} hint="Submitted" accent="primary" />
         <StatCard label="Active Mentors" value={stats.activeMentors} hint="In rotation" />
       </div>
+      <Card className="p-4">
+        <SectionTitle action={<Link to="/goalkeepers" className="text-xs text-primary inline-flex items-center gap-1">View goalkeepers <ArrowUpRight className="size-3" /></Link>}>
+          Duty of Care · Traffic Light
+        </SectionTitle>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {([
+            { level: "green", label: "On Track", count: dutyOverview.green, hint: "Contact within 21 days" },
+            { level: "amber", label: "Attention", count: dutyOverview.amber, hint: "22–35 days since contact" },
+            { level: "red", label: "Breach", count: dutyOverview.red, hint: "36+ days · escalate now" },
+          ] as const).map((b) => {
+            const pct = Math.round((b.count / Math.max(1, dutyOverview.total)) * 100);
+            const bar = b.level === "green" ? "bg-success" : b.level === "amber" ? "bg-warning" : "bg-destructive";
+            return (
+              <div key={b.level} className="rounded-md border border-border/60 bg-accent/20 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrafficLight level={b.level} size={12} />
+                    <span className="text-sm font-medium">{b.label}</span>
+                  </div>
+                  <span className="tabular-nums text-lg font-semibold">{b.count}</span>
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-1">{b.hint}</div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-2">
+                  <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1 tabular-nums">{pct}% of roster</div>
+              </div>
+            );
+          })}
+        </div>
+        {dutyOverview.red > 0 && (
+          <div className="mt-4">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Breaches requiring immediate action</div>
+            <div className="flex flex-wrap gap-1.5">
+              {goalkeepers
+                .map((g) => ({ g, d: dutyStatusForGk(g) }))
+                .filter((x) => x.d.level === "red")
+                .sort((a, b) => b.d.days - a.d.days)
+                .slice(0, 8)
+                .map(({ g, d }) => (
+                  <Link key={g.id} to="/goalkeepers/$gkId" params={{ gkId: g.id }} className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 transition-colors">
+                    <TrafficLight level="red" size={6} />
+                    <span className="font-medium">{g.name}</span>
+                    <span className="text-destructive/80 tabular-nums">{d.days}d</span>
+                  </Link>
+                ))}
+            </div>
+          </div>
+        )}
+      </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 p-4">
