@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, Card, Pill, StatCard } from "@/components/primitives";
 import { alerts, getGk, formatRelative } from "@/lib/mock-data";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Mail, Send, Check, Trash2 } from "lucide-react";
+import { useNotifications, type EmailFrequency } from "@/lib/notifications";
+import { useState } from "react";
 
 export const Route = createFileRoute("/alerts")({ component: AlertsPage });
 
