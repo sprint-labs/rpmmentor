@@ -64,7 +64,7 @@ function GkDetail() {
         <Card className="p-4">
           <SectionTitle>Development Plan</SectionTitle>
           <ul className="space-y-1.5">
-            {gk.developmentPlan.map((d, i) => (
+            {gk.developmentPlan.map((d: string, i: number) => (
               <li key={i} className="flex gap-2 text-sm text-muted-foreground"><span className="text-primary mt-0.5">›</span>{d}</li>
             ))}
           </ul>
