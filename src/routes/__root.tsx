@@ -5,6 +5,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "@/lib/auth";
+import { NotificationsProvider } from "@/lib/notifications";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -62,7 +64,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppShell />
+        <NotificationsProvider>
+          <AppShell />
+          <Toaster richColors closeButton position="top-right" />
+        </NotificationsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
