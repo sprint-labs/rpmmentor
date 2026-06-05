@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { DEMO_USERS, ROLE_LABEL, useAuth } from "@/lib/auth";
+import { ROLE_LABEL, useAuth } from "@/lib/auth";
 import { useEffect } from "react";
 import { ShieldCheck, Search, HeartHandshake, ArrowRight } from "lucide-react";
 
