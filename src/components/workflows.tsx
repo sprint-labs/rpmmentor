@@ -1,7 +1,15 @@
-import { useState, type ReactNode } from "react";
-import { X, CheckCircle2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { X, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { goalkeepers, mentors } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth";
+import {
+  ACCEPT_BY_KIND,
+  MAX_FILE_BYTES,
+  detectKind,
+  formatBytes,
+  uploadMedia,
+  type MediaKind,
+} from "@/lib/media-store";
 
 export type WorkflowKind = "interaction" | "report" | "media" | "goalkeeper";
 
