@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Card, PageHeader, StatCard, SectionTitle, Avatar, Pill, TierBadge } from "@/components/primitives";
-import { activity, alerts, goalkeepers, stats, formatRelative, getMentor } from "@/lib/mock-data";
+import { Card, PageHeader, StatCard, SectionTitle, Avatar, Pill, TierBadge, TrafficLight, DutyBadge } from "@/components/primitives";
+import { activity, alerts, goalkeepers, stats, formatRelative, getMentor, dutyOverview, dutyStatusForGk } from "@/lib/mock-data";
 import { ArrowUpRight, AlertTriangle, CalendarClock, FileText, Users, UserCog } from "lucide-react";
 import { useAuth, ROLE_LABEL } from "@/lib/auth";
 
