@@ -1,7 +1,15 @@
-import { useState, type ReactNode } from "react";
-import { X, CheckCircle2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { X, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { goalkeepers, mentors } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth";
+import {
+  ACCEPT_BY_KIND,
+  MAX_FILE_BYTES,
+  detectKind,
+  formatBytes,
+  uploadMedia,
+  type MediaKind,
+} from "@/lib/media-store";
 
 export type WorkflowKind = "interaction" | "report" | "media" | "goalkeeper";
 
@@ -20,7 +28,9 @@ export function WorkflowDialog({ kind, onClose }: { kind: WorkflowKind | null; o
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
           <div>
             <h3 className="text-base font-semibold">{TITLES[kind]}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Saved locally to this session</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {kind === "media" ? "Stored in Lovable Cloud and linked to the goalkeeper profile" : "Saved locally to this session"}
+            </p>
           </div>
           <button onClick={onClose} className="size-8 grid place-items-center rounded-md hover:bg-accent"><X className="size-4" /></button>
         </div>
@@ -110,25 +120,127 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   );
 }
 
+const KIND_LABELS: { value: MediaKind; label: string }[] = [
+  { value: "video", label: "Video clip" },
+  { value: "pdf", label: "PDF" },
+  { value: "image", label: "Image" },
+  { value: "audio", label: "Voice note" },
+];
+
 function MediaForm({ onDone }: { onDone: () => void }) {
+  const { user, can } = useAuth();
   const [done, setDone] = useState(false);
-  if (done) return <Submitted message="Media uploaded and linked." onDone={onDone} />;
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); setDone(true); }} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Media Type"><select className={selectCls}>{["Video clip", "PDF", "Image", "Voice note"].map((t) => <option key={t}>{t}</option>)}</select></Field>
-        <Field label="Linked Goalkeeper"><select className={selectCls}>{goalkeepers.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></Field>
+  const [kind, setKind] = useState<MediaKind>("video");
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [gkId, setGkId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Mentors only see their own assigned goalkeepers
+  const allowedGks = useMemo(() => {
+    if (user?.role === "mentor" && user.mentorId) {
+      return goalkeepers.filter((g) => g.mentorId === user.mentorId);
+    }
+    return goalkeepers;
+  }, [user]);
+
+  if (!user || !can("media.upload")) {
+    return (
+      <div className="text-sm text-muted-foreground flex items-start gap-2 p-2">
+        <AlertCircle className="size-4 text-amber-400 mt-0.5" />
+        <span>Your role doesn't have permission to upload media. Contact an admin.</span>
       </div>
-      <Field label="Title"><input className={inputCls} placeholder="e.g. Match clip vs derby — 2nd half" required /></Field>
+    );
+  }
+
+  if (done) return <Submitted message="Media uploaded and linked to the goalkeeper." onDone={onDone} />;
+
+  const handleFile = (f: File | null) => {
+    setError(null);
+    if (!f) { setFile(null); return; }
+    if (f.size > MAX_FILE_BYTES) {
+      setError(`File is ${formatBytes(f.size)} — limit is ${formatBytes(MAX_FILE_BYTES)}.`);
+      return;
+    }
+    const detected = detectKind(f);
+    if (detected) setKind(detected);
+    setFile(f);
+    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!file) { setError("Please choose a file to upload."); return; }
+    if (!gkId) { setError("Please select a goalkeeper."); return; }
+    setBusy(true);
+    try {
+      await uploadMedia({ file, gkId, title: title.trim() || file.name, notes, kind, user });
+      window.dispatchEvent(new CustomEvent("rpm:media-uploaded"));
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Media Type">
+          <select className={selectCls} value={kind} onChange={(e) => setKind(e.target.value as MediaKind)}>
+            {KIND_LABELS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Linked Goalkeeper">
+          <select className={selectCls} required value={gkId} onChange={(e) => setGkId(e.target.value)}>
+            <option value="" disabled>Select…</option>
+            {allowedGks.map((g) => <option key={g.id} value={g.id}>{g.name} — {g.club}</option>)}
+          </select>
+        </Field>
+      </div>
+      <Field label="Title">
+        <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Match clip vs derby — 2nd half" required />
+      </Field>
       <Field label="File">
-        <label className="flex flex-col items-center justify-center gap-1.5 h-32 rounded-md border-2 border-dashed border-border hover:border-primary/40 cursor-pointer bg-input/30">
-          <span className="text-sm font-medium">Click or drag a file to upload</span>
-          <span className="text-[11px] text-muted-foreground">Up to 500MB · video, audio, image or PDF</span>
-          <input type="file" className="hidden" />
+        <label className="flex flex-col items-center justify-center gap-1.5 h-32 rounded-md border-2 border-dashed border-border hover:border-primary/40 cursor-pointer bg-input/30 px-4 text-center">
+          {file ? (
+            <>
+              <Upload className="size-5 text-primary" />
+              <span className="text-sm font-medium truncate max-w-full">{file.name}</span>
+              <span className="text-[11px] text-muted-foreground">{formatBytes(file.size)} · {file.type || "unknown type"}</span>
+            </>
+          ) : (
+            <>
+              <Upload className="size-5 text-muted-foreground" />
+              <span className="text-sm font-medium">Click to select a file</span>
+              <span className="text-[11px] text-muted-foreground">Up to 200MB · video, audio, image or PDF</span>
+            </>
+          )}
+          <input
+            type="file"
+            className="hidden"
+            accept={ACCEPT_BY_KIND[kind]}
+            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+          />
         </label>
       </Field>
-      <Field label="Notes"><textarea rows={3} className={taCls} placeholder="Context for reviewers…" /></Field>
-      <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm">Cancel</button><button type="submit" className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">Upload</button></div>
+      <Field label="Notes"><textarea rows={3} className={taCls} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Context for reviewers…" /></Field>
+      {error && (
+        <div className="flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-md p-2">
+          <AlertCircle className="size-4 mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+      <div className="flex justify-end gap-2 pt-2">
+        <button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm" disabled={busy}>Cancel</button>
+        <button type="submit" disabled={busy} className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60">
+          {busy ? "Uploading…" : "Upload"}
+        </button>
+      </div>
     </form>
   );
 }
