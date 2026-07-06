@@ -99,16 +99,6 @@ function LoginPage() {
           })}
         </div>
 
-        {/* Prototype Notes */}
-        <div className="rounded-xl border border-border bg-card/60 p-4">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-foreground mb-2">Prototype Notes</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            This prototype demonstrates role based access across the RPM platform. Different user types see different tools, workflows and data depending on their responsibilities within the organisation.
-          </p>
-          <p className="text-xs text-muted-foreground leading-relaxed mt-2">
-            If you would like to explore the full platform, sign in as Richard Lee or David Rouse.
-          </p>
-        </div>
 
         {/* Footer */}
         <div className="mt-10 text-[11px] text-muted-foreground/60">
