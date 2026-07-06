@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ROLE_LABEL, useAuth } from "@/lib/auth";
 import { useEffect } from "react";
-import { ShieldCheck, Search, HeartHandshake, ArrowRight } from "lucide-react";
+import { ShieldCheck, HeartHandshake, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
@@ -19,13 +19,6 @@ const ACCOUNTS = [
     role: "admin" as const,
     tagline: "Full platform access",
     icon: ShieldCheck,
-  },
-  {
-    id: "u-matt-g",
-    name: "Matt GKU",
-    role: "scout" as const,
-    tagline: "Scouting workflows, reports and intelligence tools",
-    icon: Search,
   },
   {
     id: "u-mentor",
@@ -63,13 +56,6 @@ function LoginPage() {
           </p>
         </div>
 
-        {/* Demo Access */}
-        <div className="mb-6">
-          <h2 className="text-sm font-medium tracking-tight text-foreground mb-1.5">Demo Access</h2>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            For prototype purposes, demo accounts do not require a username or password. Simply select a role below to explore the platform.
-          </p>
-        </div>
 
         {/* Account cards */}
         <div className="space-y-2.5 mb-8">
