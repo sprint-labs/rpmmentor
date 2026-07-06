@@ -85,11 +85,6 @@ function LoginPage() {
           })}
         </div>
 
-
-        {/* Footer */}
-        <div className="mt-10 text-[11px] text-muted-foreground/60">
-          RPM Football Operations
-        </div>
       </div>
     </div>
   );
