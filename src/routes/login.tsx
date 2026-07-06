@@ -56,7 +56,7 @@ function LoginPage() {
         {/* Headline */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight leading-tight">
-            Manage all goalkeeper operations, scouting intelligence, mentor activity, performance reporting and internal workflows from one central platform.
+            Log-in
           </h1>
           <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
             A central database designed to streamline workflows, improve visibility, identify operational gaps, increase productivity and create a standardised approach across the RPM network.
