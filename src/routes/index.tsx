@@ -4,6 +4,7 @@ import { Card, PageHeader, StatCard, SectionTitle, Avatar, Pill, TierBadge, Traf
 import { activity, alerts, goalkeepers, stats, formatRelative, getMentor, dutyOverview, dutyStatusForGk } from "@/lib/mock-data";
 import { ArrowUpRight, AlertTriangle, CalendarClock, FileText, Users, UserCog } from "lucide-react";
 import { useAuth, ROLE_LABEL } from "@/lib/auth";
+import { MentorDashboard } from "@/components/mentor/mentor-dashboard";
 
 export const Route = createFileRoute("/")({ component: Dashboard });
 
@@ -17,9 +18,12 @@ function Dashboard() {
 
   if (!user) return null;
 
-  const pool = user.role === "mentor" && user.mentorId
-    ? goalkeepers.filter((g) => g.mentorId === user.mentorId)
-    : goalkeepers;
+  // Dedicated mentor experience — priority-led, mobile-first.
+  if (user.role === "mentor" && user.mentorId) {
+    return <MentorDashboard user={user} mentorProfileId={user.mentorId} />;
+  }
+
+  const pool = goalkeepers;
   const upcoming = [...pool]
     .filter((g) => new Date(g.nextInteraction).getTime() >= Date.now())
     .sort((a, b) => +new Date(a.nextInteraction) - +new Date(b.nextInteraction))
@@ -29,7 +33,8 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={greeting} description={`${ROLE_LABEL[user.role]} view · ${user.role === "mentor" ? `${pool.length} assigned goalkeepers` : "Live overview of goalkeeper coverage and outstanding actions."}`} />
+      <PageHeader title={greeting} description={`${ROLE_LABEL[user.role]} view · Live overview of goalkeeper coverage and outstanding actions.`} />
+
 
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
