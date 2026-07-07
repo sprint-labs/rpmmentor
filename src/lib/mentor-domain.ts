@@ -209,9 +209,10 @@ export function selectOverduePlayers(mentorProfileId: string, limit = 5) {
     .map((d) => ({ duty: d, player: toPlayerRow(d.player_id)! }));
 }
 
-/** Recent interactions logged by this mentor. */
+/** Recent interactions logged by this mentor (session-store rows first, then seed data). */
 export function selectRecentInteractions(mentorProfileId: string, limit = 8): MentorInteractionRow[] {
-  return interactions
+  const session = getSessionInteractions().filter((r) => r.mentor_profile_id === mentorProfileId);
+  const seeded: MentorInteractionRow[] = interactions
     .filter((i) => i.mentorId === mentorProfileId)
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
     .slice(0, limit)
