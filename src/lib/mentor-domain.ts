@@ -36,7 +36,12 @@ import {
 import {
   getSessionInteractions,
   getSessionReports,
+  insertMentorInteraction as insertMentorInteractionRow,
+  insertMatchReport as insertMatchReportRow,
+  subscribeMentorSession,
 } from "@/lib/mentor-session-store";
+
+export { insertMentorInteractionRow, insertMatchReportRow, subscribeMentorSession };
 
 // ---------- Row shapes (Supabase-style) ----------
 
