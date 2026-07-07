@@ -171,10 +171,31 @@ export function AppShell() {
             )}
           </div>
         </header>
-        <main className="flex-1 min-w-0 p-4 md:p-6">
+        <main className="flex-1 min-w-0 p-4 md:p-6 pb-24 md:pb-6">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile bottom navigation — primary routes for the current role */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border bg-background/95 backdrop-blur grid grid-cols-5 h-16 pb-safe">
+        {visible.slice(0, 5).map((n) => {
+          const active = n.exact ? path === n.to : path.startsWith(n.to);
+          const Icon = n.icon;
+          return (
+            <Link
+              key={n.to}
+              to={n.to as never}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <Icon className="size-5" />
+              <span className="truncate max-w-[64px]">{n.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <WorkflowDialog kind={workflow} onClose={() => setWorkflow(null)} />
     </div>
