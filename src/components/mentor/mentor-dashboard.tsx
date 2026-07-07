@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  AlertTriangle, CalendarClock, ChevronRight, ClipboardList, FileText,
-  Mic, MessageSquarePlus, Search, TrendingUp, Users, ArrowUpRight,
+  CalendarClock, ChevronRight, ClipboardList, FileText,
+  Mic, MessageSquarePlus, Search, TrendingUp, ArrowUpRight,
+  type LucideIcon,
 } from "lucide-react";
 import { Avatar, Card, DutyBadge, ProgressBar, SectionTitle, TrafficLight } from "@/components/primitives";
 import { formatRelative } from "@/lib/mock-data";
