@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarClock, ChevronRight, ClipboardList, FileText,
@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Avatar, Card, DutyBadge, ProgressBar, SectionTitle, TrafficLight } from "@/components/primitives";
 import { formatRelative } from "@/lib/mock-data";
-import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
+import { MentorWorkflowDialog, type MentorWorkflowState } from "@/components/mentor/mentor-workflow";
 import {
   selectAssignedPlayers,
   selectDutyForPlayer,
@@ -19,6 +19,7 @@ import {
   selectRecentReports,
   selectUpcomingForMentor,
   resolveMentorProfile,
+  subscribeMentorSession,
   type DutyOfCareRow,
   type PlayerRow,
 } from "@/lib/mentor-domain";
