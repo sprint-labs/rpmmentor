@@ -36,16 +36,20 @@ const DUTY_PROMPT: Record<"red" | "amber", string> = {
 };
 
 export function MentorDashboard({ user, mentorProfileId }: Props) {
-  const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
+  const [workflow, setWorkflow] = useState<MentorWorkflowState | null>(null);
   const [query, setQuery] = useState("");
+  const [tick, forceRefresh] = useReducer((n: number) => n + 1, 0);
+
+  // Refresh selectors whenever the mentor submits a new interaction/report.
+  useEffect(() => subscribeMentorSession(() => forceRefresh()), []);
 
   const profile = resolveMentorProfile(mentorProfileId);
   const roster = useMemo(() => selectAssignedPlayers(mentorProfileId), [mentorProfileId]);
   const rollup = useMemo(() => selectDutyRollup(mentorProfileId), [mentorProfileId]);
   const overdue = useMemo(() => selectOverduePlayers(mentorProfileId, 6), [mentorProfileId]);
   const upcoming = useMemo(() => selectUpcomingForMentor(mentorProfileId, 14, 5), [mentorProfileId]);
-  const recentInteractions = useMemo(() => selectRecentInteractions(mentorProfileId, 5), [mentorProfileId]);
-  const recentReports = useMemo(() => selectRecentReports(mentorProfileId, 4), [mentorProfileId]);
+  const recentInteractions = useMemo(() => selectRecentInteractions(mentorProfileId, 5), [mentorProfileId, tick]);
+  const recentReports = useMemo(() => selectRecentReports(mentorProfileId, 4), [mentorProfileId, tick]);
   const mediaCounts = useMemo(() => selectMediaCountByPlayer(mentorProfileId), [mentorProfileId]);
   const progress = useMemo(() => selectMentorProgress(mentorProfileId), [mentorProfileId]);
 
