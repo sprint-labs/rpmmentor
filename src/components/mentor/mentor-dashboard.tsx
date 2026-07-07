@@ -318,6 +318,7 @@ function QuickAction({
 }
 
 function RosterRow({ player, mediaCount }: { player: PlayerRow; mediaCount: number }) {
+  const duty: DutyOfCareRow | null = selectDutyForPlayer(player.id);
   return (
     <li>
       <Link
@@ -329,7 +330,7 @@ function RosterRow({ player, mediaCount }: { player: PlayerRow; mediaCount: numb
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-medium text-sm truncate">{player.full_name}</span>
-            <DutyBadgeInline playerId={player.id} />
+            {duty && <DutyBadge level={duty.level} label={duty.label} />}
           </div>
           <div className="text-[11px] text-muted-foreground truncate">
             {player.club} · {player.league}
@@ -346,15 +347,4 @@ function RosterRow({ player, mediaCount }: { player: PlayerRow; mediaCount: numb
       </Link>
     </li>
   );
-}
-
-function DutyBadgeInline({ playerId }: { playerId: string }) {
-  // Inline import to avoid recomputing rollup for each row from parent.
-  // Cheap; the underlying calc is O(1) per player.
-  // Placed here so RosterRow stays a pure prop-driven component.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { selectDutyForPlayer } = require("@/lib/mentor-domain") as typeof import("@/lib/mentor-domain");
-  const d = selectDutyForPlayer(playerId);
-  if (!d) return null;
-  return <DutyBadge level={d.level} label={d.label} />;
 }
