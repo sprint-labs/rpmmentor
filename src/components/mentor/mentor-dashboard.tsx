@@ -87,9 +87,9 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
 
       {/* Quick actions (mobile: pill row / desktop: grid) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <QuickAction icon={MessageSquarePlus} label="Log interaction" onClick={() => setWorkflow("interaction")} />
-        <QuickAction icon={FileText} label="Match report" onClick={() => setWorkflow("report")} tone="info" />
-        <QuickAction icon={Mic} label="Voice note" onClick={() => setWorkflow("interaction")} tone="warning" />
+        <QuickAction icon={MessageSquarePlus} label="Log interaction" onClick={() => setWorkflow({ kind: "interaction" })} />
+        <QuickAction icon={FileText} label="Match report" onClick={() => setWorkflow({ kind: "report" })} tone="info" />
+        <QuickAction icon={Mic} label="Voice note" onClick={() => setWorkflow({ kind: "voice" })} tone="warning" />
       </div>
 
       {/* Priority queue (duty of care prompts) */}
