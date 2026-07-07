@@ -33,6 +33,15 @@ import {
   getMentor,
   type DutyLevel,
 } from "@/lib/mock-data";
+import {
+  getSessionInteractions,
+  getSessionReports,
+  insertMentorInteraction as insertMentorInteractionRow,
+  insertMatchReport as insertMatchReportRow,
+  subscribeMentorSession,
+} from "@/lib/mentor-session-store";
+
+export { insertMentorInteractionRow, insertMatchReportRow, subscribeMentorSession };
 
 // ---------- Row shapes (Supabase-style) ----------
 
@@ -69,6 +78,8 @@ export interface DutyOfCareRow {
   label: string;
 }
 
+export type WellbeingFlag = "green" | "amber" | "red";
+
 export interface MentorInteractionRow {
   id: string;
   player_id: string;
@@ -78,7 +89,36 @@ export interface MentorInteractionRow {
   notes: string;
   outcome: string;
   follow_up: string;
+  /** Optional richer fields — populated for session-created rows. */
+  wellbeing_flag?: WellbeingFlag;
+  follow_up_required?: boolean;
+  next_action?: string;
+  transcript_source?: "voice_note" | "typed" | "handwritten";
 }
+
+/**
+ * The seven RPM goalkeeper metrics, scored 1-10.
+ * Reference schema: match_reports.scores jsonb.
+ */
+export interface Rpm7Scores {
+  shot_stopping: number;
+  distribution: number;
+  aerial_command: number;
+  one_v_one: number;
+  communication: number;
+  decision_making: number;
+  footwork: number;
+}
+
+export const RPM7_METRICS: Array<{ key: keyof Rpm7Scores; label: string; hint: string }> = [
+  { key: "shot_stopping", label: "Shot stopping", hint: "Reactions, positioning, saves" },
+  { key: "distribution", label: "Distribution", hint: "Throws, kicks, build-up" },
+  { key: "aerial_command", label: "Aerial command", hint: "Crosses, corners, claims" },
+  { key: "one_v_one", label: "1 v 1", hint: "Smother, spread, timing" },
+  { key: "communication", label: "Communication", hint: "Organising the back line" },
+  { key: "decision_making", label: "Decision making", hint: "When to come, when to stay" },
+  { key: "footwork", label: "Footwork", hint: "Set, shuffle, first step" },
+];
 
 export interface MatchReportRow {
   id: string;
@@ -88,6 +128,12 @@ export interface MatchReportRow {
   occurred_at: string;
   overall_rating: number;
   summary: string;
+  /** Optional richer fields — populated for session-created rows. */
+  fixture?: string;
+  opposition?: string;
+  minutes_watched?: number;
+  recommendation?: string;
+  scores?: Rpm7Scores;
 }
 
 export interface UpcomingFixtureRow {
@@ -172,12 +218,11 @@ export function selectOverduePlayers(mentorProfileId: string, limit = 5) {
     .map((d) => ({ duty: d, player: toPlayerRow(d.player_id)! }));
 }
 
-/** Recent interactions logged by this mentor. */
+/** Recent interactions logged by this mentor (session-store rows first, then seed data). */
 export function selectRecentInteractions(mentorProfileId: string, limit = 8): MentorInteractionRow[] {
-  return interactions
+  const session = getSessionInteractions().filter((r) => r.mentor_profile_id === mentorProfileId);
+  const seeded: MentorInteractionRow[] = interactions
     .filter((i) => i.mentorId === mentorProfileId)
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-    .slice(0, limit)
     .map((i) => ({
       id: i.id,
       player_id: i.gkId,
@@ -188,14 +233,16 @@ export function selectRecentInteractions(mentorProfileId: string, limit = 8): Me
       outcome: i.outcome,
       follow_up: i.followUp,
     }));
+  return [...session, ...seeded]
+    .sort((a, b) => +new Date(b.occurred_at) - +new Date(a.occurred_at))
+    .slice(0, limit);
 }
 
-/** Recent match reports authored by this mentor. */
+/** Recent match reports authored by this mentor (session-store rows first). */
 export function selectRecentReports(mentorProfileId: string, limit = 6): MatchReportRow[] {
-  return reports
+  const session = getSessionReports().filter((r) => r.mentor_profile_id === mentorProfileId);
+  const seeded: MatchReportRow[] = reports
     .filter((r) => r.authorId === mentorProfileId)
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-    .slice(0, limit)
     .map((r) => ({
       id: r.id,
       player_id: r.gkId,
@@ -205,6 +252,9 @@ export function selectRecentReports(mentorProfileId: string, limit = 6): MatchRe
       overall_rating: r.rating,
       summary: r.summary,
     }));
+  return [...session, ...seeded]
+    .sort((a, b) => +new Date(b.occurred_at) - +new Date(a.occurred_at))
+    .slice(0, limit);
 }
 
 /** Next fixtures/observations for this mentor's roster. */
@@ -236,6 +286,11 @@ export function selectMentorProgress(mentorProfileId: string) {
 /** Player-scoped duty of care lookup (for player profile prompts). */
 export function selectDutyForPlayer(playerId: string): DutyOfCareRow | null {
   return toDutyRow(playerId);
+}
+
+/** Single player row lookup, exported for workflow forms. */
+export function selectPlayer(playerId: string): PlayerRow | null {
+  return toPlayerRow(playerId);
 }
 
 /** Media count per player for the mentor's roster (used in list badges). */

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarClock, ChevronRight, ClipboardList, FileText,
@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Avatar, Card, DutyBadge, ProgressBar, SectionTitle, TrafficLight } from "@/components/primitives";
 import { formatRelative } from "@/lib/mock-data";
-import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
+import { MentorWorkflowDialog, type MentorWorkflowState } from "@/components/mentor/mentor-workflow";
 import {
   selectAssignedPlayers,
   selectDutyForPlayer,
@@ -19,6 +19,7 @@ import {
   selectRecentReports,
   selectUpcomingForMentor,
   resolveMentorProfile,
+  subscribeMentorSession,
   type DutyOfCareRow,
   type PlayerRow,
 } from "@/lib/mentor-domain";
@@ -35,16 +36,20 @@ const DUTY_PROMPT: Record<"red" | "amber", string> = {
 };
 
 export function MentorDashboard({ user, mentorProfileId }: Props) {
-  const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
+  const [workflow, setWorkflow] = useState<MentorWorkflowState | null>(null);
   const [query, setQuery] = useState("");
+  const [tick, forceRefresh] = useReducer((n: number) => n + 1, 0);
+
+  // Refresh selectors whenever the mentor submits a new interaction/report.
+  useEffect(() => subscribeMentorSession(() => forceRefresh()), []);
 
   const profile = resolveMentorProfile(mentorProfileId);
   const roster = useMemo(() => selectAssignedPlayers(mentorProfileId), [mentorProfileId]);
   const rollup = useMemo(() => selectDutyRollup(mentorProfileId), [mentorProfileId]);
   const overdue = useMemo(() => selectOverduePlayers(mentorProfileId, 6), [mentorProfileId]);
   const upcoming = useMemo(() => selectUpcomingForMentor(mentorProfileId, 14, 5), [mentorProfileId]);
-  const recentInteractions = useMemo(() => selectRecentInteractions(mentorProfileId, 5), [mentorProfileId]);
-  const recentReports = useMemo(() => selectRecentReports(mentorProfileId, 4), [mentorProfileId]);
+  const recentInteractions = useMemo(() => selectRecentInteractions(mentorProfileId, 5), [mentorProfileId, tick]);
+  const recentReports = useMemo(() => selectRecentReports(mentorProfileId, 4), [mentorProfileId, tick]);
   const mediaCounts = useMemo(() => selectMediaCountByPlayer(mentorProfileId), [mentorProfileId]);
   const progress = useMemo(() => selectMentorProgress(mentorProfileId), [mentorProfileId]);
 
@@ -82,9 +87,9 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
 
       {/* Quick actions (mobile: pill row / desktop: grid) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <QuickAction icon={MessageSquarePlus} label="Log interaction" onClick={() => setWorkflow("interaction")} />
-        <QuickAction icon={FileText} label="Match report" onClick={() => setWorkflow("report")} tone="info" />
-        <QuickAction icon={Mic} label="Voice note" onClick={() => setWorkflow("interaction")} tone="warning" />
+        <QuickAction icon={MessageSquarePlus} label="Log interaction" onClick={() => setWorkflow({ kind: "interaction" })} />
+        <QuickAction icon={FileText} label="Match report" onClick={() => setWorkflow({ kind: "report" })} tone="info" />
+        <QuickAction icon={Mic} label="Voice note" onClick={() => setWorkflow({ kind: "voice" })} tone="warning" />
       </div>
 
       {/* Priority queue (duty of care prompts) */}
@@ -112,31 +117,37 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
           <ul className="divide-y divide-border -mx-1">
             {overdue.map(({ player, duty }) => (
               <li key={player.id} className="px-1">
-                <Link
-                  to="/goalkeepers/$gkId"
-                  params={{ gkId: player.id }}
-                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 hover:bg-accent/30 -mx-2 px-2 rounded-md transition-colors"
-                >
-                  <div className="relative shrink-0">
-                    <Avatar initials={player.initials} size={36} />
-                    <span className="absolute -bottom-0.5 -right-0.5 ring-2 ring-card rounded-full">
-                      <TrafficLight level={duty.level} size={10} />
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-sm truncate">{player.full_name}</span>
+                <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 -mx-2 px-2 rounded-md">
+                  <Link
+                    to="/goalkeepers/$gkId"
+                    params={{ gkId: player.id }}
+                    className="contents"
+                  >
+                    <div className="relative shrink-0">
+                      <Avatar initials={player.initials} size={36} />
+                      <span className="absolute -bottom-0.5 -right-0.5 ring-2 ring-card rounded-full">
+                        <TrafficLight level={duty.level} size={10} />
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{player.club}</div>
-                    <div className={`text-[11px] mt-0.5 truncate ${duty.level === "red" ? "text-destructive" : "text-warning"}`}>
-                      {DUTY_PROMPT[duty.level as "red" | "amber"]}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium text-sm truncate">{player.full_name}</span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{duty.days_since_contact}d</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{player.club}</div>
+                      <div className={`text-[11px] mt-0.5 truncate ${duty.level === "red" ? "text-destructive" : "text-warning"}`}>
+                        {DUTY_PROMPT[duty.level as "red" | "amber"]}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs tabular-nums font-medium">{duty.days_since_contact}d</div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">since contact</div>
-                  </div>
-                </Link>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setWorkflow({ kind: "interaction", playerId: player.id })}
+                    className="shrink-0 h-9 px-3 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 inline-flex items-center gap-1.5"
+                  >
+                    <MessageSquarePlus className="size-3.5" /> Log
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -281,20 +292,31 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
       {/* Mobile-only sticky action bar */}
       <div className="fixed bottom-0 inset-x-0 md:hidden bg-background/95 backdrop-blur border-t border-border p-3 z-30 flex gap-2 safe-area-inset-bottom">
         <button
-          onClick={() => setWorkflow("interaction")}
+          onClick={() => setWorkflow({ kind: "interaction" })}
           className="flex-1 h-11 rounded-md bg-primary text-primary-foreground text-sm font-medium inline-flex items-center justify-center gap-1.5"
         >
           <MessageSquarePlus className="size-4" /> Log interaction
         </button>
         <button
-          onClick={() => setWorkflow("report")}
+          onClick={() => setWorkflow({ kind: "voice" })}
+          className="h-11 px-3 rounded-md border border-border text-sm font-medium inline-flex items-center gap-1.5"
+          aria-label="Voice note"
+        >
+          <Mic className="size-4" />
+        </button>
+        <button
+          onClick={() => setWorkflow({ kind: "report" })}
           className="h-11 px-4 rounded-md border border-border text-sm font-medium inline-flex items-center gap-1.5"
         >
           <FileText className="size-4" /> Report
         </button>
       </div>
 
-      <WorkflowDialog kind={workflow} onClose={() => setWorkflow(null)} />
+      <MentorWorkflowDialog
+        state={workflow}
+        mentorProfileId={mentorProfileId}
+        onClose={() => setWorkflow(null)}
+      />
     </div>
   );
 }
