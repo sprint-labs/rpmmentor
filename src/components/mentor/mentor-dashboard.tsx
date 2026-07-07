@@ -117,31 +117,37 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
           <ul className="divide-y divide-border -mx-1">
             {overdue.map(({ player, duty }) => (
               <li key={player.id} className="px-1">
-                <Link
-                  to="/goalkeepers/$gkId"
-                  params={{ gkId: player.id }}
-                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 hover:bg-accent/30 -mx-2 px-2 rounded-md transition-colors"
-                >
-                  <div className="relative shrink-0">
-                    <Avatar initials={player.initials} size={36} />
-                    <span className="absolute -bottom-0.5 -right-0.5 ring-2 ring-card rounded-full">
-                      <TrafficLight level={duty.level} size={10} />
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-sm truncate">{player.full_name}</span>
+                <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 -mx-2 px-2 rounded-md">
+                  <Link
+                    to="/goalkeepers/$gkId"
+                    params={{ gkId: player.id }}
+                    className="contents"
+                  >
+                    <div className="relative shrink-0">
+                      <Avatar initials={player.initials} size={36} />
+                      <span className="absolute -bottom-0.5 -right-0.5 ring-2 ring-card rounded-full">
+                        <TrafficLight level={duty.level} size={10} />
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{player.club}</div>
-                    <div className={`text-[11px] mt-0.5 truncate ${duty.level === "red" ? "text-destructive" : "text-warning"}`}>
-                      {DUTY_PROMPT[duty.level as "red" | "amber"]}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium text-sm truncate">{player.full_name}</span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{duty.days_since_contact}d</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{player.club}</div>
+                      <div className={`text-[11px] mt-0.5 truncate ${duty.level === "red" ? "text-destructive" : "text-warning"}`}>
+                        {DUTY_PROMPT[duty.level as "red" | "amber"]}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs tabular-nums font-medium">{duty.days_since_contact}d</div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">since contact</div>
-                  </div>
-                </Link>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setWorkflow({ kind: "interaction", playerId: player.id })}
+                    className="shrink-0 h-9 px-3 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 inline-flex items-center gap-1.5"
+                  >
+                    <MessageSquarePlus className="size-3.5" /> Log
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
