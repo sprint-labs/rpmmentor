@@ -292,20 +292,31 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
       {/* Mobile-only sticky action bar */}
       <div className="fixed bottom-0 inset-x-0 md:hidden bg-background/95 backdrop-blur border-t border-border p-3 z-30 flex gap-2 safe-area-inset-bottom">
         <button
-          onClick={() => setWorkflow("interaction")}
+          onClick={() => setWorkflow({ kind: "interaction" })}
           className="flex-1 h-11 rounded-md bg-primary text-primary-foreground text-sm font-medium inline-flex items-center justify-center gap-1.5"
         >
           <MessageSquarePlus className="size-4" /> Log interaction
         </button>
         <button
-          onClick={() => setWorkflow("report")}
+          onClick={() => setWorkflow({ kind: "voice" })}
+          className="h-11 px-3 rounded-md border border-border text-sm font-medium inline-flex items-center gap-1.5"
+          aria-label="Voice note"
+        >
+          <Mic className="size-4" />
+        </button>
+        <button
+          onClick={() => setWorkflow({ kind: "report" })}
           className="h-11 px-4 rounded-md border border-border text-sm font-medium inline-flex items-center gap-1.5"
         >
           <FileText className="size-4" /> Report
         </button>
       </div>
 
-      <WorkflowDialog kind={workflow} onClose={() => setWorkflow(null)} />
+      <MentorWorkflowDialog
+        state={workflow}
+        mentorProfileId={mentorProfileId}
+        onClose={() => setWorkflow(null)}
+      />
     </div>
   );
 }
