@@ -283,6 +283,11 @@ export function selectDutyForPlayer(playerId: string): DutyOfCareRow | null {
   return toDutyRow(playerId);
 }
 
+/** Single player row lookup, exported for workflow forms. */
+export function selectPlayer(playerId: string): PlayerRow | null {
+  return toPlayerRow(playerId);
+}
+
 /** Media count per player for the mentor's roster (used in list badges). */
 export function selectMediaCountByPlayer(mentorProfileId: string): Record<string, number> {
   const roster = new Set(goalkeepers.filter((g) => g.mentorId === mentorProfileId).map((g) => g.id));
