@@ -299,7 +299,7 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
 
 function QuickAction({
   icon: Icon, label, onClick, tone = "primary",
-}: { icon: typeof Users; label: string; onClick: () => void; tone?: "primary" | "info" | "warning" }) {
+}: { icon: LucideIcon; label: string; onClick: () => void; tone?: "primary" | "info" | "warning" }) {
   const bg =
     tone === "info" ? "bg-info/10 text-info hover:bg-info/15 border-info/20"
     : tone === "warning" ? "bg-warning/10 text-warning hover:bg-warning/15 border-warning/20"
