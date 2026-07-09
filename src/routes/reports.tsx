@@ -57,8 +57,8 @@ function ReportsPage() {
               <th className="px-4 py-2.5 font-medium">Date</th>
               <th className="px-2 py-2.5 font-medium">Type</th>
               <th className="px-2 py-2.5 font-medium">Goalkeeper</th>
-              <th className="px-2 py-2.5 font-medium">Author</th>
-              <th className="px-2 py-2.5 font-medium">Summary</th>
+              <th className="px-2 py-2.5 font-medium">MENTOR</th>
+              <th className="px-2 py-2.5 font-medium">COMMENTS</th>
               <th className="px-2 py-2.5 font-medium text-right">Rating</th>
               <th className="px-4 py-2.5 font-medium text-right" />
             </tr>
@@ -70,11 +70,11 @@ function ReportsPage() {
               return (
                 <tr key={r.id} className="border-b border-border/60 last:border-0 hover:bg-accent/20">
                   <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{formatDate(r.date)}</td>
-                  <td className="px-2"><Pill tone="info"><FileText className="size-2.5 mr-1 inline" />{r.type}</Pill></td>
+                  <td className="px-2"><Pill tone="info"><FileText className="size-2.5 mr-1 inline" />RPM GK</Pill></td>
                   <td className="px-2 font-medium">{gk?.name}</td>
                   <td className="px-2 text-muted-foreground">{m?.name}</td>
                   <td className="px-2 text-muted-foreground max-w-md"><span className="line-clamp-1">{r.summary}</span></td>
-                  <td className="px-2 text-right tabular-nums font-semibold">{r.rating}</td>
+                  <td className="px-2 text-right tabular-nums font-semibold">3.2</td>
                   <td className="px-4 text-right">
                     <Link to="/reports/$reportId" params={{ reportId: r.id }} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5">
                       Open <ChevronRight className="size-3" />

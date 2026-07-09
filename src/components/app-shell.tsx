@@ -12,12 +12,12 @@ const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true, perm: "goalkeepers.view" },
   { to: "/goalkeepers", label: "Goalkeepers", icon: Users, perm: "goalkeepers.view" },
   { to: "/mentors", label: "Mentors", icon: UserCog, perm: "mentors.view" },
-  { to: "/interactions", label: "Interactions", icon: MessageSquare, perm: "interactions.view" },
-  { to: "/reports", label: "Reports", icon: FileText, perm: "reports.view" },
+  { to: "/interactions", label: "Interactions Log", icon: MessageSquare, perm: "interactions.view" },
+  { to: "/reports", label: "Match Reports", icon: FileText, perm: "reports.view" },
   { to: "/intelligence", label: "Intelligence", icon: Database, perm: "intelligence.view" },
   { to: "/media", label: "Media Library", icon: FolderOpen, perm: "media.view" },
   { to: "/audit", label: "Audit Log", icon: History, perm: "audit.view" },
-  { to: "/alerts", label: "Alerts", icon: BellRing, perm: "alerts.view" },
+  { to: "/alerts", label: "Notification Centre", icon: BellRing, perm: "alerts.view" },
   { to: "/calendar", label: "Calendar", icon: Calendar, perm: "calendar.view" },
   { to: "/executive", label: "Executive", icon: BarChart3, perm: "executive.view" },
 ];
@@ -58,10 +58,10 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
         <div className="flex items-center gap-2 px-5 h-14 border-b border-sidebar-border">
-          <div className="size-7 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold text-sm">R</div>
+          <div className="size-7 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold text-sm">AM</div>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold tracking-tight">RPM</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">GK Intelligence</span>
+            <span className="text-sm font-semibold tracking-tight">Andy Marshall</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">MENTOR</span>
           </div>
         </div>
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
