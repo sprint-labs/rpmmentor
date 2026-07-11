@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { to: "/alerts", label: "Notification Centre", icon: BellRing, perm: "alerts.view" },
   { to: "/calendar", label: "Calendar", icon: Calendar, perm: "calendar.view" },
   { to: "/executive", label: "Executive", icon: BarChart3, perm: "executive.view" },
+  { to: "/system/users", label: "Users & Roles", icon: ShieldCheck, perm: "system.manage" },
 ];
 
 export function AppShell() {
