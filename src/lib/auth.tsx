@@ -13,14 +13,14 @@ export interface SessionUser {
 }
 
 export const DEMO_USERS: SessionUser[] = [
-  { id: "u-luke", name: "Luke Harrison", email: "luke@rpmgk.com", role: "super_admin", initials: "LH", title: "Platform Owner" },
-  { id: "u-richard", name: "Richard Lee", email: "richard@rpmgk.com", role: "admin", initials: "RL", title: "Co-Founder & Director", mentorId: "m-richard" },
-  { id: "u-scott", name: "Scott Barron", email: "scott@rpmgk.com", role: "admin", initials: "SB", title: "Co-Founder & Director", mentorId: "m-scott" },
-  { id: "u-sam", name: "Sam Winstanley", email: "sam@rpmgk.com", role: "admin", initials: "SW", title: "Co-Founder & Director", mentorId: "m-sam" },
-  { id: "u-david-r", name: "David Rouse", email: "david.rouse@rpmgk.com", role: "mentor_manager", initials: "DR", title: "Managing Director" },
-  { id: "u-matt-b", name: "Matt Beadle", email: "matt.beadle@rpmgk.com", role: "mentor_manager", initials: "MB", title: "Mentor Operations Lead" },
-  { id: "u-matt-g", name: "Matt GKU", email: "matt.gku@rpmgk.com", role: "admin", initials: "MG", title: "Goalkeeper Intelligence Lead" },
-  { id: "u-mentor", name: "Mark Halsey", email: "mark.halsey@rpmgk.com", role: "mentor", initials: "MH", title: "Goalkeeper Mentor", mentorId: "m-mark-h" },
+  { id: "u-luke", name: "Luke Corrigan", email: "lcorrigan@gkhq.app", role: "super_admin", initials: "LC", title: "Platform Owner" },
+  { id: "u-richard", name: "Richard Lee", email: "rlee@gkhq.app", role: "admin", initials: "RL", title: "Co-Founder & Director", mentorId: "m-richard" },
+  { id: "u-scott", name: "Scott Barron", email: "sbarron@gkhq.app", role: "admin", initials: "SB", title: "Co-Founder & Director", mentorId: "m-scott" },
+  { id: "u-sam", name: "Sam Winstanley", email: "swinstanley@gkhq.app", role: "admin", initials: "SW", title: "Co-Founder & Director", mentorId: "m-sam" },
+  { id: "u-david-r", name: "David Rouse", email: "drouse@gkhq.app", role: "mentor_manager", initials: "DR", title: "Managing Director" },
+  { id: "u-matt-b", name: "Matt Beadle", email: "mbeadle@gkhq.app", role: "mentor_manager", initials: "MB", title: "Mentor Operations Lead" },
+  { id: "u-matt-g", name: "Matt GKU", email: "mgku@gkhq.app", role: "admin", initials: "MG", title: "Goalkeeper Intelligence Lead" },
+  { id: "u-mentor", name: "Mark Halsey", email: "mhalsey@gkhq.app", role: "mentor", initials: "MH", title: "Goalkeeper Mentor", mentorId: "m-mark-h" },
 ];
 
 // Permission catalogue — kept intentionally coarse. Prefer role checks at route/nav
@@ -90,6 +90,7 @@ const MATRIX: Record<Role, Permission[]> = {
 interface AuthState {
   user: SessionUser | null;
   signIn: (id: string) => void;
+  signInByEmail: (email: string) => SessionUser | null;
   signOut: () => void;
   can: (p: Permission) => boolean;
 }
@@ -118,6 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
     try { window.localStorage.setItem(KEY, u.id); } catch {}
   };
+  const signInByEmail = (email: string) => {
+    const normalized = email.trim().toLowerCase();
+    const u = DEMO_USERS.find((x) => x.email.toLowerCase() === normalized);
+    if (!u) return null;
+    setUser(u);
+    try { window.localStorage.setItem(KEY, u.id); } catch {}
+    return u;
+  };
   const signOut = () => {
     setUser(null);
     try { window.localStorage.removeItem(KEY); } catch {}
@@ -129,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return <div className="min-h-screen bg-background" />;
   }
 
-  return <Ctx.Provider value={{ user, signIn, signOut, can }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, signIn, signInByEmail, signOut, can }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
