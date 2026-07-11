@@ -21,6 +21,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SystemUsersRouteImport } from './routes/system.users'
 import { Route as ReportsReportIdRouteImport } from './routes/reports.$reportId'
 import { Route as GoalkeepersGkIdRouteImport } from './routes/goalkeepers.$gkId'
 
@@ -84,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SystemUsersRoute = SystemUsersRouteImport.update({
+  id: '/system/users',
+  path: '/system/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
   id: '/$reportId',
   path: '/$reportId',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRouteWithChildren
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/users': typeof SystemUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRouteWithChildren
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/users': typeof SystemUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRouteWithChildren
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/users': typeof SystemUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/users'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   MediaRoute: typeof MediaRoute
   MentorsRoute: typeof MentorsRoute
   ReportsRoute: typeof ReportsRouteWithChildren
+  SystemUsersRoute: typeof SystemUsersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/system/users': {
+      id: '/system/users'
+      path: '/system/users'
+      fullPath: '/system/users'
+      preLoaderRoute: typeof SystemUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports/$reportId': {
       id: '/reports/$reportId'
       path: '/$reportId'
@@ -349,17 +369,8 @@ const rootRouteChildren: RootRouteChildren = {
   MediaRoute: MediaRoute,
   MentorsRoute: MentorsRoute,
   ReportsRoute: ReportsRouteWithChildren,
+  SystemUsersRoute: SystemUsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
