@@ -334,12 +334,8 @@ function MediaForm({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allowedGks = useMemo(() => {
-    if (user?.role === "mentor" && user.mentorId) {
-      return goalkeepers.filter((g) => g.mentorId === user.mentorId);
-    }
-    return goalkeepers;
-  }, [user]);
+  // Mentors work collaboratively — any mentor can link media to any goalkeeper.
+  const allowedGks = useMemo(() => goalkeepers, []);
 
   if (!user || !can("media.upload")) {
     return (
