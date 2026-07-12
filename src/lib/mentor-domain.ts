@@ -290,11 +290,10 @@ export function selectPlayer(playerId: string): PlayerRow | null {
   return toPlayerRow(playerId);
 }
 
-/** Media count per player for the mentor's roster (used in list badges). */
-export function selectMediaCountByPlayer(mentorProfileId: string): Record<string, number> {
-  const roster = new Set(goalkeepers.filter((g) => g.mentorId === mentorProfileId).map((g) => g.id));
+/** Media count per player across the full roster (used in list badges). */
+export function selectMediaCountByPlayer(_mentorProfileId: string): Record<string, number> {
   const out: Record<string, number> = {};
-  media.forEach((m) => { if (roster.has(m.gkId)) out[m.gkId] = (out[m.gkId] ?? 0) + 1; });
+  media.forEach((m) => { out[m.gkId] = (out[m.gkId] ?? 0) + 1; });
   return out;
 }
 
