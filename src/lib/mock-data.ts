@@ -569,7 +569,7 @@ export const stats = {
   upcomingInteractions: goalkeepers.filter((g) => new Date(g.nextInteraction).getTime() >= Date.now() && (new Date(g.nextInteraction).getTime() - Date.now()) / 86400000 < 14).length,
   overdueInteractions: alerts.filter((a) => a.kind === "Overdue observation" || a.kind === "Overdue contact").length,
   reportsThisWeek: reports.filter((r) => (Date.now() - new Date(r.date).getTime()) / 86400000 < 7).length,
-  activeMentors: mentors.filter((m) => m.role === "Goalkeeper Mentor" || m.role === "Goalkeeper Intelligence Scout").length,
+  activeMentors: mentors.filter((m) => m.role === "Goalkeeper Mentor" || m.role === "Goalkeeper Intelligence Scout" || m.role === "Managing Director & Mentor").length,
   // Back-compat: tierDistribution now reports the Status distribution
   tierDistribution: STATUSES.map((t) => ({ tier: t, count: goalkeepers.filter((g) => g.status === t).length })),
   statusDistribution: STATUSES.map((t) => ({ status: t, count: goalkeepers.filter((g) => g.status === t).length })),
