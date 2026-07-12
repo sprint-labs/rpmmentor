@@ -255,13 +255,12 @@ export function selectRecentReports(mentorProfileId: string, limit = 6): MatchRe
     .slice(0, limit);
 }
 
-/** Next fixtures/observations for this mentor's roster. */
-export function selectUpcomingForMentor(mentorProfileId: string, days = 14, limit = 6): UpcomingFixtureRow[] {
+/** Next fixtures/observations across the full client roster. */
+export function selectUpcomingForMentor(_mentorProfileId: string, days = 14, limit = 6): UpcomingFixtureRow[] {
   const now = Date.now();
   const cutoff = now + days * 86400000;
-  const roster = new Set(goalkeepers.filter((g) => g.mentorId === mentorProfileId).map((g) => g.id));
   return calendarEvents
-    .filter((e) => e.gkId && roster.has(e.gkId) && +new Date(e.date) >= now && +new Date(e.date) <= cutoff)
+    .filter((e) => e.gkId && +new Date(e.date) >= now && +new Date(e.date) <= cutoff)
     .sort((a, b) => +new Date(a.date) - +new Date(b.date))
     .slice(0, limit)
     .map((e) => ({
