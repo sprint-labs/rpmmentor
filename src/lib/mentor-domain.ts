@@ -183,19 +183,17 @@ function toDutyRow(id: string): DutyOfCareRow | null {
 
 // ---------- Selectors ----------
 
-/** All players a given mentor profile is currently assigned to. */
-export function selectAssignedPlayers(mentorProfileId: string): PlayerRow[] {
+/** Full RPM client roster — mentors work collaboratively, so every mentor sees all goalkeepers. */
+export function selectAssignedPlayers(_mentorProfileId: string): PlayerRow[] {
   return goalkeepers
-    .filter((g) => g.mentorId === mentorProfileId)
     .map((g) => toPlayerRow(g.id)!)
     .sort((a, b) => a.full_name.localeCompare(b.full_name));
 }
 
-/** Duty of care rows for a mentor's roster, ordered worst-first. */
-export function selectDutyOfCareForMentor(mentorProfileId: string): DutyOfCareRow[] {
+/** Duty of care rows for the full roster, ordered worst-first. */
+export function selectDutyOfCareForMentor(_mentorProfileId: string): DutyOfCareRow[] {
   const rank: Record<DutyLevel, number> = { red: 0, amber: 1, green: 2 };
   return goalkeepers
-    .filter((g) => g.mentorId === mentorProfileId)
     .map((g) => toDutyRow(g.id)!)
     .sort((a, b) => rank[a.level] - rank[b.level] || b.days_since_contact - a.days_since_contact);
 }
