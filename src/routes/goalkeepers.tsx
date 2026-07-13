@@ -2,8 +2,9 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { PageHeader, Card, TierBadge, Avatar, TrafficLight, DutyBadge, StatCard } from "@/components/primitives";
 import { goalkeepers, getMentor, formatRelative, dutyStatusForGk, dutyOverview } from "@/lib/mock-data";
 import { useState } from "react";
+import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/goalkeepers")({ component: GoalkeepersLayout });
+export const Route = createFileRoute("/goalkeepers")({ component: withPermission(GoalkeepersLayout, "goalkeepers.view") });
 
 function GoalkeepersLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
