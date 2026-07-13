@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { calendarEvents, formatDate } from "@/lib/mock-data";
 import { useState } from "react";
+import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/calendar")({ component: CalendarPage });
+export const Route = createFileRoute("/calendar")({ component: withPermission(CalendarPage, "calendar.view") });
 
 const TONE: Record<string, "info" | "warning" | "success" | "muted" | "destructive"> = {
   "Match": "info",

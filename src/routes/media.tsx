@@ -10,8 +10,9 @@ import {
   canDeleteAsset, canEditAsset, RATING_TAG_OPTIONS,
   type MediaAsset, type MediaKind, type MediaFilters,
 } from "@/lib/media-store";
+import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/media")({ component: MediaPage });
+export const Route = createFileRoute("/media")({ component: withPermission(MediaPage, "media.view") });
 
 const KIND_ICON: Record<MediaKind, typeof Video> = { video: Video, pdf: FileText, image: ImageIcon, audio: Mic };
 const KINDS = ["all", "video", "pdf", "image", "audio"] as const;

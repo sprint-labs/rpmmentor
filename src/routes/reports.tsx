@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { FileText, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
+import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/reports")({ component: ReportsPage });
+export const Route = createFileRoute("/reports")({ component: withPermission(ReportsPage, "reports.view") });
 
 const TYPES = ["All", "Goalkeeper Development", "Match Report", "Training Report", "Opposition GK", "Recruitment"] as const;
 
