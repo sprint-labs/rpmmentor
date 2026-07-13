@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { X, CheckCircle2, Upload, AlertCircle, Paperclip, Search } from "lucide-react";
 import { goalkeepers, mentors } from "@/lib/mock-data";
 import { useAuth, type SessionUser } from "@/lib/auth";
@@ -8,6 +9,10 @@ import {
   type MediaAsset, type MediaKind,
 } from "@/lib/media-store";
 import { HandwrittenNotesField } from "@/components/handwritten-notes-field";
+import { submitMatchReport } from "@/lib/match-reports/reports.functions";
+import {
+  PILLAR_IDS, PILLAR_LABELS, averageOfScores, type PillarId,
+} from "@/lib/match-reports/schema";
 
 export type WorkflowKind = "interaction" | "report" | "media" | "goalkeeper";
 
