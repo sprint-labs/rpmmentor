@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      match_reports_cache: {
+        Row: {
+          average: number | null
+          change_play: number | null
+          coach: string
+          comments: string | null
+          control_play: number | null
+          created_at: string
+          goalkeeper: string
+          id: string
+          match_date: string | null
+          opponent: string | null
+          physical: number | null
+          protect_air: number | null
+          protect_goal: number | null
+          protect_space: number | null
+          psych: number | null
+          report_id: string
+          row_index: number | null
+          synced_at: string
+          team: string | null
+          updated_at: string
+        }
+        Insert: {
+          average?: number | null
+          change_play?: number | null
+          coach: string
+          comments?: string | null
+          control_play?: number | null
+          created_at?: string
+          goalkeeper: string
+          id?: string
+          match_date?: string | null
+          opponent?: string | null
+          physical?: number | null
+          protect_air?: number | null
+          protect_goal?: number | null
+          protect_space?: number | null
+          psych?: number | null
+          report_id: string
+          row_index?: number | null
+          synced_at?: string
+          team?: string | null
+          updated_at?: string
+        }
+        Update: {
+          average?: number | null
+          change_play?: number | null
+          coach?: string
+          comments?: string | null
+          control_play?: number | null
+          created_at?: string
+          goalkeeper?: string
+          id?: string
+          match_date?: string | null
+          opponent?: string | null
+          physical?: number | null
+          protect_air?: number | null
+          protect_goal?: number | null
+          protect_space?: number | null
+          psych?: number | null
+          report_id?: string
+          row_index?: number | null
+          synced_at?: string
+          team?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           created_at: string
