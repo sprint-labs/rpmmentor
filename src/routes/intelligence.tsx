@@ -3,8 +3,9 @@ import { PageHeader, Card, TierBadge, Pill, Avatar, ProgressBar } from "@/compon
 import { goalkeepers, reports } from "@/lib/mock-data";
 import { useState } from "react";
 import { Video } from "lucide-react";
+import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/intelligence")({ component: IntelligencePage });
+export const Route = createFileRoute("/intelligence")({ component: withPermission(IntelligencePage, "intelligence.view") });
 
 function IntelligencePage() {
   const [q, setQ] = useState("");
