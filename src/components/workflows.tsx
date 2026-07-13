@@ -329,15 +329,21 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     setDraftRestoredFrom(null);
     localVersionRef.current = 0;
     setConflict(null);
+    setSaveStatus("idle");
   };
 
   // Conflict resolution actions.
   const keepMine = () => {
     if (!user || !conflict) return;
     const res = overwriteDraft(user.id, tabIdRef.current, currentSnapshot());
-    localVersionRef.current = res.version;
-    setDraftSavedAt(res.savedAt);
-    setConflict(null);
+    if (res.ok) {
+      localVersionRef.current = res.version;
+      setDraftSavedAt(res.savedAt);
+      setConflict(null);
+      setSaveStatus("saved");
+    } else {
+      setSaveStatus("failed");
+    }
   };
   const useTheirs = () => {
     if (!conflict) return;
@@ -346,6 +352,23 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     setDraftSavedAt(conflict.savedAt);
     setDraftRestoredFrom(conflict.savedAt);
     setConflict(null);
+    setSaveStatus("saved");
+  };
+
+  const retrySave = () => {
+    if (!user) return;
+    setSaveStatus("saving");
+    const res = saveDraft(user.id, tabIdRef.current, localVersionRef.current, currentSnapshot());
+    if (res.ok) {
+      localVersionRef.current = res.version;
+      setDraftSavedAt(res.savedAt);
+      setSaveStatus("saved");
+    } else if ("conflict" in res) {
+      setConflict(res.conflict);
+      setSaveStatus("idle");
+    } else {
+      setSaveStatus("failed");
+    }
   };
 
   const liveAverage = useMemo(() => averageOfScores(scores), [scores]);
