@@ -440,6 +440,44 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         user={user}
       />
 
+      {conflict && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="size-4 mt-0.5 text-amber-500 shrink-0" />
+            <div className="text-xs leading-relaxed">
+              <div className="font-semibold text-foreground">Draft conflict detected</div>
+              <div className="text-muted-foreground mt-0.5">
+                Another tab saved this draft at <strong>{formatDraftTime(conflict.savedAt)}</strong>{" "}
+                (v{conflict.version}). Your unsaved changes here haven't been saved. Choose which version to keep — autosave is paused until you decide.
+              </div>
+              <div className="mt-1 grid grid-cols-2 gap-2 text-[11px]">
+                <div className="rounded border border-border/60 bg-background/60 p-2">
+                  <div className="uppercase tracking-wider text-muted-foreground mb-1">Other tab</div>
+                  <div className="truncate"><span className="text-muted-foreground">GK:</span> {conflict.goalkeeper || "—"}</div>
+                  <div className="truncate"><span className="text-muted-foreground">Opponent:</span> {conflict.opponent || "—"}</div>
+                  <div className="truncate"><span className="text-muted-foreground">Comments:</span> {conflict.comments ? `${conflict.comments.slice(0, 40)}${conflict.comments.length > 40 ? "…" : ""}` : "—"}</div>
+                </div>
+                <div className="rounded border border-border/60 bg-background/60 p-2">
+                  <div className="uppercase tracking-wider text-muted-foreground mb-1">This tab</div>
+                  <div className="truncate"><span className="text-muted-foreground">GK:</span> {goalkeeper || "—"}</div>
+                  <div className="truncate"><span className="text-muted-foreground">Opponent:</span> {opponent || "—"}</div>
+                  <div className="truncate"><span className="text-muted-foreground">Comments:</span> {comments ? `${comments.slice(0, 40)}${comments.length > 40 ? "…" : ""}` : "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-end">
+            <button type="button" onClick={useTheirs}
+              className="h-8 px-3 rounded-md border border-border text-xs">
+              Use other tab's version
+            </button>
+            <button type="button" onClick={keepMine}
+              className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+              Keep this tab's version
+            </button>
+          </div>
+        </div>
+      )}
       {error && <div className="text-xs text-destructive flex items-start gap-1.5"><AlertCircle className="size-3.5 mt-0.5" />{error}</div>}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60">
         <div className="text-[11px] text-muted-foreground flex items-center gap-2 min-h-6">
