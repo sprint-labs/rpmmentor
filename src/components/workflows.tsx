@@ -247,6 +247,9 @@ function ReportForm({ onDone }: { onDone: () => void }) {
       localVersionRef.current = d.version;
       setDraftSavedAt(d.savedAt);
       setDraftRestoredFrom(d.savedAt);
+      setSaveStatus("saved");
+    } else {
+      setSaveStatus("idle");
     }
     setDraftLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
