@@ -17,6 +17,16 @@ import {
   loadDraft, saveDraft, clearDraft, isDraftMeaningful,
 } from "@/lib/match-reports/draft-store";
 
+function formatDraftTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const today = new Date();
+    const sameDay = d.toDateString() === today.toDateString();
+    const t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return sameDay ? t : `${d.toLocaleDateString()} ${t}`;
+  } catch { return iso; }
+}
+
 export type WorkflowKind = "interaction" | "report" | "media" | "goalkeeper";
 
 const TITLES: Record<WorkflowKind, string> = {
