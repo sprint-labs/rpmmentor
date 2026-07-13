@@ -1,0 +1,186 @@
+/**
+ * Match Report server functions.
+ *
+ * Auth note: the app currently uses a client-side mock auth (see
+ * src/lib/auth.tsx + security memory). Real Supabase auth is not yet wired up,
+ * so `requireSupabaseAuth` middleware would reject every call. Until real auth
+ * lands, the client passes an `actor` blob and the server re-checks the role
+ * against a mirrored permission map. Swap for `.middleware([requireSupabaseAuth])`
+ * once mock auth is replaced.
+ */
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import {
+  matchReportSubmitSchema,
+  averageOfScores,
+  computeReportId,
+  rowToMatchReport,
+  formatSheetDate,
+  COLUMN_INDEX,
+  PILLAR_IDS,
+  type MatchReportRow,
+} from "./schema";
+
+type Role = "super_admin" | "admin" | "mentor_manager" | "mentor";
+
+const CAN_SUBMIT: Role[] = ["super_admin", "mentor_manager", "mentor"];
+const CAN_OVERRIDE_COACH: Role[] = ["super_admin", "admin", "mentor_manager"];
+
+const actorSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  role: z.enum(["super_admin", "admin", "mentor_manager", "mentor"]),
+});
+
+// ---------------------------------------------------------------------------
+// listMatchReports
+// ---------------------------------------------------------------------------
+
+export const listMatchReports = createServerFn({ method: "GET" }).handler(async () => {
+  const { readAllRows } = await import("./sheets.server");
+  const { rows, firstDataRow } = await readAllRows();
+  const parsed: MatchReportRow[] = [];
+  rows.forEach((row, i) => {
+    const r = rowToMatchReport(row, firstDataRow + i);
+    if (r) parsed.push(r);
+  });
+  // Newest first (by match_date, missing dates last).
+  parsed.sort((a, b) => {
+    if (!a.match_date && !b.match_date) return 0;
+    if (!a.match_date) return 1;
+    if (!b.match_date) return -1;
+    return a.match_date < b.match_date ? 1 : a.match_date > b.match_date ? -1 : 0;
+  });
+
+  // Best-effort cache upsert. Failures don't block the read.
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (parsed.length) {
+      await supabaseAdmin.from("match_reports_cache").upsert(
+        parsed.map((r) => ({
+          report_id: r.report_id,
+          row_index: r.row_index,
+          goalkeeper: r.goalkeeper,
+          coach: r.coach,
+          team: r.team,
+          opponent: r.opponent,
+          match_date: r.match_date,
+          protect_goal: r.scores.protect_goal,
+          protect_space: r.scores.protect_space,
+          protect_air: r.scores.protect_air,
+          control_play: r.scores.control_play,
+          change_play: r.scores.change_play,
+          psych: r.scores.psych,
+          physical: r.scores.physical,
+          average: r.average,
+          comments: r.comments,
+          synced_at: new Date().toISOString(),
+        })),
+        { onConflict: "report_id" },
+      );
+    }
+  } catch (e) {
+    console.error("[match-reports] cache upsert skipped:", e);
+  }
+
+  return { reports: parsed };
+});
+
+// ---------------------------------------------------------------------------
+// getMatchReport
+// ---------------------------------------------------------------------------
+
+export const getMatchReport = createServerFn({ method: "GET" })
+  .inputValidator((data: { reportId: string }) =>
+    z.object({ reportId: z.string().min(1) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { readAllRows } = await import("./sheets.server");
+    const { rows, firstDataRow } = await readAllRows();
+    for (let i = 0; i < rows.length; i++) {
+      const r = rowToMatchReport(rows[i], firstDataRow + i);
+      if (r && r.report_id === data.reportId) return { report: r };
+    }
+    return { report: null };
+  });
+
+// ---------------------------------------------------------------------------
+// submitMatchReport
+// ---------------------------------------------------------------------------
+
+const submitInput = z.object({
+  actor: actorSchema,
+  payload: matchReportSubmitSchema,
+});
+
+export const submitMatchReport = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => submitInput.parse(data))
+  .handler(async ({ data }) => {
+    const { actor, payload } = data;
+
+    if (!CAN_SUBMIT.includes(actor.role)) {
+      throw new Error("You don't have permission to submit reports.");
+    }
+    // Non-privileged roles cannot override the coach name.
+    if (
+      !CAN_OVERRIDE_COACH.includes(actor.role) &&
+      payload.coach.trim().toLowerCase() !== actor.name.trim().toLowerCase()
+    ) {
+      throw new Error("Only managers/admins can submit on another coach's behalf.");
+    }
+
+    const average = averageOfScores(payload);
+    const { appendRow } = await import("./sheets.server");
+
+    // Column order MUST match COLUMN_INDEX / SHEET_HEADERS.
+    const row = new Array<string | number>(14);
+    row[COLUMN_INDEX.goalkeeper] = payload.goalkeeper;
+    row[COLUMN_INDEX.coach] = payload.coach;
+    row[COLUMN_INDEX.team] = payload.team;
+    row[COLUMN_INDEX.opponent] = payload.opponent;
+    row[COLUMN_INDEX.match_date] = formatSheetDate(payload.match_date);
+    for (const id of PILLAR_IDS) row[COLUMN_INDEX[id]] = payload[id];
+    row[COLUMN_INDEX.average] = average;
+    row[COLUMN_INDEX.comments] = payload.comments ?? "";
+
+    const rowIndex = await appendRow(row);
+
+    const report_id = computeReportId({
+      goalkeeper: payload.goalkeeper,
+      match_date: payload.match_date,
+      opponent: payload.opponent,
+    });
+
+    // Mirror into cache immediately so /reports reflects the new row without a re-read.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("match_reports_cache").upsert(
+        [
+          {
+            report_id,
+            row_index: rowIndex > 0 ? rowIndex : null,
+            goalkeeper: payload.goalkeeper,
+            coach: payload.coach,
+            team: payload.team,
+            opponent: payload.opponent,
+            match_date: payload.match_date,
+            protect_goal: payload.protect_goal,
+            protect_space: payload.protect_space,
+            protect_air: payload.protect_air,
+            control_play: payload.control_play,
+            change_play: payload.change_play,
+            psych: payload.psych,
+            physical: payload.physical,
+            average,
+            comments: payload.comments ?? "",
+            synced_at: new Date().toISOString(),
+          },
+        ],
+        { onConflict: "report_id" },
+      );
+    } catch (e) {
+      console.error("[match-reports] cache mirror on submit failed:", e);
+    }
+
+    return { report_id, row_index: rowIndex, average };
+  });
