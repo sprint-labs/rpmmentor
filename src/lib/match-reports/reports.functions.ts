@@ -102,17 +102,23 @@ export const getMatchReport = createServerFn({ method: "GET" })
 // submitMatchReport
 // ---------------------------------------------------------------------------
 
-const submitInput = z.object({
-  actor: actorSchema,
-  payload: matchReportSubmitSchema,
-});
-
 export const submitMatchReport = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => submitInput.parse(data))
+  .inputValidator((data: unknown) => {
+    const actorSchema = z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      role: z.enum(["super_admin", "admin", "mentor_manager", "mentor"]),
+    });
+    return z
+      .object({ actor: actorSchema, payload: matchReportSubmitSchema })
+      .parse(data);
+  })
   .handler(async ({ data }) => {
+    const CAN_SUBMIT = ["super_admin", "mentor_manager", "mentor"] as const;
+    const CAN_OVERRIDE_COACH = ["super_admin", "admin", "mentor_manager"] as const;
     const { actor, payload } = data;
 
-    if (!CAN_SUBMIT.includes(actor.role)) {
+    if (!(CAN_SUBMIT as readonly string[]).includes(actor.role)) {
       throw new Error("You don't have permission to submit reports.");
     }
     // Non-privileged roles cannot override the coach name.
