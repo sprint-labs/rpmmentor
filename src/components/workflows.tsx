@@ -267,6 +267,9 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         catch (mErr) { console.error("[report] attach media failed:", mErr); }
       }
       window.dispatchEvent(new CustomEvent("rpm:report-submitted"));
+      clearDraft(user.id);
+      setDraftSavedAt(null);
+      setDraftRestoredFrom(null);
       setDone({ report_id: res.report_id, average: res.average });
     } catch (err) {
       // Zod errors from the server come back stringified; surface plainly.
