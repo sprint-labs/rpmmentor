@@ -278,6 +278,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         // No local divergence — silently fast-forward.
         localVersionRef.current = remote.version;
         setDraftSavedAt(remote.savedAt);
+        setSaveStatus("saved");
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
