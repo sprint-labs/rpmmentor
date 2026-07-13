@@ -14,7 +14,9 @@ import {
   PILLAR_IDS, PILLAR_LABELS, averageOfScores, type PillarId,
 } from "@/lib/match-reports/schema";
 import {
-  loadDraft, saveDraft, clearDraft, isDraftMeaningful,
+  loadDraft, saveDraft, overwriteDraft, clearDraft, isDraftMeaningful,
+  subscribeDraftChanges, newTabId,
+  type ReportDraft, type ReportDraftSnapshot,
 } from "@/lib/match-reports/draft-store";
 
 function formatDraftTime(iso: string): string {
