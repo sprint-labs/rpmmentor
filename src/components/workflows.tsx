@@ -165,7 +165,65 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     if (!canOverrideCoach && user?.name) setCoach(user.name);
   }, [canOverrideCoach, user?.name]);
 
-  const liveAverage = useMemo(() => averageOfScores(scores), [scores]);
+  // ---------------- Draft persistence (localStorage, 5s debounce) ----------------
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [draftRestoredFrom, setDraftRestoredFrom] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore on mount.
+  useEffect(() => {
+    if (!user) return;
+    const d = loadDraft(user.id);
+    if (d) {
+      setGoalkeeper(d.goalkeeper);
+      if (canOverrideCoach) setCoach(d.coach);
+      setTeam(d.team);
+      setOpponent(d.opponent);
+      if (d.matchDate) setMatchDate(d.matchDate);
+      setScores(d.scores);
+      setComments(d.comments);
+      setSelectedMedia(d.selectedMedia);
+      setDraftSavedAt(d.savedAt);
+      setDraftRestoredFrom(d.savedAt);
+    }
+    setDraftLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Autosave (debounced 5s) whenever a tracked field changes.
+  useEffect(() => {
+    if (!user || !draftLoaded || done) return;
+    const snapshot = {
+      goalkeeper, coach, team, opponent, matchDate,
+      scores, comments, selectedMedia,
+    };
+    if (!isDraftMeaningful(snapshot)) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const savedAt = saveDraft(user.id, snapshot);
+      setDraftSavedAt(savedAt);
+    }, 5000);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [user, draftLoaded, done, goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia]);
+
+  const discardDraft = () => {
+    if (!user) return;
+    clearDraft(user.id);
+    setGoalkeeper("");
+    if (canOverrideCoach) setCoach(user.name);
+    setTeam("");
+    setOpponent("");
+    setMatchDate(new Date().toISOString().slice(0, 10));
+    setScores({
+      protect_goal: 3, protect_space: 3, protect_air: 3,
+      control_play: 3, change_play: 3, psych: 3, physical: 3,
+    });
+    setComments("");
+    setSelectedMedia([]);
+    setDraftSavedAt(null);
+    setDraftRestoredFrom(null);
+  };
 
   if (done) {
     return (
