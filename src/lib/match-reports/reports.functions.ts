@@ -123,7 +123,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     }
     // Non-privileged roles cannot override the coach name.
     if (
-      !CAN_OVERRIDE_COACH.includes(actor.role) &&
+      !(CAN_OVERRIDE_COACH as readonly string[]).includes(actor.role) &&
       payload.coach.trim().toLowerCase() !== actor.name.trim().toLowerCase()
     ) {
       throw new Error("Only managers/admins can submit on another coach's behalf.");
