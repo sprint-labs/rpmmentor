@@ -29,6 +29,41 @@ function formatDraftTime(iso: string): string {
   } catch { return iso; }
 }
 
+function DraftStatusIndicator({
+  status,
+  savedAt,
+  onRetry,
+}: {
+  status: "idle" | "saving" | "saved" | "failed";
+  savedAt: string | null;
+  onRetry: () => void;
+}) {
+  if (status === "saving") {
+    return (
+      <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <Loader2 className="size-3 animate-spin" /> Saving…
+      </span>
+    );
+  }
+  if (status === "saved") {
+    return (
+      <span className="inline-flex items-center gap-1 text-green-600">
+        <CheckCircle2 className="size-3" /> Saved
+        {savedAt && <span className="text-muted-foreground">· {formatDraftTime(savedAt)}</span>}
+      </span>
+    );
+  }
+  if (status === "failed") {
+    return (
+      <span className="inline-flex items-center gap-1 text-destructive">
+        <AlertCircle className="size-3" /> Failed to save
+        <button type="button" onClick={onRetry} className="underline hover:text-destructive/80 ml-1">Retry</button>
+      </span>
+    );
+  }
+  return <span className="opacity-60 text-muted-foreground">Autosaves every 5s</span>;
+}
+
 export type WorkflowKind = "interaction" | "report" | "media" | "goalkeeper";
 
 const TITLES: Record<WorkflowKind, string> = {
