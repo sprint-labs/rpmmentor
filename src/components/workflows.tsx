@@ -288,18 +288,27 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (!user || !draftLoaded || done || conflict) return;
     const snapshot = currentSnapshot();
-    if (!isDraftMeaningful(snapshot)) return;
+    if (!isDraftMeaningful(snapshot)) {
+      if (saveStatus !== "idle") setSaveStatus("idle");
+      return;
+    }
+    setSaveStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       const res = saveDraft(user.id, tabIdRef.current, localVersionRef.current, snapshot);
       if (res.ok) {
         localVersionRef.current = res.version;
         setDraftSavedAt(res.savedAt);
-      } else {
+        setSaveStatus("saved");
+      } else if ("conflict" in res) {
         setConflict(res.conflict);
+        setSaveStatus("idle");
+      } else {
+        setSaveStatus("failed");
       }
     }, 5000);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, draftLoaded, done, conflict, goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia]);
 
   const discardDraft = () => {
