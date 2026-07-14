@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const InputSchema = z.object({
   // data URL: "data:image/jpeg;base64,...."
@@ -24,6 +25,7 @@ Your job:
 - If the image clearly contains no handwriting, reply with exactly: NO_HANDWRITING_DETECTED`;
 
 export const transcribeNotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => InputSchema.parse(data))
   .handler(async ({ data }) => {
     const apiKey = process.env.LOVABLE_API_KEY;

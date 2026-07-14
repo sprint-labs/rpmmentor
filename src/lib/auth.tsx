@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 export type Role = "super_admin" | "admin" | "mentor_manager" | "mentor";
 
@@ -9,15 +11,14 @@ export interface SessionUser {
   role: Role;
   initials: string;
   title: string;
-  mentorId?: string; // links to mock-data mentor
+  mentorId?: string;
 }
 
+// Reference directory of known team members (for name/initials lookups in the UI only).
+// Login and role assignment go through Supabase Auth + the user_roles table — not this list.
 export const DEMO_USERS: SessionUser[] = [
-  // Platform / leadership
   { id: "u-luke", name: "Luke Corrigan", email: "lcorrigan@gkhq.app", role: "super_admin", initials: "LC", title: "System Admin / Product Owner" },
   { id: "u-rich", name: "Rich Lee", email: "rlee@gkhq.app", role: "admin", initials: "RL", title: "Co-Founder & Director", mentorId: "m-rich-lee" },
-
-  // Mentor team (collaborative — no per-goalkeeper assignment)
   { id: "u-drouse", name: "David Rouse", email: "drouse@gkhq.app", role: "mentor_manager", initials: "DR", title: "Managing Director & Mentor", mentorId: "m-david-rouse" },
   { id: "u-dwatson", name: "Dave Watson", email: "dwatson@gkhq.app", role: "mentor", initials: "DW", title: "Goalkeeper Mentor", mentorId: "m-dave-watson" },
   { id: "u-amarshall", name: "Andy Marshall", email: "amarshall@gkhq.app", role: "mentor", initials: "AM", title: "Goalkeeper Mentor", mentorId: "m-andy-marshall" },
@@ -26,18 +27,10 @@ export const DEMO_USERS: SessionUser[] = [
   { id: "u-mmargetson", name: "Martyn Margetson", email: "mmargetson@gkhq.app", role: "mentor", initials: "MM", title: "Goalkeeper Mentor", mentorId: "m-martyn-margetson" },
   { id: "u-mmiddelbeek", name: "Martijn Middelbeek", email: "mmiddelbeek@gkhq.app", role: "mentor", initials: "MM", title: "Goalkeeper Mentor", mentorId: "m-martijn-middelbeek" },
   { id: "u-mbeadle", name: "Matt Beadle", email: "mbeadle@gkhq.app", role: "mentor", initials: "MB", title: "Goalkeeper Mentor", mentorId: "m-matt-beadle" },
-
-  // Generic role-test accounts (for QA — sign in with any password)
-  { id: "u-test-super", name: "Super Admin (Test)", email: "superadmin@gkhq.app", role: "super_admin", initials: "SA", title: "Test — Super Admin" },
-  { id: "u-test-admin", name: "Admin (Test)", email: "admin@gkhq.app", role: "admin", initials: "AD", title: "Test — Admin" },
-  { id: "u-test-mm", name: "Mentor Manager (Test)", email: "mentormanager@gkhq.app", role: "mentor_manager", initials: "MM", title: "Test — Mentor Manager" },
-  { id: "u-test-mentor", name: "Mentor (Test)", email: "mentor@gkhq.app", role: "mentor", initials: "ME", title: "Test — Mentor", mentorId: "m-dave-watson" },
 ];
 
-// Permission catalogue — kept intentionally coarse. Prefer role checks at route/nav
-// level via `can()` so the map here is the single place to adjust access.
 export type Permission =
-  | "system.manage"        // user/role management, imports, destructive system actions, diagnostics
+  | "system.manage"
   | "goalkeepers.view"
   | "goalkeepers.edit"
   | "goalkeepers.create"
@@ -46,7 +39,7 @@ export type Permission =
   | "interactions.log"
   | "reports.view"
   | "reports.submit"
-  | "reports.manage"       // review / edit mentor-submitted reports
+  | "reports.manage"
   | "media.view"
   | "media.upload"
   | "media.edit"
@@ -99,56 +92,128 @@ const MATRIX: Record<Role, Permission[]> = {
 
 interface AuthState {
   user: SessionUser | null;
-  signIn: (id: string) => void;
-  signInByEmail: (email: string) => SessionUser | null;
-  signOut: () => void;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  signOut: () => Promise<void>;
   can: (p: Permission) => boolean;
 }
 
 const Ctx = createContext<AuthState | null>(null);
-const KEY = "rpm.session.v1";
+
+interface ProfileRow {
+  id: string;
+  email: string;
+  name: string;
+  initials: string;
+  title: string;
+  mentor_id: string | null;
+}
+
+async function loadSessionUser(session: Session | null): Promise<SessionUser | null> {
+  if (!session?.user) return null;
+  const uid = session.user.id;
+
+  // Role is fetched from the database, not client state. The user_roles RLS
+  // policy restricts each row to its owner (auth.uid() = user_id).
+  const [{ data: roles }, { data: profile }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", uid),
+    supabase.from("profiles").select("id,email,name,initials,title,mentor_id").eq("id", uid).maybeSingle<ProfileRow>(),
+  ]);
+
+  const roleValues = (roles ?? []).map((r) => r.role as Role);
+  const role: Role =
+    roleValues.includes("super_admin") ? "super_admin" :
+    roleValues.includes("admin") ? "admin" :
+    roleValues.includes("mentor_manager") ? "mentor_manager" :
+    "mentor";
+
+  const email = profile?.email ?? session.user.email ?? "";
+  const fallbackName = email.split("@")[0] ?? "User";
+  const name = profile?.name || fallbackName;
+  const initials = profile?.initials || name.slice(0, 2).toUpperCase();
+
+  return {
+    id: uid,
+    email,
+    name,
+    initials,
+    title: profile?.title ?? "",
+    role,
+    mentorId: profile?.mentor_id ?? undefined,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? window.localStorage.getItem(KEY) : null;
-      if (raw) {
-        const u = DEMO_USERS.find((x) => x.id === raw);
-        if (u) setUser(u);
-      }
-    } catch {}
-    setHydrated(true);
+    let cancelled = false;
+
+    // Subscribe first, then hydrate — avoids missed events.
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      // Defer async work to avoid deadlocking the auth callback.
+      setTimeout(() => {
+        if (cancelled) return;
+        loadSessionUser(session).then((u) => { if (!cancelled) setUser(u); });
+      }, 0);
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      loadSessionUser(data.session).then((u) => {
+        if (cancelled) return;
+        setUser(u);
+        setLoading(false);
+        setHydrated(true);
+      });
+    }).catch(() => {
+      if (cancelled) return;
+      setLoading(false);
+      setHydrated(true);
+    });
+
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
-  const signIn = (id: string) => {
-    const u = DEMO_USERS.find((x) => x.id === id);
-    if (!u) return;
-    setUser(u);
-    try { window.localStorage.setItem(KEY, u.id); } catch {}
+  const signIn: AuthState["signIn"] = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
   };
-  const signInByEmail = (email: string) => {
-    const normalized = email.trim().toLowerCase();
-    const u = DEMO_USERS.find((x) => x.email.toLowerCase() === normalized);
-    if (!u) return null;
-    setUser(u);
-    try { window.localStorage.setItem(KEY, u.id); } catch {}
-    return u;
+
+  const signUp: AuthState["signUp"] = async (email, password, name) => {
+    const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/` : undefined;
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo,
+        data: {
+          name,
+          initials: name.slice(0, 2).toUpperCase(),
+        },
+      },
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
   };
-  const signOut = () => {
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    try { window.localStorage.removeItem(KEY); } catch {}
   };
+
   const can = (p: Permission) => !!user && MATRIX[user.role].includes(p);
 
-  // Avoid SSR/client flash mismatch
-  if (!hydrated) {
-    return <div className="min-h-screen bg-background" />;
-  }
+  if (!hydrated) return <div className="min-h-screen bg-background" />;
 
-  return <Ctx.Provider value={{ user, signIn, signInByEmail, signOut, can }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ user, loading, signIn, signUp, signOut, can }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAuth() {
