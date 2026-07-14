@@ -356,6 +356,35 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     setConflict(null);
     setSaveStatus("saved");
   };
+  const applyMerge = () => {
+    if (!user || !conflict) return;
+    const mine = currentSnapshot();
+    const merged: ReportDraftSnapshot = { ...mine, scores: { ...mine.scores }, selectedMedia: [...mine.selectedMedia] };
+    for (const [key, side] of Object.entries(mergeSelections)) {
+      if (side !== "theirs") continue;
+      if (key.startsWith("score.")) {
+        const pid = key.slice(6) as PillarId;
+        if (conflict.scores?.[pid] != null) merged.scores[pid] = conflict.scores[pid];
+      } else if (key === "goalkeeper") merged.goalkeeper = conflict.goalkeeper;
+      else if (key === "coach") merged.coach = conflict.coach;
+      else if (key === "team") merged.team = conflict.team;
+      else if (key === "opponent") merged.opponent = conflict.opponent;
+      else if (key === "matchDate") merged.matchDate = conflict.matchDate;
+      else if (key === "comments") merged.comments = conflict.comments;
+      else if (key === "media") merged.selectedMedia = [...(conflict.selectedMedia ?? [])];
+    }
+    applySnapshot(merged);
+    const res = overwriteDraft(user.id, tabIdRef.current, merged);
+    if (res.ok) {
+      localVersionRef.current = res.version;
+      setDraftSavedAt(res.savedAt);
+      setDraftRestoredFrom(res.savedAt);
+      setConflict(null);
+      setSaveStatus("saved");
+    } else {
+      setSaveStatus("failed");
+    }
+  };
 
   const retrySave = () => {
     if (!user) return;
