@@ -22,14 +22,6 @@ function precedence(roles: string[]): ManagedRole | null {
   return null;
 }
 
-async function assertSuperAdmin(
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth.server>>["context"]["supabase"] extends infer T ? T : never,
-  userId: string,
-) {
-  // Fallback typing — just use the shape.
-  void supabase;
-  void userId;
-}
 
 export const listManagedUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
