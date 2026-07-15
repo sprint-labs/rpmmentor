@@ -508,7 +508,14 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         if (cancelled) return;
         setMediaTitles((prev) => {
           const next = { ...prev };
-          for (const a of assets) next[a.id] = { title: a.title, kind: a.media_type };
+          for (const a of assets) next[a.id] = {
+            title: a.title,
+            kind: a.media_type,
+            thumbnailPath: a.thumbnail_path,
+            filePath: a.file_path,
+            mimeType: a.mime_type,
+            fileSize: a.file_size,
+          };
           return next;
         });
       })
