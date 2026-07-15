@@ -4,13 +4,22 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+function safeNext(raw: unknown): string {
+  if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
+
+export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) }),
+  component: LoginPage,
+});
 
 type View = "signin" | "signup" | "forgot" | "sent";
 
 function LoginPage() {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [view, setView] = useState<View>("signin");
 
   const [email, setEmail] = useState("");
@@ -25,8 +34,8 @@ function LoginPage() {
   const [sentTo, setSentTo] = useState("");
 
   useEffect(() => {
-    if (user) navigate({ to: "/", replace: true });
-  }, [user, navigate]);
+    if (user) navigate({ to: next, replace: true });
+  }, [user, navigate, next]);
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
