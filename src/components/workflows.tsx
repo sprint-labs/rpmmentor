@@ -722,11 +722,6 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                         const dimCell = "opacity-50";
                         const mineActive = state === "rejected" || !state;
                         const theirsActive = state === "accepted" || !state;
-                        const kindGlyph = (k?: MediaKind) => k === "video" ? "🎬" : k === "pdf" ? "📄" : k === "image" ? "🖼️" : k === "audio" ? "🔊" : "📎";
-                        const chipLabel = (id: string) => {
-                          const m = mediaTitles[id];
-                          return m ? `${kindGlyph(m.kind)} ${m.title}` : `📎 …${id.slice(-6)}`;
-                        };
                         const md = r.mediaDiff;
                         const bothSides = md && md.added.length > 0 && md.removed.length > 0;
                         return (
@@ -750,16 +745,10 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                                     <span className="text-muted-foreground italic">nothing attached</span>
                                   )}
                                   {md.removed.map((id) => (
-                                    <span key={id} title="Only in this tab — will be removed if you accept remote"
-                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 line-through decoration-rose-500/60 text-[11px]">
-                                      {chipLabel(id)}
-                                    </span>
+                                    <MediaChipPreview key={id} id={id} info={mediaTitles[id]} tone="removed" />
                                   ))}
                                   {md.kept.map((id) => (
-                                    <span key={id} title="In both drafts"
-                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-background text-foreground/70 border border-border text-[11px]">
-                                      {chipLabel(id)}
-                                    </span>
+                                    <MediaChipPreview key={id} id={id} info={mediaTitles[id]} tone="kept" />
                                   ))}
                                 </div>
                               ) : (
@@ -773,16 +762,10 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                                     <span className="text-muted-foreground italic">nothing attached</span>
                                   )}
                                   {md.added.map((id) => (
-                                    <span key={id} title="Only in other tab — will be added if you accept remote"
-                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[11px]">
-                                      <span className="font-semibold">+</span>{chipLabel(id)}
-                                    </span>
+                                    <MediaChipPreview key={id} id={id} info={mediaTitles[id]} tone="added" />
                                   ))}
                                   {md.kept.map((id) => (
-                                    <span key={id} title="In both drafts"
-                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-background text-foreground/70 border border-border text-[11px]">
-                                      {chipLabel(id)}
-                                    </span>
+                                    <MediaChipPreview key={id} id={id} info={mediaTitles[id]} tone="kept" />
                                   ))}
                                 </div>
                               ) : (
