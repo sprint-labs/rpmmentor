@@ -108,7 +108,9 @@ interface AuthState {
   signUp: (email: string, password: string, name: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   signOut: () => Promise<void>;
   can: (p: Permission) => boolean;
+  setViewAsRole: (role: Role | null) => void;
 }
+
 
 const Ctx = createContext<AuthState | null>(null);
 
