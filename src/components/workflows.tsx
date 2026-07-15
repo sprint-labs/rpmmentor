@@ -489,6 +489,28 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolutions, conflict]);
 
+  // Fetch titles/kinds for any media IDs involved in the conflict so the diff
+  // panel can show human-readable chips instead of raw counts.
+  useEffect(() => {
+    if (!conflict) return;
+    const mineIds = preConflictLocalRef.current?.selectedMedia ?? selectedMedia;
+    const union = Array.from(new Set([...mineIds, ...(conflict.selectedMedia ?? [])]));
+    const missing = union.filter((id) => !mediaTitles[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    getMediaByIds(missing)
+      .then((assets) => {
+        if (cancelled) return;
+        setMediaTitles((prev) => {
+          const next = { ...prev };
+          for (const a of assets) next[a.id] = { title: a.title, kind: a.media_type };
+          return next;
+        });
+      })
+      .catch(() => { /* leave IDs; render fallback */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conflict]);
 
 
   const retrySave = () => {
