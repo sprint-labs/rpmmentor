@@ -1,15 +1,13 @@
 /**
  * Match Report server functions.
  *
- * Auth note: the app currently uses a client-side mock auth (see
- * src/lib/auth.tsx + security memory). Real Supabase auth is not yet wired up,
- * so `requireSupabaseAuth` middleware would reject every call. Until real auth
- * lands, the client passes an `actor` blob and the server re-checks the role
- * against a mirrored permission map. Swap for `.middleware([requireSupabaseAuth])`
- * once mock auth is replaced.
+ * All handlers require an authenticated Supabase session. The caller's role
+ * and display name are looked up from the database (`user_roles`, `profiles`)
+ * — never trusted from client input.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   matchReportSubmitSchema,
   averageOfScores,
@@ -30,7 +28,10 @@ import {
 // listMatchReports
 // ---------------------------------------------------------------------------
 
-export const listMatchReports = createServerFn({ method: "GET" }).handler(async () => {
+export const listMatchReports = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+
   const { readAllRows } = await import("./sheets.server");
   const { rows, firstDataRow } = await readAllRows();
   const parsed: MatchReportRow[] = [];
