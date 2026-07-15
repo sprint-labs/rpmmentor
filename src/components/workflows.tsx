@@ -566,7 +566,6 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     try {
       const res = await submitFn({
         data: {
-          actor: { id: user.id, name: user.name, role: user.role },
           payload: {
             goalkeeper: goalkeeper.trim(),
             coach: coach.trim(),
@@ -578,6 +577,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
           },
         },
       });
+
 
       // Attach any media picked while composing.
       if (selectedMedia.length) {
