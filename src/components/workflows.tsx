@@ -30,6 +30,15 @@ function formatDraftTime(iso: string): string {
   } catch { return iso; }
 }
 
+type MediaChipInfo = {
+  title: string;
+  kind: MediaKind;
+  thumbnailPath: string | null;
+  filePath: string;
+  mimeType: string | null;
+  fileSize: number | null;
+};
+
 function DraftStatusIndicator({
   status,
   savedAt,
