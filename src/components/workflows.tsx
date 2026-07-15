@@ -5,7 +5,7 @@ import { goalkeepers, mentors } from "@/lib/mock-data";
 import { useAuth, type SessionUser } from "@/lib/auth";
 import {
   ACCEPT_BY_KIND, MAX_FILE_BYTES, detectKind, formatBytes, uploadMedia,
-  updateMedia, listMedia, attachMediaToReport, RATING_TAG_OPTIONS,
+  updateMedia, listMedia, attachMediaToReport, getMediaByIds, RATING_TAG_OPTIONS,
   type MediaAsset, type MediaKind,
 } from "@/lib/media-store";
 import { HandwrittenNotesField } from "@/components/handwritten-notes-field";
