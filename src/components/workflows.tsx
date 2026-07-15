@@ -406,10 +406,6 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     const removed = mineIds.filter((id) => !theirSet.has(id));
     const kept = mineIds.filter((id) => theirSet.has(id));
     if (added.length || removed.length) {
-      const parts: string[] = [];
-      if (added.length) parts.push(`+${added.length} added`);
-      if (removed.length) parts.push(`−${removed.length} removed`);
-      const summary = parts.join(", ");
       rows.push({
         key: "media",
         label: "Media attachments",
@@ -417,7 +413,6 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         theirs: theirIds.length ? `${theirIds.length} attached` : "—",
         mediaDiff: { added, removed, kept },
       });
-      void summary; // (used in rendering via mediaDiff)
     }
     return rows;
   };
