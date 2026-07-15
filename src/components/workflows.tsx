@@ -369,14 +369,16 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     }
   }, [conflict]);
 
-  const computeDiffRows = (mine: ReportDraftSnapshot, other: ReportDraft) => {
+  type MediaDiff = { added: string[]; removed: string[]; kept: string[] };
+  type Row = { key: string; label: string; mine: string; theirs: string; mediaDiff?: MediaDiff };
+
+  const computeDiffRows = (mine: ReportDraftSnapshot, other: ReportDraft): Row[] => {
     const fmt = (v: unknown): string => {
       if (v == null || v === "") return "—";
       if (Array.isArray(v)) return v.length ? `${v.length} item${v.length === 1 ? "" : "s"}` : "—";
       return String(v);
     };
     const truncate = (s: string, n = 60) => s.length > n ? `${s.slice(0, n)}…` : s;
-    type Row = { key: string; label: string; mine: string; theirs: string };
     const rows: Row[] = [];
     const push = (key: string, label: string, m: unknown, t: unknown) => {
       const ms = fmt(m); const ts = fmt(t);
@@ -395,12 +397,26 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         mine: mine.comments ? truncate(mine.comments) : "—",
         theirs: other.comments ? truncate(other.comments) : "—" });
     }
-    const mineMedia = [...mine.selectedMedia].sort().join("|");
-    const theirMedia = [...(other.selectedMedia ?? [])].sort().join("|");
-    if (mineMedia !== theirMedia) {
-      rows.push({ key: "media", label: "Media attachments",
-        mine: mine.selectedMedia.length ? `${mine.selectedMedia.length} attached` : "—",
-        theirs: other.selectedMedia?.length ? `${other.selectedMedia.length} attached` : "—" });
+    const mineIds = mine.selectedMedia ?? [];
+    const theirIds = other.selectedMedia ?? [];
+    const mineSet = new Set(mineIds);
+    const theirSet = new Set(theirIds);
+    const added = theirIds.filter((id) => !mineSet.has(id));
+    const removed = mineIds.filter((id) => !theirSet.has(id));
+    const kept = mineIds.filter((id) => theirSet.has(id));
+    if (added.length || removed.length) {
+      const parts: string[] = [];
+      if (added.length) parts.push(`+${added.length} added`);
+      if (removed.length) parts.push(`−${removed.length} removed`);
+      const summary = parts.join(", ");
+      rows.push({
+        key: "media",
+        label: "Media attachments",
+        mine: mineIds.length ? `${mineIds.length} attached` : "—",
+        theirs: theirIds.length ? `${theirIds.length} attached` : "—",
+        mediaDiff: { added, removed, kept },
+      });
+      void summary; // (used in rendering via mediaDiff)
     }
     return rows;
   };
