@@ -516,6 +516,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
             filePath: a.file_path,
             mimeType: a.mime_type,
             fileSize: a.file_size,
+            createdAt: a.created_at,
           };
           return next;
         });
