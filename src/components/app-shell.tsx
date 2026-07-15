@@ -76,9 +76,9 @@ export function AppShell() {
                 key={n.to}
                 to={n.to as never}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                  "flex items-center gap-2.5 px-3 py-1.5 rounded-[6px] text-[12.5px] font-semibold uppercase tracking-[0.05em] transition-colors",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
