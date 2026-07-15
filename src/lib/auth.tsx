@@ -226,14 +226,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const can = (p: Permission) => !!user && MATRIX[user.role].includes(p);
 
+  const setViewAsRole: AuthState["setViewAsRole"] = (role) => {
+    if (typeof window === "undefined") return;
+    try {
+      if (role) window.localStorage.setItem(VIEW_AS_KEY, role);
+      else window.localStorage.removeItem(VIEW_AS_KEY);
+    } catch { /* ignore */ }
+    setUser((u) => {
+      if (!u || !u.actualRole) return u;
+      const next: Role = u.actualRole === "super_admin" && role ? role : u.actualRole;
+      return { ...u, role: next };
+    });
+  };
+
   if (!hydrated) return <div className="min-h-screen bg-background" />;
 
   return (
-    <Ctx.Provider value={{ user, loading, signIn, signUp, signOut, can }}>
+    <Ctx.Provider value={{ user, loading, signIn, signUp, signOut, can, setViewAsRole }}>
       {children}
     </Ctx.Provider>
   );
 }
+
 
 export function useAuth() {
   const v = useContext(Ctx);
