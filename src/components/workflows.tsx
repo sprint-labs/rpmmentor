@@ -5,7 +5,7 @@ import { goalkeepers, mentors } from "@/lib/mock-data";
 import { useAuth, type SessionUser } from "@/lib/auth";
 import {
   ACCEPT_BY_KIND, MAX_FILE_BYTES, detectKind, formatBytes, uploadMedia,
-  updateMedia, listMedia, attachMediaToReport, RATING_TAG_OPTIONS,
+  updateMedia, listMedia, attachMediaToReport, getMediaByIds, RATING_TAG_OPTIONS,
   type MediaAsset, type MediaKind,
 } from "@/lib/media-store";
 import { HandwrittenNotesField } from "@/components/handwritten-notes-field";
@@ -222,6 +222,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   const [conflict, setConflict] = useState<ReportDraft | null>(null);
   const [resolutions, setResolutions] = useState<Record<string, "accepted" | "rejected">>({});
   const preConflictLocalRef = useRef<ReportDraftSnapshot | null>(null);
+  const [mediaTitles, setMediaTitles] = useState<Record<string, { title: string; kind: MediaKind }>>({});
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -369,14 +370,16 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     }
   }, [conflict]);
 
-  const computeDiffRows = (mine: ReportDraftSnapshot, other: ReportDraft) => {
+  type MediaDiff = { added: string[]; removed: string[]; kept: string[] };
+  type Row = { key: string; label: string; mine: string; theirs: string; mediaDiff?: MediaDiff };
+
+  const computeDiffRows = (mine: ReportDraftSnapshot, other: ReportDraft): Row[] => {
     const fmt = (v: unknown): string => {
       if (v == null || v === "") return "—";
       if (Array.isArray(v)) return v.length ? `${v.length} item${v.length === 1 ? "" : "s"}` : "—";
       return String(v);
     };
     const truncate = (s: string, n = 60) => s.length > n ? `${s.slice(0, n)}…` : s;
-    type Row = { key: string; label: string; mine: string; theirs: string };
     const rows: Row[] = [];
     const push = (key: string, label: string, m: unknown, t: unknown) => {
       const ms = fmt(m); const ts = fmt(t);
@@ -395,12 +398,21 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         mine: mine.comments ? truncate(mine.comments) : "—",
         theirs: other.comments ? truncate(other.comments) : "—" });
     }
-    const mineMedia = [...mine.selectedMedia].sort().join("|");
-    const theirMedia = [...(other.selectedMedia ?? [])].sort().join("|");
-    if (mineMedia !== theirMedia) {
-      rows.push({ key: "media", label: "Media attachments",
-        mine: mine.selectedMedia.length ? `${mine.selectedMedia.length} attached` : "—",
-        theirs: other.selectedMedia?.length ? `${other.selectedMedia.length} attached` : "—" });
+    const mineIds = mine.selectedMedia ?? [];
+    const theirIds = other.selectedMedia ?? [];
+    const mineSet = new Set(mineIds);
+    const theirSet = new Set(theirIds);
+    const added = theirIds.filter((id) => !mineSet.has(id));
+    const removed = mineIds.filter((id) => !theirSet.has(id));
+    const kept = mineIds.filter((id) => theirSet.has(id));
+    if (added.length || removed.length) {
+      rows.push({
+        key: "media",
+        label: "Media attachments",
+        mine: mineIds.length ? `${mineIds.length} attached` : "—",
+        theirs: theirIds.length ? `${theirIds.length} attached` : "—",
+        mediaDiff: { added, removed, kept },
+      });
     }
     return rows;
   };
@@ -472,6 +484,28 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolutions, conflict]);
 
+  // Fetch titles/kinds for any media IDs involved in the conflict so the diff
+  // panel can show human-readable chips instead of raw counts.
+  useEffect(() => {
+    if (!conflict) return;
+    const mineIds = preConflictLocalRef.current?.selectedMedia ?? selectedMedia;
+    const union = Array.from(new Set([...mineIds, ...(conflict.selectedMedia ?? [])]));
+    const missing = union.filter((id) => !mediaTitles[id]);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    getMediaByIds(missing)
+      .then((assets) => {
+        if (cancelled) return;
+        setMediaTitles((prev) => {
+          const next = { ...prev };
+          for (const a of assets) next[a.id] = { title: a.title, kind: a.media_type };
+          return next;
+        });
+      })
+      .catch(() => { /* leave IDs; render fallback */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conflict]);
 
 
   const retrySave = () => {
@@ -671,14 +705,72 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                         const dimCell = "opacity-50";
                         const mineActive = state === "rejected" || !state;
                         const theirsActive = state === "accepted" || !state;
+                        const kindGlyph = (k?: MediaKind) => k === "video" ? "🎬" : k === "pdf" ? "📄" : k === "image" ? "🖼️" : k === "audio" ? "🔊" : "📎";
+                        const chipLabel = (id: string) => {
+                          const m = mediaTitles[id];
+                          return m ? `${kindGlyph(m.kind)} ${m.title}` : `📎 …${id.slice(-6)}`;
+                        };
+                        const md = r.mediaDiff;
+                        const bothSides = md && md.added.length > 0 && md.removed.length > 0;
                         return (
                           <Fragment key={r.key}>
-                            <div className="px-2 py-1 border-t border-border/60 text-foreground/80 truncate">{r.label}</div>
+                            <div className="px-2 py-1 border-t border-border/60 text-foreground/80 truncate">
+                              {r.label}
+                              {md && (
+                                <div className="text-[10px] font-normal text-muted-foreground normal-case tracking-normal mt-0.5">
+                                  {bothSides ? "replaced · " : ""}
+                                  {md.added.length > 0 && <span className="text-emerald-600 dark:text-emerald-400">+{md.added.length}</span>}
+                                  {md.added.length > 0 && md.removed.length > 0 && " / "}
+                                  {md.removed.length > 0 && <span className="text-rose-600 dark:text-rose-400">−{md.removed.length}</span>}
+                                  {md.kept.length > 0 && <span className="text-muted-foreground"> · {md.kept.length} kept</span>}
+                                </div>
+                              )}
+                            </div>
                             <div className={`${cellBase} ${mineActive ? activeCell : dimCell}`}>
-                              <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.mine}</span>
+                              {md ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {md.removed.length === 0 && md.kept.length === 0 && (
+                                    <span className="text-muted-foreground italic">nothing attached</span>
+                                  )}
+                                  {md.removed.map((id) => (
+                                    <span key={id} title="Only in this tab — will be removed if you accept remote"
+                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 line-through decoration-rose-500/60 text-[11px]">
+                                      {chipLabel(id)}
+                                    </span>
+                                  ))}
+                                  {md.kept.map((id) => (
+                                    <span key={id} title="In both drafts"
+                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-background text-foreground/70 border border-border text-[11px]">
+                                      {chipLabel(id)}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.mine}</span>
+                              )}
                             </div>
                             <div className={`${cellBase} ${theirsActive ? activeCell : dimCell}`}>
-                              <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.theirs}</span>
+                              {md ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {md.added.length === 0 && md.kept.length === 0 && (
+                                    <span className="text-muted-foreground italic">nothing attached</span>
+                                  )}
+                                  {md.added.map((id) => (
+                                    <span key={id} title="Only in other tab — will be added if you accept remote"
+                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[11px]">
+                                      <span className="font-semibold">+</span>{chipLabel(id)}
+                                    </span>
+                                  ))}
+                                  {md.kept.map((id) => (
+                                    <span key={id} title="In both drafts"
+                                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-background text-foreground/70 border border-border text-[11px]">
+                                      {chipLabel(id)}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.theirs}</span>
+                              )}
                             </div>
                             <div className={`${cellBase} whitespace-nowrap`}>
                               {state ? (
