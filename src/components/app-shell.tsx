@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, Database, FolderOpen, BellRing, Calendar, BarChart3, Search, Plus, LogOut, ChevronDown, ShieldCheck, History, Check, Trash2 } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, Database, FolderOpen, BellRing, Calendar, BarChart3, Search, Plus, LogOut, ChevronDown, ShieldCheck, History, Check, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABEL, type Permission, type Role } from "@/lib/auth";
 import { useEffect, useRef, useState } from "react";
