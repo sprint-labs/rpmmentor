@@ -633,41 +633,11 @@ function ReportForm({ onDone }: { onDone: () => void }) {
       />
 
       {conflict && (() => {
-        const mineSnap = { goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia };
-        const fmt = (v: unknown): string => {
-          if (v == null || v === "") return "—";
-          if (Array.isArray(v)) return v.length ? `${v.length} item${v.length === 1 ? "" : "s"}` : "—";
-          return String(v);
+        const mineSnap: ReportDraftSnapshot = preConflictLocalRef.current ?? {
+          goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia,
         };
-        type Row = { key: string; label: string; mine: string; theirs: string };
-        const rows: Row[] = [];
-        const push = (key: string, label: string, m: unknown, t: unknown) => {
-          const ms = fmt(m); const ts = fmt(t);
-          if (ms !== ts) rows.push({ key, label, mine: ms, theirs: ts });
-        };
-        push("goalkeeper", "Goalkeeper", mineSnap.goalkeeper, conflict.goalkeeper);
-        push("coach", "Coach", mineSnap.coach, conflict.coach);
-        push("team", "Team", mineSnap.team, conflict.team);
-        push("opponent", "Opponent", mineSnap.opponent, conflict.opponent);
-        push("matchDate", "Match date", mineSnap.matchDate, conflict.matchDate);
-        for (const pid of PILLAR_IDS) {
-          push(`score.${pid}`, PILLAR_LABELS[pid], mineSnap.scores[pid], conflict.scores?.[pid]);
-        }
-        const truncate = (s: string, n = 60) => s.length > n ? `${s.slice(0, n)}…` : s;
-        if ((mineSnap.comments || "") !== (conflict.comments || "")) {
-          rows.push({ key: "comments", label: "Comments",
-            mine: mineSnap.comments ? truncate(mineSnap.comments) : "—",
-            theirs: conflict.comments ? truncate(conflict.comments) : "—" });
-        }
-        const mineMedia = [...mineSnap.selectedMedia].sort().join("|");
-        const theirMedia = [...(conflict.selectedMedia ?? [])].sort().join("|");
-        if (mineMedia !== theirMedia) {
-          rows.push({ key: "media", label: "Media attachments",
-            mine: mineSnap.selectedMedia.length ? `${mineSnap.selectedMedia.length} attached` : "—",
-            theirs: conflict.selectedMedia?.length ? `${conflict.selectedMedia.length} attached` : "—" });
-        }
-        const theirsCount = rows.reduce((n, r) => n + (mergeSelections[r.key] === "theirs" ? 1 : 0), 0);
-        const mineCount = rows.length - theirsCount;
+        const rows = computeDiffRows(mineSnap, conflict);
+        const resolvedCount = rows.reduce((n, r) => n + (resolutions[r.key] ? 1 : 0), 0);
         return (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
             <div className="flex items-start gap-2">
@@ -681,7 +651,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                 </div>
                 <div className="text-muted-foreground mt-0.5">
                   Another tab saved this draft at <strong>{formatDraftTime(conflict.savedAt)}</strong>{" "}
-                  (v{conflict.version}). Keep one side, or pick per field and apply the merge.
+                  (v{conflict.version}). Accept the other tab's value or reject to keep yours, per field.
                 </div>
                 {rows.length === 0 ? (
                   <div className="mt-2 text-[11px] text-muted-foreground italic">
@@ -693,36 +663,48 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                       <div className="bg-background/70 px-2 py-1 font-medium text-muted-foreground uppercase tracking-wider">Field</div>
                       <div className="bg-background/70 px-2 py-1 font-medium text-muted-foreground uppercase tracking-wider border-l border-border/60">This tab</div>
                       <div className="bg-background/70 px-2 py-1 font-medium text-muted-foreground uppercase tracking-wider border-l border-border/60">Other tab</div>
-                      <div className="bg-background/70 px-2 py-1 font-medium text-muted-foreground uppercase tracking-wider border-l border-border/60">Take</div>
+                      <div className="bg-background/70 px-2 py-1 font-medium text-muted-foreground uppercase tracking-wider border-l border-border/60">Action</div>
                       {rows.map((r) => {
-                        const pick = mergeSelections[r.key] === "theirs" ? "theirs" : "mine";
-                        const setPick = (side: "mine" | "theirs") =>
-                          setMergeSelections((prev) => ({ ...prev, [r.key]: side }));
+                        const state = resolutions[r.key];
                         const cellBase = "px-2 py-1 border-t border-l border-border/60";
                         const activeCell = "bg-amber-500/15";
                         const dimCell = "opacity-50";
+                        const mineActive = state === "rejected" || !state;
+                        const theirsActive = state === "accepted" || !state;
                         return (
                           <Fragment key={r.key}>
                             <div className="px-2 py-1 border-t border-border/60 text-foreground/80 truncate">{r.label}</div>
-                            <div className={`${cellBase} ${pick === "mine" ? activeCell : dimCell}`}>
+                            <div className={`${cellBase} ${mineActive ? activeCell : dimCell}`}>
                               <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.mine}</span>
                             </div>
-                            <div className={`${cellBase} ${pick === "theirs" ? activeCell : dimCell}`}>
+                            <div className={`${cellBase} ${theirsActive ? activeCell : dimCell}`}>
                               <span className="rounded px-1 bg-amber-500/20 text-foreground break-words">{r.theirs}</span>
                             </div>
                             <div className={`${cellBase} whitespace-nowrap`}>
-                              <div className="inline-flex rounded border border-border overflow-hidden">
-                                <button type="button" onClick={() => setPick("mine")}
-                                  aria-pressed={pick === "mine"}
-                                  className={`px-1.5 py-0.5 text-[10px] ${pick === "mine" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}>
-                                  Mine
-                                </button>
-                                <button type="button" onClick={() => setPick("theirs")}
-                                  aria-pressed={pick === "theirs"}
-                                  className={`px-1.5 py-0.5 text-[10px] border-l border-border ${pick === "theirs" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}>
-                                  Theirs
-                                </button>
-                              </div>
+                              {state ? (
+                                <span className="inline-flex items-center gap-1.5 text-[10px]">
+                                  <span className={state === "accepted" ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground font-medium"}>
+                                    {state === "accepted" ? "Accepted remote" : "Kept local"}
+                                  </span>
+                                  <button type="button" onClick={() => undoField(r.key)}
+                                    className="underline text-muted-foreground hover:text-foreground">
+                                    Undo
+                                  </button>
+                                </span>
+                              ) : (
+                                <div className="inline-flex rounded border border-border overflow-hidden">
+                                  <button type="button" onClick={() => rejectField(r.key)}
+                                    aria-label={`Reject remote change for ${r.label}`}
+                                    className="px-1.5 py-0.5 text-[10px] bg-background text-muted-foreground hover:text-foreground hover:bg-muted">
+                                    Reject
+                                  </button>
+                                  <button type="button" onClick={() => acceptField(r.key)}
+                                    aria-label={`Accept remote change for ${r.label}`}
+                                    className="px-1.5 py-0.5 text-[10px] border-l border-border bg-primary text-primary-foreground hover:opacity-90">
+                                    Accept
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </Fragment>
                         );
@@ -735,17 +717,12 @@ function ReportForm({ onDone }: { onDone: () => void }) {
             <div className="flex flex-wrap items-center gap-2 justify-end">
               {rows.length > 0 && (
                 <span className="text-[11px] text-muted-foreground mr-auto">
-                  {mineCount} mine · {theirsCount} theirs
+                  {resolvedCount} of {rows.length} resolved
                 </span>
               )}
               <button type="button" onClick={useTheirs}
                 className="h-8 px-3 rounded-md border border-border text-xs">
                 Use other tab's version
-              </button>
-              <button type="button" onClick={applyMerge}
-                disabled={theirsCount === 0}
-                className="h-8 px-3 rounded-md border border-primary/60 text-primary text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
-                Apply merge
               </button>
               <button type="button" onClick={keepMine}
                 className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium">
@@ -755,6 +732,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
           </div>
         );
       })()}
+
       {error && <div className="text-xs text-destructive flex items-start gap-1.5"><AlertCircle className="size-3.5 mt-0.5" />{error}</div>}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60">
         <div className="text-[11px] flex items-center gap-2 min-h-6">
