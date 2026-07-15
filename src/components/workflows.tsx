@@ -220,8 +220,8 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   if (!tabIdRef.current) tabIdRef.current = newTabId();
   const localVersionRef = useRef<number>(0);
   const [conflict, setConflict] = useState<ReportDraft | null>(null);
-  const [mergeSelections, setMergeSelections] = useState<Record<string, "mine" | "theirs">>({});
-  useEffect(() => { setMergeSelections({}); }, [conflict]);
+  const [resolutions, setResolutions] = useState<Record<string, "accepted" | "rejected">>({});
+  const preConflictLocalRef = useRef<ReportDraftSnapshot | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
