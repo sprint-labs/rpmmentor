@@ -27,7 +27,7 @@ export function PageHeader({ title, description, action }: { title: string; desc
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-3xl font-display font-bold uppercase tracking-[0.02em]">{title}</h1>
         {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {action}
@@ -52,7 +52,7 @@ export function StatCard({ label, value, hint, accent }: { label: string; value:
   return (
     <Card className={cn("p-4 relative overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-[3px]", ring)}>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
-      <div className="mt-1.5 text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="mt-1.5 text-2xl font-semibold tabular-nums font-mono">{value}</div>
       {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
     </Card>
   );

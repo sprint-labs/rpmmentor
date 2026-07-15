@@ -79,18 +79,18 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-md">
-        <div className="flex items-center gap-2.5 mb-10">
-          <div className="size-9 rounded-lg bg-primary text-primary-foreground grid place-items-center font-bold text-sm tracking-tight">GK</div>
-          <div className="leading-tight">
-            <div className="font-semibold tracking-tight text-lg">GKHQ</div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Goalkeeper Head Quarters</div>
+        <div className="flex items-center gap-3 mb-10">
+          <img src="/app-icon-120.png" alt="GKHQ" width={40} height={40} className="size-10 rounded-[8px]" />
+          <div className="flex flex-col leading-tight">
+            <img src="/wordmark.png" alt="GKHQ" height={22} className="h-[22px] w-auto" />
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">Goalkeeper Head Quarters</div>
           </div>
         </div>
 
         {view === "signin" && (
           <>
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold tracking-tight leading-tight">Sign in</h1>
+              <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Sign in</h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign in with your GKHQ account.</p>
             </div>
 
@@ -143,7 +143,7 @@ function LoginPage() {
         {view === "signup" && (
           <>
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold tracking-tight leading-tight">Create account</h1>
+              <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Create account</h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign up for a GKHQ account. New accounts start with mentor-level access.</p>
             </div>
 
@@ -199,7 +199,7 @@ function LoginPage() {
         {view === "forgot" && (
           <>
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold tracking-tight leading-tight">Reset your password</h1>
+              <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Reset your password</h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Enter your email and we'll send you a link to reset your password.</p>
             </div>
 
@@ -229,7 +229,7 @@ function LoginPage() {
           <>
             <div className="mb-8">
               <div className="size-12 rounded-xl bg-secondary grid place-items-center mb-5"><CheckCircle2 className="size-6 text-primary" /></div>
-              <h1 className="text-3xl font-semibold tracking-tight leading-tight">Check your inbox</h1>
+              <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Check your inbox</h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">If an account exists for <span className="text-foreground font-medium">{sentTo}</span>, you'll receive a reset link shortly.</p>
             </div>
 

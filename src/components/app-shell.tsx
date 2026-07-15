@@ -60,8 +60,8 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-        <div className="flex items-center gap-2 px-5 h-14 border-b border-sidebar-border">
-          <div className="size-7 rounded-md bg-primary text-primary-foreground grid place-items-center font-bold text-sm">{user.initials}</div>
+        <div className="flex items-center gap-2.5 px-5 h-14 border-b border-sidebar-border">
+          <img src="/app-icon-120.png" alt="GKHQ" width={28} height={28} className="size-7 rounded-[6px] shrink-0" />
           <div className="flex flex-col leading-tight min-w-0">
             <span className="text-sm font-semibold tracking-tight truncate">{user.name}</span>
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">{ROLE_LABEL[user.role]}</span>
@@ -76,9 +76,9 @@ export function AppShell() {
                 key={n.to}
                 to={n.to as never}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                  "flex items-center gap-2.5 px-3 py-1.5 rounded-[6px] text-[12.5px] font-semibold uppercase tracking-[0.05em] transition-colors",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
@@ -106,11 +106,12 @@ export function AppShell() {
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-background/80 backdrop-blur sticky top-0 z-10">
-          <div className="md:hidden font-semibold">RPM</div>
+        <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-sidebar/95 backdrop-blur sticky top-0 z-10">
+          <div className="md:hidden font-display uppercase tracking-[0.04em] font-bold">GKHQ</div>
           <div className="flex-1 max-w-xl relative">
             <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input placeholder="Search goalkeepers, mentors, reports…" className="w-full h-9 pl-9 pr-3 rounded-md bg-input/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40" />
+            <input placeholder="Search goalkeepers, mentors, reports…" className="w-full h-9 pl-9 pr-14 rounded-md bg-input border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40" />
+            <kbd className="hidden md:inline-flex items-center gap-0.5 absolute right-2 top-1/2 -translate-y-1/2 h-5 px-1.5 rounded border border-border bg-background/60 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
           </div>
           {user.actualRole === "super_admin" ? (
             <div className="hidden md:inline-flex items-center gap-1.5 h-7 pl-2 pr-1 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-medium uppercase tracking-wider" title={user.role === user.actualRole ? "View as role (Super Admin only)" : `Viewing as ${ROLE_LABEL[user.role]} · real role: ${ROLE_LABEL[user.actualRole]}`}>
@@ -149,7 +150,7 @@ export function AppShell() {
             <div className="hidden md:inline-flex items-center gap-1.5 h-7 px-2 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-medium uppercase tracking-wider"><ShieldCheck className="size-3" />{ROLE_LABEL[user.role]}</div>
           )}
           {primaryAction && (
-            <button onClick={() => setWorkflow(primaryAction.kind)} className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
+            <button onClick={() => setWorkflow(primaryAction.kind)} className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-xs uppercase tracking-[0.06em] font-semibold hover:opacity-90">
               <Plus className="size-4" />{primaryAction.label}
             </button>
           )}
@@ -157,7 +158,7 @@ export function AppShell() {
             onClick={() => { signOut(); navigate({ to: "/login" as never }); }}
             title="Sign out"
             aria-label="Sign out"
-            className="inline-flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-md border border-border text-sm hover:bg-accent"
+            className="inline-flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-md border border-border text-xs uppercase tracking-[0.06em] font-semibold hover:bg-accent"
           >
             <LogOut className="size-4" />
             <span className="hidden md:inline">Sign out</span>
@@ -166,7 +167,7 @@ export function AppShell() {
             <button onClick={() => setBellOpen((v) => !v)} className="relative size-9 grid place-items-center rounded-md border border-border hover:bg-accent">
               <BellRing className="size-4" />
               {notif.unread > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold grid place-items-center">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-mono font-semibold grid place-items-center">
                   {notif.unread > 9 ? "9+" : notif.unread}
                 </span>
               )}
