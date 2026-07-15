@@ -814,6 +814,18 @@ function ReportForm({ onDone }: { onDone: () => void }) {
                   {resolvedCount} of {rows.length} resolved
                 </span>
               )}
+              <button type="button"
+                onClick={() => exportConflictJson(buildConflictSummary(rows, conflict, mediaTitles))}
+                className="h-8 px-3 rounded-md border border-border text-xs"
+                title="Download a machine-readable summary of this conflict">
+                Export JSON
+              </button>
+              <button type="button"
+                onClick={() => { void exportConflictPdf(buildConflictSummary(rows, conflict, mediaTitles)); }}
+                className="h-8 px-3 rounded-md border border-border text-xs"
+                title="Download a printable summary of this conflict">
+                Export PDF
+              </button>
               <button type="button" onClick={useTheirs}
                 className="h-8 px-3 rounded-md border border-border text-xs">
                 Use other tab's version
