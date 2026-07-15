@@ -86,6 +86,7 @@ export const listMatchReports = createServerFn({ method: "GET" })
 // ---------------------------------------------------------------------------
 
 export const getMatchReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { reportId: string }) =>
     z.object({ reportId: z.string().min(1) }).parse(data),
   )
@@ -104,28 +105,47 @@ export const getMatchReport = createServerFn({ method: "GET" })
 // ---------------------------------------------------------------------------
 
 export const submitMatchReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => {
-    const actorSchema = z.object({
-      id: z.string().min(1),
-      name: z.string().min(1),
-      role: z.enum(["super_admin", "admin", "mentor_manager", "mentor"]),
-    });
-    return z
-      .object({ actor: actorSchema, payload: matchReportSubmitSchema })
-      .parse(data);
+    return z.object({ payload: matchReportSubmitSchema }).parse(data);
   })
-  .handler(async ({ data }) => {
-    const CAN_SUBMIT = ["super_admin", "mentor_manager", "mentor"] as const;
-    const CAN_OVERRIDE_COACH = ["super_admin", "admin", "mentor_manager"] as const;
-    const { actor, payload } = data;
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { payload } = data;
 
-    if (!(CAN_SUBMIT as readonly string[]).includes(actor.role)) {
+    // Look up the caller's real role from the database — never trust the client.
+    const { data: roleRows, error: roleErr } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (roleErr) throw new Error("Unable to verify caller role.");
+
+    const roles = (roleRows ?? []).map((r) => r.role as string);
+    const effectiveRole =
+      roles.includes("super_admin") ? "super_admin" :
+      roles.includes("admin") ? "admin" :
+      roles.includes("mentor_manager") ? "mentor_manager" :
+      roles.includes("mentor") ? "mentor" : null;
+
+    const CAN_SUBMIT = ["super_admin", "mentor_manager", "mentor"];
+    const CAN_OVERRIDE_COACH = ["super_admin", "admin", "mentor_manager"];
+
+    if (!effectiveRole || !CAN_SUBMIT.includes(effectiveRole)) {
       throw new Error("You don't have permission to submit reports.");
     }
-    // Non-privileged roles cannot override the coach name.
+
+    // Look up caller's canonical name from profiles.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name,email")
+      .eq("id", userId)
+      .maybeSingle<{ name: string | null; email: string | null }>();
+    const callerName = (profile?.name || profile?.email || "").trim();
+
+    // Non-privileged roles cannot submit on another coach's behalf.
     if (
-      !(CAN_OVERRIDE_COACH as readonly string[]).includes(actor.role) &&
-      payload.coach.trim().toLowerCase() !== actor.name.trim().toLowerCase()
+      !CAN_OVERRIDE_COACH.includes(effectiveRole) &&
+      payload.coach.trim().toLowerCase() !== callerName.toLowerCase()
     ) {
       throw new Error("Only managers/admins can submit on another coach's behalf.");
     }
@@ -185,3 +205,4 @@ export const submitMatchReport = createServerFn({ method: "POST" })
 
     return { report_id, row_index: rowIndex, average };
   });
+
