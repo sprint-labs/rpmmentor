@@ -37,6 +37,7 @@ type MediaChipInfo = {
   filePath: string;
   mimeType: string | null;
   fileSize: number | null;
+  createdAt: string;
 };
 
 function DraftStatusIndicator({
