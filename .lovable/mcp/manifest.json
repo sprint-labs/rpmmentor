@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://mldlwxtsfgeeozsgtqth.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "gkhq-mcp",
+      "version": "0.1.0",
+      "title": "GKHQ"
+    },
+    "tools": [
+      {
+        "name": "whoami",
+        "title": "Who am I",
+        "description": "Return the signed-in GKHQ user's profile (name, email, title) and roles from user_roles.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_match_reports",
+        "title": "List match reports",
+        "description": "List recent GKHQ match reports the signed-in user is allowed to see under Row Level Security. Returns goalkeeper, opponent, match date, coach and overall average.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Max rows to return (default 25).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "goalkeeper": {
+              "description": "Filter by goalkeeper name (case-insensitive contains).",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

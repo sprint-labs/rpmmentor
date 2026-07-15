@@ -69,7 +69,7 @@ export const SHEET_HEADERS = [
 ];
 
 export const pillarScore = z
-  .number({ invalid_type_error: "Score is required" })
+  .number({ message: "Score is required" })
   .int()
   .min(1, "Min 1")
   .max(5, "Max 5");
