@@ -1,34 +1,74 @@
-## Wire /system/users to the real user_roles table
+# Automated tests for gk-media bucket access
 
-Replace the local-storage-backed role editor in `src/routes/system.users.tsx` with real database-backed assign/revoke, using existing `user_roles` + `has_role`. No schema changes.
+Add a Vitest suite that hits the real backend using `@supabase/supabase-js` and asserts the current policies on `storage.objects` for the private `gk-media` bucket.
 
-### Behavior
+## Policies under test (from migrations)
 
-- Page still gated to `system.manage` (super_admin), same as today.
-- User list comes from the database (`profiles` joined with `user_roles`), not `DEMO_USERS` / `usersStore`.
-- Each row's role dropdown offers: **super_admin, admin, mentor_manager, mentor, — no role —**. Changing the selection replaces the user's row in `user_roles` (single-role model — delete existing, insert new; "no role" just deletes).
-- Optimistic toast + query invalidation on success; error toast on failure.
-- Self-guard: the signed-in super_admin cannot change or revoke their own role from this UI (row's dropdown is disabled, tooltip explains why). Prevents lockout.
-- Remove the "Reset to defaults" button and the Active/Deactivate column — both are legacy local-store concepts that don't map to the real backend. The search box stays.
-- The prototype disclaimer footer is removed.
+- `anon`: no policies → cannot list, read, upload, update, or delete.
+- `authenticated`: SELECT any object, INSERT/UPDATE any object in `gk-media` (must be signed in), DELETE only if `owner = auth.uid()` OR has `admin`/`super_admin` role.
+- `super_admin`: everything authenticated can do, plus DELETE of any object (including files owned by other users).
 
-### Server functions (new `src/lib/admin-users.functions.ts`)
+## Test file
 
-Both use `requireSupabaseAuth` and verify the caller has `super_admin` via `context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" })`. If not, throw. Then load `supabaseAdmin` inside the handler to read/write across users.
+`src/lib/storage/gk-media.test.ts` — a single Vitest suite with three `describe` blocks.
 
-- `listManagedUsers()` — returns `[{ id, email, name, initials, title, role | null }]` for every row in `profiles`, joined with the user's highest-precedence role (super_admin > admin > mentor_manager > mentor, matching the precedence already used in `loadSessionUser`).
-- `setManagedUserRole({ userId, role })` — role is `Role | null`. Deletes all `user_roles` rows for the target user, then inserts the new role (skipped when `null`). Rejects when `userId === context.userId` (self-guard on server too).
+Uses the publishable/anon key from `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` (already in `.env`). Signs in via `signInWithPassword` using test credentials from env vars:
 
-Zod validates both inputs.
+- `TEST_MENTOR_EMAIL` / `TEST_MENTOR_PASSWORD` — existing mentor account
+- `TEST_SUPER_ADMIN_EMAIL` / `TEST_SUPER_ADMIN_PASSWORD` — Luke's account
 
-### Client wiring
+If either credential pair is missing, that block is skipped with `describe.skip` and a console warning so the anon block still runs in CI.
 
-- `system.users.tsx` uses TanStack Query: `queryKey: ["managed-users"]`, `queryFn: listManagedUsers`. Show a small skeleton row list while loading and an error state with retry on failure.
-- Dropdown change → `useMutation` calling `setManagedUserRole`, `onSuccess` invalidates `["managed-users"]` and shows a toast; the affected user sees their new role after their next session refresh (documented in a small helper note under the header, replacing the current prototype disclaimer).
-- Remove imports of `usersStore` and `DEMO_USERS` from this file. `users-store.ts` and `DEMO_USERS` stay in the repo untouched — other files still reference them and this task is scoped to the admin UI.
+### Assertions
 
-### Files
+**anon (unauthenticated client)**
+- `storage.from('gk-media').list('')` → returns empty array or error (no rows visible).
+- `storage.from('gk-media').upload(path, blob)` → error (RLS denies).
+- `storage.from('gk-media').download(seededPath)` → error.
+- `storage.from('gk-media').remove([seededPath])` → error / no-op.
 
-- New: `src/lib/admin-users.functions.ts`
-- Edited: `src/routes/system.users.tsx`
-- No migrations, no changes to `auth.tsx`, no changes to `users-store.ts`.
+**authenticated (mentor)**
+- `list('')` → success (array).
+- `upload('test/<uuid>.txt', blob)` → success. Path saved for cleanup.
+- `download(ownPath)` → success, bytes match.
+- `remove([ownPath])` → success (owner delete allowed).
+- Attempt to `remove([otherUserPath])` seeded by super_admin block → error / count 0.
+
+**super_admin (Luke)**
+- `upload`, `download`, `list` → success.
+- `remove` a file uploaded by the mentor session → success (privileged delete).
+- Cleanup: remove any leftover test files under `test/` prefix.
+
+Each block uses `beforeAll` to sign in and `afterAll` to sign out and clean up. Test files use a unique `test/${runId}/...` prefix so parallel runs don't collide.
+
+## Tooling
+
+- Add dev deps: `vitest`, `@vitest/ui` (optional), `jsdom` not needed (node env).
+- `package.json` scripts: `"test": "vitest run"`, `"test:watch": "vitest"`.
+- `vitest.config.ts` at project root: node environment, loads `.env` via `loadEnv`, 30s timeout for network calls.
+- No changes to app code or migrations.
+
+## Files
+
+```text
+vitest.config.ts                       (new)
+src/lib/storage/gk-media.test.ts       (new)
+package.json                           (scripts + devDeps)
+```
+
+## Required user action
+
+Before running tests, add to `.env.local` (not committed):
+
+```
+TEST_MENTOR_EMAIL=...
+TEST_MENTOR_PASSWORD=...
+TEST_SUPER_ADMIN_EMAIL=luke@sprintlabs.uk
+TEST_SUPER_ADMIN_PASSWORD=...
+```
+
+Without these, only the anon block runs; authenticated / super_admin blocks skip with a clear message.
+
+## Run
+
+`bun run test` — executes once and exits with non-zero on any policy regression.
