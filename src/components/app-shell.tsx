@@ -113,9 +113,17 @@ export function AppShell() {
             <input placeholder="Search goalkeepers, mentors, reports…" className="w-full h-9 pl-9 pr-3 rounded-md bg-input/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40" />
           </div>
           {user.actualRole === "super_admin" ? (
-            <div className="hidden md:inline-flex items-center gap-1.5 h-7 pl-2 pr-1 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-medium uppercase tracking-wider" title="View as role (Super Admin only)">
+            <div className="hidden md:inline-flex items-center gap-1.5 h-7 pl-2 pr-1 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-medium uppercase tracking-wider" title={user.role === user.actualRole ? "View as role (Super Admin only)" : `Viewing as ${ROLE_LABEL[user.role]} · real role: ${ROLE_LABEL[user.actualRole]}`}>
               <ShieldCheck className="size-3" />
-              <span>View as</span>
+              {user.role !== user.actualRole ? (
+                <span className="hidden lg:inline">
+                  Viewing as {ROLE_LABEL[user.role]}
+                  <span className="mx-1.5 text-primary/60">·</span>
+                  <span className="text-primary/80">{ROLE_LABEL[user.actualRole]}</span>
+                </span>
+              ) : (
+                <span>View as</span>
+              )}
               <select
                 value={user.role}
                 onChange={(e) => setViewAsRole(e.target.value as Role)}
