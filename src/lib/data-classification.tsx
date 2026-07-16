@@ -118,6 +118,13 @@ interface BannerProps {
   className?: string;
 }
 
+const BANNER_HEADING: Record<Classification, string> = {
+  live: "Live data source",
+  mock: "Preview data — not real operational records",
+  transitional: "Transitional data source",
+  unverified: "Unverified data source",
+};
+
 /** Full-width banner rendered near the top of each classified route. */
 export function DataSourceBanner({ classification, extra, className }: BannerProps) {
   if (classification === "live") return null;
@@ -133,9 +140,7 @@ export function DataSourceBanner({ classification, extra, className }: BannerPro
     >
       <m.Icon className="size-4 mt-0.5 shrink-0" />
       <div className="min-w-0">
-        <div className="font-semibold uppercase tracking-[0.05em] text-[11px]">
-          {m.label} — {m.short}
-        </div>
+        <div className="font-semibold text-[12px] leading-snug">{BANNER_HEADING[classification]}</div>
         <div className="opacity-90 mt-0.5">{m.description}</div>
         {extra ? <div className="mt-1 opacity-90">{extra}</div> : null}
       </div>
