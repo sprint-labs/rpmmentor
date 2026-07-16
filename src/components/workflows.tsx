@@ -559,6 +559,16 @@ function ReportForm({ onDone }: { onDone: () => void }) {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Phase 1 safety: final submission is temporarily disabled while report
+    // storage is being verified. The Google Sheets serverFn is intentionally
+    // NOT called from this path. Drafts continue to save locally.
+    setError(
+      "Final submission is temporarily unavailable while report storage is being verified. Your draft is stored on this device only."
+    );
+    return;
+    // Preserved (unused) submission path — retained in Git history and behind
+    // this guard for the eventual re-enable once persistence is verified.
+    // eslint-disable-next-line no-unreachable
     if (!user) { setError("You must be signed in."); return; }
     setError(null);
     setFieldErrors({});
