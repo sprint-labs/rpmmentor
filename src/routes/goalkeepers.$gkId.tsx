@@ -46,6 +46,9 @@ function GkDetail() {
         </div>
       </div>
 
+      <DataSourceBanner classification="mock" extra="Profile bio, ratings, assigned-mentor, interaction history, reports and media listed here are illustrative — not real operational records." />
+
+
       {gk.bio && (
         <Card className="p-4">
           <SectionTitle>Profile</SectionTitle>
