@@ -31,6 +31,7 @@ function Executive() {
   return (
     <div className="space-y-6">
       <PageHeader title="Executive Dashboard" description="Strategic overview for directors and Head of Goalkeeping." />
+      <DataSourceBanner classification="mock" extra="Executive figures, pipeline counts, activity leaderboard and coverage percentages are illustrative." />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="GK Coverage (30d)" value={`${coverage}%`} hint="Observed in last month" accent="primary" />

@@ -19,6 +19,7 @@ function AlertsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Alerts Engine" description="Conditions across the platform that need attention, plus duty-of-care notifications and email summaries." />
+      <DataSourceBanner classification="mock" extra="Alerts, overdue-contact counts and duty status notifications are illustrative." />
 
       <DutyNotificationsPanel />
 

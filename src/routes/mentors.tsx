@@ -10,6 +10,7 @@ function MentorsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="People & Mentors" description="RPM leadership and mentor team. Mentors work collaboratively across the entire client roster — no per-goalkeeper assignment." />
+      <DataSourceBanner classification="mock" extra="Monthly targets, completion percentages and activity leaderboard figures are illustrative." />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {mentors.map((m) => {
           const recent = interactions.filter((i) => i.mentorId === m.id).slice(0, 3);
