@@ -51,6 +51,8 @@ function CalendarPage() {
           </div>
         }
       />
+      <DataSourceBanner classification="mock" extra="Calendar events shown here are illustrative and are not synced to any live scheduling source." />
+
 
       {view === "month" ? (
         <Card className="p-3">
