@@ -105,7 +105,6 @@ interface AuthState {
   user: SessionUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   signOut: () => Promise<void>;
   can: (p: Permission) => boolean;
   setViewAsRole: (role: Role | null) => void;
