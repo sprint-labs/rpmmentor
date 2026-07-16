@@ -812,6 +812,14 @@ function ReportForm({ onDone }: { onDone: () => void }) {
       })()}
 
       {error && <div className="text-xs text-destructive flex items-start gap-1.5"><AlertCircle className="size-3.5 mt-0.5" />{error}</div>}
+
+      <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] leading-snug text-foreground/90">
+        <div className="font-semibold text-foreground">Final submission is temporarily unavailable</div>
+        <div className="opacity-90 mt-0.5">
+          Report storage is being verified. Your draft is stored on this device only — nothing has been submitted, queued, synced, or saved to RPM.
+        </div>
+      </div>
+
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60">
         <div className="text-[11px] flex items-center gap-2 min-h-6">
           {draftRestoredFrom && (
@@ -829,8 +837,14 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm" disabled={submitting}>Cancel</button>
-          <button type="submit" disabled={submitting} className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60">
-            {submitting ? "Saving to Sheet…" : "Submit Match Report"}
+          <button
+            type="submit"
+            disabled
+            aria-disabled="true"
+            title="Final submission is temporarily unavailable while report storage is being verified."
+            className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium opacity-50 cursor-not-allowed"
+          >
+            Submit Match Report (unavailable)
           </button>
         </div>
       </div>
