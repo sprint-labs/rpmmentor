@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, Card, Pill } from "@/components/primitives";
+import { DataSourceBanner } from "@/lib/data-classification";
 import { calendarEvents, formatDate } from "@/lib/mock-data";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
@@ -50,6 +51,8 @@ function CalendarPage() {
           </div>
         }
       />
+      <DataSourceBanner classification="mock" extra="Calendar events shown here are illustrative and are not synced to any live scheduling source." />
+
 
       {view === "month" ? (
         <Card className="p-3">

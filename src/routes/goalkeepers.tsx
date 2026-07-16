@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageHeader, Card, TierBadge, Avatar, TrafficLight, DutyBadge, StatCard } from "@/components/primitives";
+import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, getMentor, formatRelative, dutyStatusForGk, dutyOverview } from "@/lib/mock-data";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
@@ -37,6 +38,7 @@ function GoalkeepersList() {
   return (
     <div className="space-y-5">
       <PageHeader title="Goalkeepers" description={`${goalkeepers.length} RPM clients under management across the UK and internationally.`} />
+      <DataSourceBanner classification="mock" extra="Roster, assigned-mentor fields, duty traffic-light counts and last-contact times are illustrative." />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Under Care" value={dutyOverview.total} />

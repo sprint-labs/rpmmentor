@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PageHeader, Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
+import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, interactions, reports, media, getMentor, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Video, FileText, Phone, MessageSquare, Eye, Users as UsersIcon } from "lucide-react";
 
@@ -44,6 +45,9 @@ function GkDetail() {
           <button className="h-9 px-3 rounded-md border border-border text-sm">Submit Report</button>
         </div>
       </div>
+
+      <DataSourceBanner classification="mock" extra="Profile bio, ratings, assigned-mentor, interaction history, reports and media listed here are illustrative — not real operational records." />
+
 
       {gk.bio && (
         <Card className="p-4">

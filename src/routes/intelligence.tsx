@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, Card, TierBadge, Pill, Avatar, ProgressBar } from "@/components/primitives";
+import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, reports } from "@/lib/mock-data";
 import { useState } from "react";
 import { Video } from "lucide-react";
@@ -19,6 +20,7 @@ function IntelligencePage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Goalkeeper Intelligence" description="Searchable database of every scouted and tracked goalkeeper." />
+      <DataSourceBanner classification="mock" extra="Ratings, potential scores and recommendation categories shown here are illustrative." />
 
       <div className="flex flex-wrap items-center gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, club, league, nationality…" className="h-9 px-3 rounded-md bg-input/60 border border-border text-sm w-80" />
