@@ -130,6 +130,16 @@ function LoginPage() {
               Continue with Google
             </button>
 
+            <button type="button" onClick={async () => {
+              setError(null);
+              const res = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+              if (res.error) setError(res.error.message || "Apple sign-in failed.");
+            }}
+              className="w-full mt-2.5 flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/30 text-sm font-medium transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.365 1.43c0 1.14-.42 2.24-1.18 3.04-.84.9-2.17 1.58-3.28 1.5-.13-1.11.42-2.28 1.14-3.02.83-.86 2.27-1.53 3.32-1.52zM20.5 17.09c-.55 1.27-.82 1.83-1.53 2.95-.98 1.56-2.37 3.5-4.09 3.51-1.53.01-1.93-1-4-1-2.08.01-2.51 1.02-4.04 1.01-1.72-.01-3.03-1.76-4.02-3.32C.06 16.68-.24 11.4 1.94 8.6 3.5 6.62 5.94 5.46 8.24 5.46c2.35 0 3.83 1.29 5.77 1.29 1.88 0 3.03-1.29 5.75-1.29 2.05 0 4.22 1.12 5.77 3.06-5.07 2.78-4.24 10.03-4.53 8.57z"/></svg>
+              Continue with Apple
+            </button>
+
 
             <p className="text-[11px] text-muted-foreground mt-8 leading-relaxed">
               GKHQ accounts are provisioned by an administrator. If you need access, contact your RPM admin.
