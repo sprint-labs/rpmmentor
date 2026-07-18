@@ -1,11 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHeader, Card, Pill, Avatar } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { interactions, getGk, getMentor, formatDate, formatRelative } from "@/lib/mock-data";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/interactions")({ component: withPermission(InteractionsPage, "interactions.view") });
+const interactionsSearchSchema = z.object({
+  from: fallback(z.string(), "").default(""),
+  to: fallback(z.string(), "").default(""),
+  mentorId: fallback(z.string(), "").default(""),
+});
+
+export const Route = createFileRoute("/interactions")({
+  validateSearch: zodValidator(interactionsSearchSchema),
+  component: withPermission(InteractionsPage, "interactions.view"),
+});
 
 const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"] as const;
 
