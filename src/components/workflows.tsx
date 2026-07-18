@@ -683,16 +683,9 @@ function ReportForm({ onDone }: { onDone: () => void }) {
           placeholder="What did you see? Key moments, strengths, areas to develop…" />
       </Field>
 
-      <MediaAttachPicker
-        gkId={goalkeepers.find((g) => g.name === goalkeeper)?.id ?? ""}
-        selected={selectedMedia}
-        onChange={setSelectedMedia}
-        user={user}
-      />
-
       {conflict && (() => {
         const mineSnap: ReportDraftSnapshot = preConflictLocalRef.current ?? {
-          goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia,
+          goalkeeper, coach, competition, team, opponent, matchDate, scores, comments, selectedMedia,
         };
         const rows = computeDiffRows(mineSnap, conflict);
         const resolvedCount = rows.reduce((n, r) => n + (resolutions[r.key] ? 1 : 0), 0);
