@@ -25,6 +25,7 @@ export interface MentorDashboardStats {
   clipsLast14: number;
   overdueReports: number;
   upcomingList: MentorUpcomingInteraction[];
+  lastUpdatedAt: string;
 }
 
 /**
@@ -62,6 +63,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
         clipsLast14: 0,
         overdueReports: 0,
         upcomingList: [],
+        lastUpdatedAt: new Date().toISOString(),
       };
     }
 
@@ -117,5 +119,6 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
       clipsLast14,
       overdueReports,
       upcomingList,
+      lastUpdatedAt: new Date().toISOString(),
     };
   });
