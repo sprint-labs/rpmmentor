@@ -1,17 +1,28 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader, Card, Pill, SectionTitle } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { useEffect, useMemo, useState } from "react";
-import { FileText, ChevronRight, RefreshCw } from "lucide-react";
+import { FileText, ChevronRight, RefreshCw, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
 import { withPermission } from "@/components/require-permission";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import type { MatchReportRow } from "@/lib/match-reports/schema";
 
-export const Route = createFileRoute("/reports")({ component: withPermission(ReportsPage, "reports.view") });
+const reportsSearchSchema = z.object({
+  from: fallback(z.string(), "").default(""),
+  to: fallback(z.string(), "").default(""),
+  coach: fallback(z.string(), "").default(""),
+});
+
+export const Route = createFileRoute("/reports")({
+  validateSearch: zodValidator(reportsSearchSchema),
+  component: withPermission(ReportsPage, "reports.view"),
+});
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
