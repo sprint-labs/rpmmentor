@@ -610,21 +610,27 @@ function ReportForm({ onDone }: { onDone: () => void }) {
             {goalkeepers.map((g) => <option key={g.id} value={g.name} />)}
           </datalist>
         </Field>
-        <Field label={`Coach *${canOverrideCoach ? "" : " (you)"}`}>
-          <input className={inputCls} required value={coach} disabled={!canOverrideCoach}
-            list="mr-coach-suggestions"
-            onChange={(e) => setCoach(e.target.value)} maxLength={80} />
-          <datalist id="mr-coach-suggestions">
-            {mentors.map((m) => <option key={m.id} value={m.name} />)}
+        <Field label="Coach (you) *">
+          <input className={`${inputCls} opacity-80 cursor-not-allowed`} required readOnly disabled value={coach} maxLength={80} />
+        </Field>
+        <Field label="Competition *">
+          <input className={inputCls} required value={competition}
+            list="mr-competition-suggestions"
+            onChange={(e) => setCompetition(e.target.value)}
+            placeholder="e.g. EFL Championship" maxLength={80} />
+          <datalist id="mr-competition-suggestions">
+            {Array.from(new Set(goalkeepers.map((g) => g.league).filter(Boolean))).sort().map((l) => (
+              <option key={l} value={l} />
+            ))}
           </datalist>
         </Field>
         <Field label="Team *">
           <input className={inputCls} required value={team} onChange={(e) => setTeam(e.target.value)}
-            placeholder="e.g. England U21" maxLength={80} />
+            placeholder="e.g. Wolves" maxLength={80} />
         </Field>
         <Field label="Opponent *">
           <input className={inputCls} required value={opponent} onChange={(e) => setOpponent(e.target.value)}
-            placeholder="e.g. Moldova" maxLength={80} />
+            placeholder="e.g. Blackburn Rovers" maxLength={80} />
         </Field>
         <Field label="Match Date *">
           <input type="date" className={inputCls} required value={matchDate}
