@@ -54,7 +54,7 @@ export type Permission =
   | "media.view"
   | "media.upload"
   | "media.edit"
-  | "intelligence.view"
+  
   | "alerts.view"
   | "calendar.view"
   | "executive.view"
