@@ -19,6 +19,8 @@ const mediaSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
   uploaderName: fallback(z.string(), "").default(""),
+  mentorProfileId: fallback(z.string(), "").default(""),
+  kind: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/media")({
@@ -29,16 +31,20 @@ export const Route = createFileRoute("/media")({
 const KIND_ICON: Record<MediaKind, typeof Video> = { video: Video, pdf: FileText, image: ImageIcon, audio: Mic };
 const KINDS = ["all", "video", "pdf", "image", "audio"] as const;
 
+function isKind(v: string): v is MediaKind | "all" {
+  return (KINDS as readonly string[]).includes(v);
+}
+
 function MediaPage() {
   const { can, user } = useAuth();
-  const { from, to, uploaderName } = Route.useSearch();
+  const { from, to, uploaderName, kind: kindParam } = Route.useSearch();
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
   const [editing, setEditing] = useState<MediaAsset | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filters, setFilters] = useState<MediaFilters>(() => {
-    const initial: MediaFilters = { kind: "all" };
+    const initial: MediaFilters = { kind: isKind(kindParam) ? kindParam : "all" };
     if (from) initial.from = from;
     if (to) initial.to = to;
     if (uploaderName) initial.uploaderName = uploaderName;
@@ -52,8 +58,10 @@ function MediaPage() {
       from: from || undefined,
       to: to || undefined,
       uploaderName: uploaderName || undefined,
+      kind: isKind(kindParam) ? kindParam : prev.kind,
     }));
-  }, [from, to, uploaderName]);
+  }, [from, to, uploaderName, kindParam]);
+
 
   const load = useCallback(async () => {
     setLoading(true);
