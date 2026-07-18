@@ -107,6 +107,7 @@ export interface MatchReportRow {
   coach: string;
   team: string | null;
   opponent: string | null;
+  competition: string | null;
   match_date: string | null; // YYYY-MM-DD
   scores: Record<PillarId, number | null>;
   average: number | null;
