@@ -18,6 +18,7 @@ const reportsSearchSchema = z.object({
   to: fallback(z.string(), "").default(""),
   coach: fallback(z.string(), "").default(""),
   mentorProfileId: fallback(z.string(), "").default(""),
+  source: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/reports")({
