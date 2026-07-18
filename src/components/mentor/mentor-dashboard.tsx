@@ -158,6 +158,7 @@ export function MentorDashboard({ user }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Link
           to="/reports"
+          search={reportsSearch}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="View match reports"
         >
@@ -171,6 +172,7 @@ export function MentorDashboard({ user }: Props) {
         </Link>
         <Link
           to="/interactions"
+          search={interactionsSearch}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-info/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info"
           aria-label="View interactions"
         >
@@ -184,6 +186,7 @@ export function MentorDashboard({ user }: Props) {
         </Link>
         <Link
           to="/media"
+          search={mediaSearch}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="View match clips"
         >
@@ -197,6 +200,7 @@ export function MentorDashboard({ user }: Props) {
         </Link>
         <Link
           to="/reports"
+          search={outstandingSearch}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-destructive/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
           aria-label="View outstanding actions"
         >
