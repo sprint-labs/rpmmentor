@@ -59,6 +59,7 @@ export const listMatchReports = createServerFn({ method: "GET" })
           coach: r.coach,
           team: r.team,
           opponent: r.opponent,
+          competition: r.competition,
           match_date: r.match_date,
           protect_goal: r.scores.protect_goal,
           protect_space: r.scores.protect_space,
