@@ -251,7 +251,9 @@ export function MentorDashboard({ user }: Props) {
                 const toneClass = isReport
                   ? "bg-destructive/15 text-destructive border-destructive/30"
                   : "bg-warning/15 text-warning border-warning/30";
-                const actionHref = isReport ? "/reports" : "/media";
+                const actionSearch = isReport
+                  ? { from: "", to: "", coach: mentorName ?? "", mentorProfileId: effectiveMentorId }
+                  : { from: "", to: "", uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video" };
                 return (
                   <div key={item.id} className="flex items-center gap-3 py-2.5">
                     <Avatar initials={item.gkInitials ?? "—"} />
@@ -281,6 +283,7 @@ export function MentorDashboard({ user }: Props) {
                     </div>
                     <Link
                       to={actionHref}
+                      search={actionSearch}
                       className="shrink-0 text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
                     >
                       {isReport ? "Submit report" : "Upload clip"}
