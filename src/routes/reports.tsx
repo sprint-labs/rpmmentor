@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageHeader, Card, Pill, SectionTitle, EmptyState } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { useEffect, useMemo, useState } from "react";
-import { FileText, ChevronRight, RefreshCw, X } from "lucide-react";
+import { FileText, ChevronRight, RefreshCw, X, FilePlus2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
 import { withPermission } from "@/components/require-permission";
