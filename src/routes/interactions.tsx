@@ -37,7 +37,8 @@ function resolveType(param: string): (typeof TYPES)[number] {
 }
 
 function InteractionsPage() {
-  const { from, to, mentorId, type: typeParam } = Route.useSearch();
+  const { from, to, mentorId, type: typeParam, source } = Route.useSearch();
+  const navSource = getNavSource(source);
   const [type, setType] = useState<(typeof TYPES)[number]>(() => resolveType(typeParam));
   useEffect(() => {
     if (typeParam) setType(resolveType(typeParam));
