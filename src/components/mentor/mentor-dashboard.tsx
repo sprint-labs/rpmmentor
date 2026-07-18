@@ -1,12 +1,7 @@
-import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { StatCard } from "@/components/primitives";
-import {
-  selectAssignedPlayers,
-  selectRecentReports,
-  selectUpcomingForMentor,
-  selectDutyOfCareForMentor,
-} from "@/lib/mentor-domain";
-import { media } from "@/lib/mock-data";
+import { getMentorDashboardStats } from "@/lib/mentor-dashboard.functions";
 import type { SessionUser } from "@/lib/auth";
 
 interface Props {
@@ -14,32 +9,12 @@ interface Props {
   mentorProfileId: string;
 }
 
-export function MentorDashboard({ user, mentorProfileId }: Props) {
-  const roster = useMemo(() => selectAssignedPlayers(mentorProfileId), [mentorProfileId]);
-  const upcoming = useMemo(() => selectUpcomingForMentor(mentorProfileId, 14, 999), [mentorProfileId]);
-  const recentReports = useMemo(() => selectRecentReports(mentorProfileId, 999), [mentorProfileId]);
-
-  const now = Date.now();
-  const fourteenDaysAgo = now - 14 * 86400000;
-
-  const reportsLast14 = recentReports.filter(
-    (r) => +new Date(r.occurred_at) >= fourteenDaysAgo && +new Date(r.occurred_at) <= now,
-  ).length;
-
-  const clipsLast14 = useMemo(() => {
-    const rosterIds = new Set(roster.map((p) => p.id));
-    return media.filter(
-      (m) =>
-        rosterIds.has(m.gkId) &&
-        +new Date(m.date) >= fourteenDaysAgo &&
-        +new Date(m.date) <= now,
-    ).length;
-  }, [roster, fourteenDaysAgo, now]);
-
-  const overdueReports = useMemo(
-    () => selectDutyOfCareForMentor(mentorProfileId).filter((d) => d.level === "red").length,
-    [mentorProfileId],
-  );
+export function MentorDashboard({ user }: Props) {
+  const fetchStats = useServerFn(getMentorDashboardStats);
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["mentor-dashboard-stats"],
+    queryFn: () => fetchStats(),
+  });
 
   const firstName = user.name.split(" ")[0];
 
@@ -50,43 +25,31 @@ export function MentorDashboard({ user, mentorProfileId }: Props) {
           Hello, {firstName}
         </h1>
         <p className="text-xs uppercase tracking-wider text-muted-foreground mt-2">
-          Here's the latest on your dashboard
+          {isLoading
+            ? "Loading your dashboard…"
+            : isError
+              ? "Couldn't load your dashboard."
+              : "Here's the latest on your assigned goalkeepers"}
         </p>
+        {isError && (
+          <button
+            onClick={() => refetch()}
+            className="mt-2 text-xs uppercase tracking-wider text-primary underline"
+          >
+            Retry
+          </button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Total Goalkeepers"
-          value={roster.length}
-          hint="Across all tiers & competitions"
-        />
-        <StatCard
-          label="Upcoming Live Interactions"
-          value={upcoming.length}
-          hint="In the next 14 days"
-          accent="info"
-        />
-        <StatCard
-          label="Match Reports"
-          value={reportsLast14}
-          hint="Submitted in the last 14 days"
-          accent="primary"
-        />
-        <StatCard
-          label="Match Clips"
-          value={clipsLast14}
-          hint="Posted in the last 14 days"
-          accent="primary"
-        />
+        <StatCard label="Total Goalkeepers" value={data?.totalGoalkeepers ?? 0} hint="Assigned to you" />
+        <StatCard label="Upcoming Live Interactions" value={data?.upcomingInteractions ?? 0} hint="In the next 14 days" accent="info" />
+        <StatCard label="Match Reports" value={data?.reportsLast14 ?? 0} hint="Submitted in the last 14 days" accent="primary" />
+        <StatCard label="Match Clips" value={data?.clipsLast14 ?? 0} hint="Posted in the last 14 days" accent="primary" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Overdue Match Reports"
-          value={overdueReports}
-          hint="Action required"
-          accent="destructive"
-        />
+        <StatCard label="Overdue Match Reports" value={data?.overdueReports ?? 0} hint="Action required" accent="destructive" />
       </div>
     </div>
   );
