@@ -114,15 +114,17 @@ export function MentorDashboard({ user }: Props) {
     return map;
   }, [filteredUpcoming]);
 
-  const mentorName = useMemo(
-    () => mentors.find((m) => m.id === data?.mentorProfileId)?.name ?? user.name,
-    [data?.mentorProfileId, user.name]
-  );
+  const mentorName = useMemo(() => {
+    const id = data?.mentorProfileId ?? user.mentorId;
+    if (id) return mentors.find((m) => m.id === id)?.name;
+    if (user.actualRole === "mentor") return user.name;
+    return undefined;
+  }, [data?.mentorProfileId, user.mentorId, user.actualRole, user.name]);
   const periodSearch = useMemo(() => lastNDaysSearch(14), []);
-  const reportsSearch = { ...periodSearch, coach: mentorName };
+  const reportsSearch = { ...periodSearch, coach: mentorName ?? "" };
   const interactionsSearch = { ...periodSearch, mentorId: data?.mentorProfileId ?? user.mentorId ?? "" };
-  const mediaSearch = { ...periodSearch, uploaderName: mentorName };
-  const outstandingSearch = { ...periodSearch, coach: mentorName };
+  const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "" };
+  const outstandingSearch = { ...periodSearch, coach: mentorName ?? "" };
 
   const toggleFilter = (type: string) => {
     setFilters((prev) =>
