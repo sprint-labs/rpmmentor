@@ -108,6 +108,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
         interactionsLast14: 0,
         clipsLast14: 0,
         outstandingActions: 0,
+        outstandingItems: [],
         upcomingList: [],
         lastUpdatedAt: new Date().toISOString(),
       };
