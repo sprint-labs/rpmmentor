@@ -238,12 +238,13 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentSnapshot = (): ReportDraftSnapshot => ({
-    goalkeeper, coach, team, opponent, matchDate, scores, comments, selectedMedia,
+    goalkeeper, coach, competition, team, opponent, matchDate, scores, comments, selectedMedia,
   });
 
   const applySnapshot = (d: ReportDraftSnapshot) => {
     setGoalkeeper(d.goalkeeper);
-    if (canOverrideCoach) setCoach(d.coach);
+    // coach is read-only, derived from the signed-in user — ignore d.coach
+    setCompetition(d.competition ?? "");
     setTeam(d.team);
     setOpponent(d.opponent);
     if (d.matchDate) setMatchDate(d.matchDate);
