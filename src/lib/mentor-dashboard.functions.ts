@@ -63,6 +63,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
         clipsLast14: 0,
         overdueReports: 0,
         upcomingList: [],
+        lastUpdatedAt: new Date().toISOString(),
       };
     }
 
