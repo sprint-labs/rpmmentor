@@ -10,6 +10,7 @@ import type { MentorUpcomingInteraction } from "@/lib/mentor-dashboard.functions
 import { mentors } from "@/lib/mock-data";
 import type { Tier } from "@/lib/mock-data";
 import type { SessionUser } from "@/lib/auth";
+import { logDashboardClick } from "@/lib/analytics.functions";
 
 function lastNDaysSearch(days: number) {
   const to = new Date();
