@@ -208,7 +208,8 @@ function ReportForm({ onDone }: { onDone: () => void }) {
 
   const [done, setDone] = useState<{ report_id: string; average: number } | null>(null);
   const [goalkeeper, setGoalkeeper] = useState("");
-  const [coach, setCoach] = useState(user?.name ?? "");
+  const coach = user?.name ?? "";
+  const [competition, setCompetition] = useState("");
   const [team, setTeam] = useState("");
   const [opponent, setOpponent] = useState("");
   const [matchDate, setMatchDate] = useState(new Date().toISOString().slice(0, 10));
@@ -220,12 +221,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  // Keep coach field synced with the signed-in user (non-managers only).
-  useEffect(() => {
-    if (!canOverrideCoach && user?.name) setCoach(user.name);
-  }, [canOverrideCoach, user?.name]);
+  const [, setFieldErrors] = useState<Record<string, string>>({});
 
   // ---------------- Draft persistence + versioning (localStorage) ----------------
   const [draftLoaded, setDraftLoaded] = useState(false);
