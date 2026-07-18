@@ -582,7 +582,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
             change_play: scores.change_play,
             psych: scores.psych,
             physical: scores.physical,
-            comments: finalComments,
+            comments,
           },
         },
       });
