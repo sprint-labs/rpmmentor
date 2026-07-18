@@ -49,6 +49,7 @@ export const COLUMN_INDEX = {
   physical: 11,
   average: 12,
   comments: 13,
+  competition: 14,
 } as const;
 
 export const SHEET_HEADERS = [
@@ -66,6 +67,7 @@ export const SHEET_HEADERS = [
   "Speed, Agility, Athleticism",
   "Av Score",
   "Comments",
+  "Competition",
 ];
 
 export const pillarScore = z
@@ -80,6 +82,7 @@ export const matchReportSubmitSchema = z.object({
   coach: z.string().trim().min(1, "Coach is required").max(80),
   team: z.string().trim().min(1, "Team is required").max(80),
   opponent: z.string().trim().min(1, "Opponent is required").max(80),
+  competition: z.string().trim().max(120).optional().default(""),
   match_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
@@ -104,6 +107,7 @@ export interface MatchReportRow {
   coach: string;
   team: string | null;
   opponent: string | null;
+  competition: string | null;
   match_date: string | null; // YYYY-MM-DD
   scores: Record<PillarId, number | null>;
   average: number | null;
@@ -175,6 +179,7 @@ export function rowToMatchReport(row: string[], rowIndex: number): MatchReportRo
     coach: (row[COLUMN_INDEX.coach] ?? "").trim(),
     team: (row[COLUMN_INDEX.team] ?? "").trim() || null,
     opponent,
+    competition: (row[COLUMN_INDEX.competition] ?? "").toString().trim() || null,
     match_date,
     scores: {
       protect_goal: num(COLUMN_INDEX.protect_goal),

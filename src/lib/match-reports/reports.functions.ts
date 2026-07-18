@@ -59,6 +59,7 @@ export const listMatchReports = createServerFn({ method: "GET" })
           coach: r.coach,
           team: r.team,
           opponent: r.opponent,
+          competition: r.competition,
           match_date: r.match_date,
           protect_goal: r.scores.protect_goal,
           protect_space: r.scores.protect_space,
@@ -154,7 +155,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     const { appendRow } = await import("./sheets.server");
 
     // Column order MUST match COLUMN_INDEX / SHEET_HEADERS.
-    const row = new Array<string | number>(14);
+    const row = new Array<string | number>(15).fill("");
     row[COLUMN_INDEX.goalkeeper] = payload.goalkeeper;
     row[COLUMN_INDEX.coach] = payload.coach;
     row[COLUMN_INDEX.team] = payload.team;
@@ -163,6 +164,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     for (const id of PILLAR_IDS) row[COLUMN_INDEX[id]] = payload[id];
     row[COLUMN_INDEX.average] = average;
     row[COLUMN_INDEX.comments] = payload.comments ?? "";
+    row[COLUMN_INDEX.competition] = payload.competition ?? "";
 
     const rowIndex = await appendRow(row);
 
@@ -184,6 +186,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
             coach: payload.coach,
             team: payload.team,
             opponent: payload.opponent,
+            competition: payload.competition ?? "",
             match_date: payload.match_date,
             protect_goal: payload.protect_goal,
             protect_space: payload.protect_space,

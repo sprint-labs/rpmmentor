@@ -65,6 +65,7 @@ export type Database = {
           change_play: number | null
           coach: string
           comments: string | null
+          competition: string | null
           control_play: number | null
           created_at: string
           goalkeeper: string
@@ -87,6 +88,7 @@ export type Database = {
           change_play?: number | null
           coach: string
           comments?: string | null
+          competition?: string | null
           control_play?: number | null
           created_at?: string
           goalkeeper: string
@@ -109,6 +111,7 @@ export type Database = {
           change_play?: number | null
           coach?: string
           comments?: string | null
+          competition?: string | null
           control_play?: number | null
           created_at?: string
           goalkeeper?: string
