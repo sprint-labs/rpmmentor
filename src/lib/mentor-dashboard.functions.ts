@@ -25,12 +25,33 @@ export interface MentorUpcomingInteraction {
   gkFreeAgent: boolean;
 }
 
+export type OutstandingActionKind = "missing_report" | "missing_clip";
+
+export interface OutstandingActionItem {
+  id: string;
+  kind: OutstandingActionKind;
+  label: string;
+  observationId: string;
+  observationDate: string;
+  dueDate: string;
+  daysOverdue: number;
+  gkId: string | null;
+  gkName: string | null;
+  gkInitials: string | null;
+  gkStatus: string | null;
+  gkTierLevel: TierLevel | null;
+  gkClub: string | null;
+  actionableBy: string;
+  actionableByRole: "self" | "mentor" | "admin";
+}
+
 export interface MentorDashboardStats {
   mentorProfileId: string | null;
   reportsLast14: number;
   interactionsLast14: number;
   clipsLast14: number;
   outstandingActions: number;
+  outstandingItems: OutstandingActionItem[];
   upcomingList: MentorUpcomingInteraction[];
   lastUpdatedAt: string;
 }
