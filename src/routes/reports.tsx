@@ -78,7 +78,7 @@ function ReportsPage() {
   }, [reports, coachFilter, from, to]);
 
   const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "" };
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "" };
 
   return (
     <div className="space-y-5">
