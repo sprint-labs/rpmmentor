@@ -2,6 +2,21 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { goalkeepers, interactions, reports, media, calendarEvents, dutyStatusForGk } from "@/lib/mock-data";
 
+export interface MentorUpcomingInteraction {
+  id: string;
+  date: string;
+  title: string;
+  type: string;
+  gkId: string | null;
+  gkName: string | null;
+  gkInitials: string | null;
+  gkTier: string | null;
+  gkClub: string | null;
+  gkLeague: string | null;
+  gkFreeAgent: boolean;
+  gkInjured: boolean;
+}
+
 export interface MentorDashboardStats {
   mentorProfileId: string | null;
   totalGoalkeepers: number;
@@ -9,6 +24,7 @@ export interface MentorDashboardStats {
   reportsLast14: number;
   clipsLast14: number;
   overdueReports: number;
+  upcomingList: MentorUpcomingInteraction[];
 }
 
 /**
@@ -45,6 +61,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
         reportsLast14: 0,
         clipsLast14: 0,
         overdueReports: 0,
+        upcomingList: [],
       };
     }
 
@@ -54,10 +71,29 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
 
     const roster = goalkeepers.filter((g) => g.mentorId === mentorId);
     const rosterIds = new Set(roster.map((g) => g.id));
+    const gkById = new Map(goalkeepers.map((g) => [g.id, g]));
 
-    const upcomingInteractions = calendarEvents.filter(
-      (e) => e.mentorId === mentorId && +new Date(e.date) >= now && +new Date(e.date) <= in14,
-    ).length;
+    const upcomingEvents = calendarEvents
+      .filter((e) => e.mentorId === mentorId && +new Date(e.date) >= now && +new Date(e.date) <= in14)
+      .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+
+    const upcomingList: MentorUpcomingInteraction[] = upcomingEvents.map((e) => {
+      const gk = e.gkId ? gkById.get(e.gkId) ?? null : null;
+      return {
+        id: e.id,
+        date: e.date,
+        title: e.title,
+        type: e.type,
+        gkId: gk?.id ?? null,
+        gkName: gk?.name ?? null,
+        gkInitials: gk?.initials ?? null,
+        gkTier: gk?.tier ?? null,
+        gkClub: gk?.club ?? null,
+        gkLeague: gk?.league ?? null,
+        gkFreeAgent: gk?.tier === "Free Agent",
+        gkInjured: false,
+      };
+    });
 
     const reportsLast14 = reports.filter(
       (r) => r.authorId === mentorId && +new Date(r.date) >= ago14 && +new Date(r.date) <= now,
@@ -76,9 +112,10 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
     return {
       mentorProfileId: mentorId,
       totalGoalkeepers: roster.length,
-      upcomingInteractions,
+      upcomingInteractions: upcomingList.length,
       reportsLast14,
       clipsLast14,
       overdueReports,
+      upcomingList,
     };
   });
