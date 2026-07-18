@@ -349,15 +349,26 @@ export function MentorDashboard({ user }: Props) {
               <p className="text-xs text-muted-foreground mt-1">
                 {isLoading
                   ? "This may take a moment."
-                  : `There are no upcoming interactions in the next ${rangeDays} days.`}
+                  : filters.length > 0
+                    ? "No upcoming interactions match the selected filters."
+                    : `There are no upcoming interactions in the next ${rangeDays} days.`}
               </p>
             </div>
-            <Link
-              to="/interactions"
-              className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
-            >
-              Schedule interaction <ArrowUpRight className="size-3" />
-            </Link>
+            {filters.length > 0 ? (
+              <button
+                onClick={clearFilters}
+                className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
+              >
+                Clear filters
+              </button>
+            ) : (
+              <Link
+                to="/interactions"
+                className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
+              >
+                Schedule interaction <ArrowUpRight className="size-3" />
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
