@@ -22,9 +22,26 @@ export const Route = createFileRoute("/interactions")({
 const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"] as const;
 
 function InteractionsPage() {
+  const { from, to, mentorId } = Route.useSearch();
   const [type, setType] = useState<(typeof TYPES)[number]>("All");
-  const sorted = [...interactions].sort((a, b) => +new Date(b.date) - +new Date(a.date));
-  const filtered = type === "All" ? sorted : sorted.filter((i) => i.type === type);
+  const sorted = useMemo(() => [...interactions].sort((a, b) => +new Date(b.date) - +new Date(a.date)), []);
+  const filtered = useMemo(() => {
+    let list = sorted;
+    if (mentorId) list = list.filter((i) => i.mentorId === mentorId);
+    if (from && to) {
+      const start = new Date(from).getTime();
+      const end = new Date(to).getTime();
+      list = list.filter((i) => {
+        const t = new Date(i.date).getTime();
+        return t >= start && t <= end;
+      });
+    }
+    if (type !== "All") list = list.filter((i) => i.type === type);
+    return list;
+  }, [sorted, mentorId, from, to, type]);
+
+  const hasFilters = Boolean(mentorId) || (Boolean(from) && Boolean(to));
+  const clearSearch = { from: "", to: "", mentorId: "" };
 
   return (
     <div className="space-y-5">
