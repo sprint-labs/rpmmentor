@@ -152,7 +152,8 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
     const within3d = (a: string, b: string) =>
       Math.abs(+new Date(a) - +new Date(b)) <= 3 * 86400000;
 
-    let outstandingActions = 0;
+    const outstandingItems: OutstandingActionItem[] = [];
+    const mentorDisplay = mentors.find((m) => m.id === mentorId)?.name ?? "You";
     for (const obs of mentorObservations) {
       const hasReport = mentorReports.some(
         (r) => r.gkId === obs.gkId && within3d(r.date, obs.date),
@@ -160,9 +161,42 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
       const hasClip = mentorClips.some(
         (m) => m.gkId === obs.gkId && within3d(m.date, obs.date),
       );
-      if (!hasReport) outstandingActions += 1;
-      if (!hasClip) outstandingActions += 1;
+      const gk = obs.gkId ? gkById.get(obs.gkId) ?? null : null;
+      const due = +new Date(obs.date) + 3 * 86400000;
+      const daysOverdue = Math.max(0, Math.floor((now - due) / 86400000));
+      const base = {
+        observationId: obs.id,
+        observationDate: obs.date,
+        dueDate: new Date(due).toISOString(),
+        daysOverdue,
+        gkId: gk?.id ?? null,
+        gkName: gk?.name ?? null,
+        gkInitials: gk?.initials ?? null,
+        gkStatus: gk?.status ?? null,
+        gkTierLevel: gk?.tierLevel ?? null,
+        gkClub: gk?.club ?? null,
+        actionableBy: mentorDisplay,
+        actionableByRole: "self" as const,
+      };
+      if (!hasReport) {
+        outstandingItems.push({
+          ...base,
+          id: `${obs.id}:report`,
+          kind: "missing_report",
+          label: `Submit match report for ${gk?.name ?? "goalkeeper"}`,
+        });
+      }
+      if (!hasClip) {
+        outstandingItems.push({
+          ...base,
+          id: `${obs.id}:clip`,
+          kind: "missing_clip",
+          label: `Upload match clip for ${gk?.name ?? "goalkeeper"}`,
+        });
+      }
     }
+    outstandingItems.sort((a, b) => b.daysOverdue - a.daysOverdue);
+    const outstandingActions = outstandingItems.length;
 
     // Upcoming interactions: this mentor's calendar in the next 14 days.
     const upcomingEvents = calendarEvents
@@ -194,6 +228,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
       interactionsLast14,
       clipsLast14,
       outstandingActions,
+      outstandingItems,
       upcomingList,
       lastUpdatedAt: new Date().toISOString(),
     };
