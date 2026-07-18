@@ -25,6 +25,7 @@ export interface MentorDashboardStats {
   clipsLast14: number;
   overdueReports: number;
   upcomingList: MentorUpcomingInteraction[];
+  lastUpdatedAt: string;
 }
 
 /**
