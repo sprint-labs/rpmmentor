@@ -151,7 +151,7 @@ function MediaPage() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
           <div className="lg:col-span-2">
             <input
               value={filters.search ?? ""}
@@ -170,6 +170,12 @@ function MediaPage() {
           <select value={filters.uploaderId ?? ""} onChange={(e) => setFilters((f) => ({ ...f, uploaderId: e.target.value || undefined }))} className="h-9 px-2 rounded-md bg-input/60 border border-border text-sm">
             <option value="">All uploaders</option>
             {uploaders.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+          <select value={filters.uploaderName ?? ""} onChange={(e) => setFilters((f) => ({ ...f, uploaderName: e.target.value || undefined }))} className="h-9 px-2 rounded-md bg-input/60 border border-border text-sm">
+            <option value="">All uploader names</option>
+            {Array.from(new Set([...DEMO_USERS.map((u) => u.name), ...uploaders.map((u) => u.name)])).map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
           </select>
           <div className="flex gap-1">
             <input type="date" value={filters.from?.slice(0, 10) ?? ""} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value ? new Date(e.target.value).toISOString() : undefined }))} className="w-full h-9 px-2 rounded-md bg-input/60 border border-border text-xs" />
