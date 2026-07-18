@@ -82,7 +82,6 @@ const ADMIN: Permission[] = [
   "interactions.view",
   "reports.view", "reports.manage",
   "media.view", "media.edit",
-  "intelligence.view",
   "alerts.view", "calendar.view",
   "executive.view", "audit.view",
 ];
