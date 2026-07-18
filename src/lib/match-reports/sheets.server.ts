@@ -49,7 +49,7 @@ export async function readAllRows(): Promise<{ rows: string[][]; firstDataRow: n
 
 /** Append one row to the sheet. Returns the resulting 1-based row index. */
 export async function appendRow(values: (string | number)[]): Promise<number> {
-  const range = `${SHEET_TAB}!A1`;
+  const range = `'${SHEET_TAB}'!A1`;
   const res = await gatewayFetch(
     `/spreadsheets/${SHEET_ID}/values/${encodeURI(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`,
     {
