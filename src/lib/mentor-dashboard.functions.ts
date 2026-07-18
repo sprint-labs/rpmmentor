@@ -68,7 +68,7 @@ function mapPlannedType(type: string): UpcomingPlannedType | null {
     case "Mentor Visit":
       return "Training Ground Visit";
     case "Meeting":
-      return "Coffee Meeting";
+      return "Coffee Catch Up";
     default:
       return null;
   }
