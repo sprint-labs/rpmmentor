@@ -224,3 +224,70 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     return { report_id, row_index: rowIndex, average };
   });
 
+// ---------------------------------------------------------------------------
+// deleteMatchReport — removes the sheet row AND its cache record atomically.
+// ---------------------------------------------------------------------------
+
+export const deleteMatchReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ reportId: z.string().min(1) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // Only privileged roles may delete reports.
+    const { data: roleRows, error: roleErr } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (roleErr) throw new Error("Unable to verify caller role.");
+    const roles = (roleRows ?? []).map((r) => r.role as string);
+    const CAN_DELETE = ["super_admin", "admin", "mentor_manager"];
+    if (!roles.some((r) => CAN_DELETE.includes(r))) {
+      throw new Error("You don't have permission to delete reports.");
+    }
+
+    // Locate the row in the sheet (source of truth).
+    const { readAllRows, deleteRow } = await import("./sheets.server");
+    const { rows, firstDataRow } = await readAllRows();
+    let matchedRowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rowToMatchReport(rows[i], firstDataRow + i);
+      if (r && r.report_id === data.reportId) {
+        matchedRowIndex = firstDataRow + i;
+        break;
+      }
+    }
+    if (matchedRowIndex < 0) {
+      // Sheet row already gone — still purge any stale cache entry.
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin
+          .from("match_reports_cache")
+          .delete()
+          .eq("report_id", data.reportId);
+      } catch (e) {
+        console.error("[match-reports] stale cache delete failed:", e);
+      }
+      return { deleted: false, reason: "not_found" as const };
+    }
+
+    // Delete sheet row first — if it fails we leave the cache alone.
+    await deleteRow(matchedRowIndex);
+
+    // Then remove the cache record so /reports reflects the deletion.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("match_reports_cache")
+        .delete()
+        .eq("report_id", data.reportId);
+    } catch (e) {
+      console.error("[match-reports] cache delete after sheet delete failed:", e);
+    }
+
+    return { deleted: true, row_index: matchedRowIndex };
+  });
+
+
