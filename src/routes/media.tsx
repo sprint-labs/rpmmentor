@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, getGk, formatDate } from "@/lib/mock-data";
@@ -13,7 +15,16 @@ import {
 } from "@/lib/media-store";
 import { withPermission } from "@/components/require-permission";
 
-export const Route = createFileRoute("/media")({ component: withPermission(MediaPage, "media.view") });
+const mediaSearchSchema = z.object({
+  from: fallback(z.string(), "").default(""),
+  to: fallback(z.string(), "").default(""),
+  uploaderName: fallback(z.string(), "").default(""),
+});
+
+export const Route = createFileRoute("/media")({
+  validateSearch: zodValidator(mediaSearchSchema),
+  component: withPermission(MediaPage, "media.view"),
+});
 
 const KIND_ICON: Record<MediaKind, typeof Video> = { video: Video, pdf: FileText, image: ImageIcon, audio: Mic };
 const KINDS = ["all", "video", "pdf", "image", "audio"] as const;
