@@ -43,16 +43,19 @@ export function Card({ className, children }: { className?: string; children: Re
   );
 }
 
-export function StatCard({ label, value, hint, accent }: { label: string; value: string | number; hint?: string; accent?: "primary" | "warning" | "destructive" | "info" }) {
+export function StatCard({ label, value, hint, accent, emptyMessage }: { label: string; value: string | number; hint?: string; accent?: "primary" | "warning" | "destructive" | "info"; emptyMessage?: string }) {
   const ring =
     accent === "warning" ? "before:bg-warning"
     : accent === "destructive" ? "before:bg-destructive"
     : accent === "info" ? "before:bg-info"
     : "before:bg-primary";
+  const isEmpty = typeof value === "number" && value === 0 && emptyMessage;
   return (
     <Card className={cn("p-4 relative overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-[3px]", ring)}>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
-      <div className="mt-1.5 text-2xl font-semibold tabular-nums font-mono">{value}</div>
+      <div className={cn("mt-1.5 text-2xl font-semibold tabular-nums font-mono", isEmpty && "text-muted-foreground/60 text-base")}>
+        {isEmpty ? emptyMessage : value}
+      </div>
       {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
     </Card>
   );
