@@ -14,6 +14,28 @@ import type {
   MatchReportRow,
 } from "@/lib/mentor-domain";
 
+/**
+ * Whitelist of approved interaction types. Validated at the insert boundary
+ * so any code path — UI, workflow, or future server ingestion — is rejected
+ * unless it matches one of these four values.
+ */
+export const ALLOWED_INTERACTION_TYPES = [
+  "Live Match Observation",
+  "Training Ground Visit",
+  "Coffee Catch Up",
+  "Phone Call",
+] as const;
+export type AllowedInteractionType = (typeof ALLOWED_INTERACTION_TYPES)[number];
+
+export class InvalidInteractionTypeError extends Error {
+  constructor(received: string) {
+    super(
+      `Invalid interaction_type "${received}". Allowed: ${ALLOWED_INTERACTION_TYPES.join(", ")}.`,
+    );
+    this.name = "InvalidInteractionTypeError";
+  }
+}
+
 const listeners = new Set<() => void>();
 const interactions: MentorInteractionRow[] = [];
 const reports: MatchReportRow[] = [];
