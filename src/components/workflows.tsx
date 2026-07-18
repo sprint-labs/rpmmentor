@@ -93,7 +93,11 @@ export function WorkflowDialog({ kind, onClose }: { kind: WorkflowKind | null; o
           <div>
             <h3 className="text-base font-semibold">{TITLES[kind]}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {kind === "media" || kind === "report" ? "Stored in Lovable Cloud" : "Saved locally to this session"}
+              {kind === "report"
+                ? "Draft autosaves locally · Submission writes to the RPM Match Reports Google Sheet"
+                : kind === "media"
+                  ? "Stored in Lovable Cloud"
+                  : "Saved locally to this session"}
             </p>
           </div>
           <button onClick={onClose} className="size-8 grid place-items-center rounded-md hover:bg-accent"><X className="size-4" /></button>
