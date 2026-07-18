@@ -37,7 +37,7 @@ const SUBTITLES: Record<MentorWorkflow, string> = {
   voice: "Paste or type a transcript. We'll turn it into an interaction.",
 };
 
-const INTERACTION_TYPES = ALLOWED_INTERACTION_TYPES;
+const INTERACTION_TYPES: readonly string[] = ALLOWED_INTERACTION_TYPES;
 
 const OUTCOMES = [
   "On track",
