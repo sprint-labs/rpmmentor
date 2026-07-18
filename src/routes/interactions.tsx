@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { PageHeader, Card, Pill, Avatar } from "@/components/primitives";
+import { PageHeader, Card, Pill, Avatar, EmptyState } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { interactions, getGk, getMentor, formatDate, formatRelative } from "@/lib/mock-data";
 import { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { X, MessageSquarePlus, Filter } from "lucide-react";
 import { withPermission } from "@/components/require-permission";
 
 const interactionsSearchSchema = z.object({
