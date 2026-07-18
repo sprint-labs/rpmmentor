@@ -70,14 +70,14 @@ export function MentorDashboard({ user }: Props) {
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Total Goalkeepers" value={data?.totalGoalkeepers ?? 0} hint="Assigned to you" />
-        <StatCard label="Upcoming Live Interactions" value={data?.upcomingInteractions ?? 0} hint="In the next 14 days" accent="info" emptyMessage="No upcoming sessions" />
-        <StatCard label="Match Reports" value={data?.reportsLast14 ?? 0} hint="Submitted in the last 14 days" accent="primary" />
-        <StatCard label="Match Clips" value={data?.clipsLast14 ?? 0} hint="Posted in the last 14 days" accent="primary" />
+        <StatCard label="Total Goalkeepers" value={data?.totalGoalkeepers ?? 0} hint="Assigned to you" updatedAt={data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined} />
+        <StatCard label="Upcoming Live Interactions" value={data?.upcomingInteractions ?? 0} hint="In the next 14 days" accent="info" emptyMessage="No upcoming sessions" updatedAt={data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined} />
+        <StatCard label="Match Reports" value={data?.reportsLast14 ?? 0} hint="Submitted in the last 14 days" accent="primary" updatedAt={data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined} />
+        <StatCard label="Match Clips" value={data?.clipsLast14 ?? 0} hint="Posted in the last 14 days" accent="primary" updatedAt={data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Overdue Match Reports" value={data?.overdueReports ?? 0} hint="Action required" accent="destructive" emptyMessage="All caught up" />
+        <StatCard label="Overdue Match Reports" value={data?.overdueReports ?? 0} hint="Action required" accent="destructive" emptyMessage="All caught up" updatedAt={data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined} />
       </div>
 
       <Card className="p-4">
