@@ -155,7 +155,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     const { appendRow } = await import("./sheets.server");
 
     // Column order MUST match COLUMN_INDEX / SHEET_HEADERS.
-    const row = new Array<string | number>(14);
+    const row = new Array<string | number>(15).fill("");
     row[COLUMN_INDEX.goalkeeper] = payload.goalkeeper;
     row[COLUMN_INDEX.coach] = payload.coach;
     row[COLUMN_INDEX.team] = payload.team;
@@ -164,6 +164,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
     for (const id of PILLAR_IDS) row[COLUMN_INDEX[id]] = payload[id];
     row[COLUMN_INDEX.average] = average;
     row[COLUMN_INDEX.comments] = payload.comments ?? "";
+    row[COLUMN_INDEX.competition] = payload.competition ?? "";
 
     const rowIndex = await appendRow(row);
 
