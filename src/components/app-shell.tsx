@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, Database, FolderOpen, BellRing, Calendar, BarChart3, Search, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABEL, type Permission, type Role } from "@/lib/auth";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +15,7 @@ const NAV: NavItem[] = [
   { to: "/mentors", label: "Mentors", icon: UserCog, perm: "mentors.view" },
   { to: "/interactions", label: "Interactions Log", icon: MessageSquare, perm: "interactions.view" },
   { to: "/reports", label: "Match Reports", icon: FileText, perm: "reports.view" },
-  { to: "/intelligence", label: "Intelligence", icon: Database, perm: "intelligence.view" },
+  
   { to: "/media", label: "Media Library", icon: FolderOpen, perm: "media.view" },
   { to: "/audit", label: "Audit Log", icon: History, perm: "audit.view" },
   { to: "/alerts", label: "Notification Centre", icon: BellRing, perm: "alerts.view" },
@@ -68,11 +68,8 @@ export function AppShell() {
             <img src="/app-icon-120.png" alt="GKHQ" width={28} height={28} className="size-7 rounded-[6px]" />
             <span className="hidden sm:inline font-display uppercase tracking-[0.04em] font-bold text-sm">GKHQ</span>
           </div>
-          <div className="flex-1 max-w-xl relative">
-            <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input placeholder="Search goalkeepers, mentors, reports…" className="w-full h-9 pl-9 pr-14 rounded-md bg-input border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40" />
-            <kbd className="hidden md:inline-flex items-center gap-0.5 absolute right-2 top-1/2 -translate-y-1/2 h-5 px-1.5 rounded border border-border bg-background/60 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
-          </div>
+          <div className="flex-1" />
+
           {user.actualRole === "super_admin" ? (
             <div className="hidden md:inline-flex items-center gap-1.5 h-7 pl-2 pr-1 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-medium uppercase tracking-wider" title="Interface only — server permissions are unchanged. This preview does not grant or restrict backend access.">
               <ShieldCheck className="size-3" />

@@ -54,7 +54,7 @@ export type Permission =
   | "media.view"
   | "media.upload"
   | "media.edit"
-  | "intelligence.view"
+  
   | "alerts.view"
   | "calendar.view"
   | "executive.view"
@@ -65,7 +65,6 @@ const MENTOR: Permission[] = [
   "interactions.view", "interactions.log",
   "reports.view", "reports.submit",
   "media.view", "media.upload", "media.edit",
-  "intelligence.view",
   "calendar.view",
 ];
 
@@ -83,7 +82,6 @@ const ADMIN: Permission[] = [
   "interactions.view",
   "reports.view", "reports.manage",
   "media.view", "media.edit",
-  "intelligence.view",
   "alerts.view", "calendar.view",
   "executive.view", "audit.view",
 ];

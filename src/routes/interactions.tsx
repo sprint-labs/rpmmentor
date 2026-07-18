@@ -22,7 +22,7 @@ export const Route = createFileRoute("/interactions")({
   component: withPermission(InteractionsPage, "interactions.view"),
 });
 
-const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"] as const;
+const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Face to Face", "Phone Call"] as const;
 
 const PLANNED_TO_TYPE: Record<string, (typeof TYPES)[number]> = {
   "Attend Live Match": "Live Match Observation",

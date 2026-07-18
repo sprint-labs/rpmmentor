@@ -31,7 +31,7 @@ export const ROUTE_CLASSIFICATION: Record<string, Classification> = {
   "/reports": "transitional",
   "/reports/$reportId": "transitional",
   "/media": "unverified",
-  "/intelligence": "mock",
+  
   "/alerts": "mock",
   "/calendar": "mock",
   "/executive": "mock",
