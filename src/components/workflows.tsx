@@ -476,7 +476,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         const pid = r.key.slice(6) as PillarId;
         if (conflict.scores?.[pid] != null) merged.scores[pid] = conflict.scores[pid];
       } else if (r.key === "goalkeeper") merged.goalkeeper = conflict.goalkeeper;
-      else if (r.key === "coach") merged.coach = conflict.coach;
+      else if (r.key === "competition") merged.competition = conflict.competition;
       else if (r.key === "team") merged.team = conflict.team;
       else if (r.key === "opponent") merged.opponent = conflict.opponent;
       else if (r.key === "matchDate") merged.matchDate = conflict.matchDate;
