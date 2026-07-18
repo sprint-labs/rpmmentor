@@ -121,10 +121,11 @@ export function MentorDashboard({ user }: Props) {
     return undefined;
   }, [data?.mentorProfileId, user.mentorId, user.actualRole, user.name]);
   const periodSearch = useMemo(() => lastNDaysSearch(rangeDays), [rangeDays]);
-  const reportsSearch = { ...periodSearch, coach: mentorName ?? "" };
-  const interactionsSearch = { ...periodSearch, mentorId: data?.mentorProfileId ?? user.mentorId ?? "" };
-  const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "" };
-  const outstandingSearch = { ...periodSearch, coach: mentorName ?? "" };
+  const effectiveMentorId = data?.mentorProfileId ?? user.mentorId ?? "";
+  const reportsSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId };
+  const interactionsSearch = { ...periodSearch, mentorId: effectiveMentorId, type: filters.length === 1 ? filters[0]! : "" };
+  const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video" };
+  const outstandingSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId };
 
   const toggleFilter = (type: string) => {
     setFilters((prev) =>
@@ -251,6 +252,9 @@ export function MentorDashboard({ user }: Props) {
                   ? "bg-destructive/15 text-destructive border-destructive/30"
                   : "bg-warning/15 text-warning border-warning/30";
                 const actionHref = isReport ? "/reports" : "/media";
+                const actionSearch = isReport
+                  ? { from: "", to: "", coach: mentorName ?? "", mentorProfileId: effectiveMentorId }
+                  : { from: "", to: "", uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video" };
                 return (
                   <div key={item.id} className="flex items-center gap-3 py-2.5">
                     <Avatar initials={item.gkInitials ?? "—"} />
@@ -280,6 +284,7 @@ export function MentorDashboard({ user }: Props) {
                     </div>
                     <Link
                       to={actionHref}
+                      search={actionSearch}
                       className="shrink-0 text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
                     >
                       {isReport ? "Submit report" : "Upload clip"}

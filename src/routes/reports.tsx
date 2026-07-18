@@ -17,6 +17,7 @@ const reportsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
   coach: fallback(z.string(), "").default(""),
+  mentorProfileId: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/reports")({
@@ -77,7 +78,7 @@ function ReportsPage() {
   }, [reports, coachFilter, from, to]);
 
   const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "" };
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "" };
 
   return (
     <div className="space-y-5">

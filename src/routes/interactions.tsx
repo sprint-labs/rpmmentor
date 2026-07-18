@@ -4,7 +4,7 @@ import { z } from "zod";
 import { PageHeader, Card, Pill, Avatar } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { interactions, getGk, getMentor, formatDate, formatRelative } from "@/lib/mock-data";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { withPermission } from "@/components/require-permission";
 
@@ -12,6 +12,7 @@ const interactionsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
   mentorId: fallback(z.string(), "").default(""),
+  type: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/interactions")({
@@ -21,9 +22,24 @@ export const Route = createFileRoute("/interactions")({
 
 const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Face to Face", "Video Review Session", "Phone Call", "WhatsApp Feedback", "Development Meeting", "Scouting Assignment"] as const;
 
+const PLANNED_TO_TYPE: Record<string, (typeof TYPES)[number]> = {
+  "Attend Live Match": "Live Match Observation",
+  "Training Ground Visit": "Training Ground Visit",
+  "Coffee Meeting": "Face to Face",
+};
+
+function resolveType(param: string): (typeof TYPES)[number] {
+  if (!param) return "All";
+  if ((TYPES as readonly string[]).includes(param)) return param as (typeof TYPES)[number];
+  return PLANNED_TO_TYPE[param] ?? "All";
+}
+
 function InteractionsPage() {
-  const { from, to, mentorId } = Route.useSearch();
-  const [type, setType] = useState<(typeof TYPES)[number]>("All");
+  const { from, to, mentorId, type: typeParam } = Route.useSearch();
+  const [type, setType] = useState<(typeof TYPES)[number]>(() => resolveType(typeParam));
+  useEffect(() => {
+    if (typeParam) setType(resolveType(typeParam));
+  }, [typeParam]);
   const sorted = useMemo(() => [...interactions].sort((a, b) => +new Date(b.date) - +new Date(a.date)), []);
   const filtered = useMemo(() => {
     let list = sorted;
@@ -40,8 +56,8 @@ function InteractionsPage() {
     return list;
   }, [sorted, mentorId, from, to, type]);
 
-  const hasFilters = Boolean(mentorId) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", mentorId: "" };
+  const hasFilters = Boolean(mentorId) || (Boolean(from) && Boolean(to)) || Boolean(typeParam);
+  const clearSearch = { from: "", to: "", mentorId: "", type: "" };
 
   return (
     <div className="space-y-5">
