@@ -14,6 +14,7 @@ import {
   type MediaAsset, type MediaKind, type MediaFilters,
 } from "@/lib/media-store";
 import { withPermission } from "@/components/require-permission";
+import { getNavSource } from "@/lib/nav-source";
 
 const mediaSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
@@ -21,6 +22,7 @@ const mediaSearchSchema = z.object({
   uploaderName: fallback(z.string(), "").default(""),
   mentorProfileId: fallback(z.string(), "").default(""),
   kind: fallback(z.string(), "").default(""),
+  source: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/media")({
@@ -37,7 +39,8 @@ function isKind(v: string): v is MediaKind | "all" {
 
 function MediaPage() {
   const { can, user } = useAuth();
-  const { from, to, uploaderName, kind: kindParam } = Route.useSearch();
+  const { from, to, uploaderName, kind: kindParam, source } = Route.useSearch();
+  const navSource = getNavSource(source);
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
@@ -138,7 +141,15 @@ function MediaPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Media Library"
+        breadcrumbs={
+          navSource
+            ? [
+                { label: "Dashboard", to: "/" },
+                { label: navSource.label },
+              ]
+            : undefined
+        }
+        title={navSource?.title ?? "Media Library"}
         description={loading ? "Loading…" : `${assets.length} asset${assets.length === 1 ? "" : "s"} matching filters.`}
         action={can("media.upload") ? (
           <button onClick={() => setWorkflow("media")} className="h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium inline-flex items-center gap-1.5">

@@ -12,12 +12,14 @@ import { WorkflowDialog, type WorkflowKind } from "@/components/workflows";
 import { withPermission } from "@/components/require-permission";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import type { MatchReportRow } from "@/lib/match-reports/schema";
+import { getNavSource } from "@/lib/nav-source";
 
 const reportsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
   coach: fallback(z.string(), "").default(""),
   mentorProfileId: fallback(z.string(), "").default(""),
+  source: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/reports")({
@@ -33,7 +35,8 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
-  const { from, to, coach } = Route.useSearch();
+  const { from, to, coach, source } = Route.useSearch();
+  const navSource = getNavSource(source);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
   const [coachFilter, setCoachFilter] = useState<string>(coach || "All");
   const router = useRouter();
@@ -78,12 +81,20 @@ function ReportsPage() {
   }, [reports, coachFilter, from, to]);
 
   const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "" };
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "" };
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Match Report Submission Centre"
+        breadcrumbs={
+          navSource
+            ? [
+                { label: "Dashboard", to: "/" },
+                { label: navSource.label },
+              ]
+            : undefined
+        }
+        title={navSource?.title ?? "Match Report Submission Centre"}
         description={
           isLoading
             ? "Loading match reports from Google Sheets…"
@@ -105,6 +116,7 @@ function ReportsPage() {
           </div>
         }
       />
+
 
       <DataSourceBanner
         classification="transitional"

@@ -122,10 +122,10 @@ export function MentorDashboard({ user }: Props) {
   }, [data?.mentorProfileId, user.mentorId, user.actualRole, user.name]);
   const periodSearch = useMemo(() => lastNDaysSearch(rangeDays), [rangeDays]);
   const effectiveMentorId = data?.mentorProfileId ?? user.mentorId ?? "";
-  const reportsSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId };
-  const interactionsSearch = { ...periodSearch, mentorId: effectiveMentorId, type: filters.length === 1 ? filters[0]! : "" };
-  const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video" };
-  const outstandingSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId };
+  const reportsSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId, source: "reports-submitted" };
+  const interactionsSearch = { ...periodSearch, mentorId: effectiveMentorId, type: filters.length === 1 ? filters[0]! : "", source: "interactions-logged" };
+  const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video", source: "clips-posted" };
+  const outstandingSearch = { ...periodSearch, coach: mentorName ?? "", mentorProfileId: effectiveMentorId, source: "outstanding-actions" };
 
   const toggleFilter = (type: string) => {
     setFilters((prev) =>
@@ -253,8 +253,8 @@ export function MentorDashboard({ user }: Props) {
                   : "bg-warning/15 text-warning border-warning/30";
                 const actionHref = isReport ? "/reports" : "/media";
                 const actionSearch = isReport
-                  ? { from: "", to: "", coach: mentorName ?? "", mentorProfileId: effectiveMentorId }
-                  : { from: "", to: "", uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video" };
+                  ? { from: "", to: "", coach: mentorName ?? "", mentorProfileId: effectiveMentorId, source: "outstanding-report" }
+                  : { from: "", to: "", uploaderName: mentorName ?? "", mentorProfileId: effectiveMentorId, kind: "video", source: "outstanding-clip" };
                 return (
                   <div key={item.id} className="flex items-center gap-3 py-2.5">
                     <Avatar initials={item.gkInitials ?? "—"} />

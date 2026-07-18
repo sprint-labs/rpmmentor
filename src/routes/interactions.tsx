@@ -7,12 +7,14 @@ import { interactions, getGk, getMentor, formatDate, formatRelative } from "@/li
 import { useEffect, useMemo, useState } from "react";
 import { X, MessageSquarePlus, Filter } from "lucide-react";
 import { withPermission } from "@/components/require-permission";
+import { getNavSource } from "@/lib/nav-source";
 
 const interactionsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
   to: fallback(z.string(), "").default(""),
   mentorId: fallback(z.string(), "").default(""),
   type: fallback(z.string(), "").default(""),
+  source: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/interactions")({
@@ -35,7 +37,8 @@ function resolveType(param: string): (typeof TYPES)[number] {
 }
 
 function InteractionsPage() {
-  const { from, to, mentorId, type: typeParam } = Route.useSearch();
+  const { from, to, mentorId, type: typeParam, source } = Route.useSearch();
+  const navSource = getNavSource(source);
   const [type, setType] = useState<(typeof TYPES)[number]>(() => resolveType(typeParam));
   useEffect(() => {
     if (typeParam) setType(resolveType(typeParam));
@@ -57,12 +60,20 @@ function InteractionsPage() {
   }, [sorted, mentorId, from, to, type]);
 
   const hasFilters = Boolean(mentorId) || (Boolean(from) && Boolean(to)) || Boolean(typeParam);
-  const clearSearch = { from: "", to: "", mentorId: "", type: "" };
+  const clearSearch = { from: "", to: "", mentorId: "", type: "", source: "" };
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Interaction Tracking"
+        breadcrumbs={
+          navSource
+            ? [
+                { label: "Dashboard", to: "/" },
+                { label: navSource.label },
+              ]
+            : undefined
+        }
+        title={navSource?.title ?? "Interaction Tracking"}
         description="Every logged touchpoint between mentors and goalkeepers."
         action={<button className="h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium">Log Interaction</button>}
       />
