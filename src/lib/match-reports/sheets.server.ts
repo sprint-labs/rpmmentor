@@ -33,9 +33,9 @@ async function gatewayFetch(path: string, init?: RequestInit): Promise<Response>
 
 /** Fetch all data rows (skips header). Returns raw string rows + first-row offset (2). */
 export async function readAllRows(): Promise<{ rows: string[][]; firstDataRow: number }> {
-  const range = `${SHEET_TAB}!A2:N`;
+  const range = `'${SHEET_TAB}'!A2:N`;
   const res = await gatewayFetch(
-    `/spreadsheets/${SHEET_ID}/values/${encodeURI(range)}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
+    `/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
   );
   if (!res.ok) {
     const body = await res.text();
