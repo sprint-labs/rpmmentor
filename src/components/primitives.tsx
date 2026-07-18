@@ -43,7 +43,7 @@ export function Card({ className, children }: { className?: string; children: Re
   );
 }
 
-export function StatCard({ label, value, hint, accent, emptyMessage }: { label: string; value: string | number; hint?: string; accent?: "primary" | "warning" | "destructive" | "info"; emptyMessage?: string }) {
+export function StatCard({ label, value, hint, accent, emptyMessage, updatedAt }: { label: string; value: string | number; hint?: string; accent?: "primary" | "warning" | "destructive" | "info"; emptyMessage?: string; updatedAt?: string }) {
   const ring =
     accent === "warning" ? "before:bg-warning"
     : accent === "destructive" ? "before:bg-destructive"
@@ -57,6 +57,7 @@ export function StatCard({ label, value, hint, accent, emptyMessage }: { label: 
         {isEmpty ? emptyMessage : value}
       </div>
       {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
+      {updatedAt && <div className="text-[10px] text-muted-foreground/70 mt-3 font-mono tabular-nums">Updated {updatedAt}</div>}
     </Card>
   );
 }
