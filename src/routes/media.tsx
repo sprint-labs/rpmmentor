@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { PageHeader, Card, Pill } from "@/components/primitives";
+import { PageHeader, Card, Pill, EmptyState } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, getGk, formatDate } from "@/lib/mock-data";
 import { Video, FileText, Image as ImageIcon, Mic, Upload, Trash2, ExternalLink, Pencil, Filter, X } from "lucide-react";
