@@ -361,6 +361,11 @@ function InteractionForm({
           <ArrowLeft className="size-3.5" /> Back to transcript
         </button>
       )}
+      {submitError && (
+        <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {submitError}
+        </div>
+      )}
       <Field label="Player" required>
         <PlayerPicker mentorProfileId={mentorProfileId} value={gkId} onChange={setGkId} required={!playerId} />
       </Field>
