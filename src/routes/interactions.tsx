@@ -57,6 +57,17 @@ function InteractionsPage() {
         ))}
       </div>
 
+      {hasFilters && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground uppercase tracking-wider">Scoped to:</span>
+          {mentorId && <Pill tone="muted">{getMentor(mentorId)?.name ?? mentorId}</Pill>}
+          {from && to && <Pill tone="muted">{new Date(from).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – {new Date(to).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</Pill>}
+          <Link to="/interactions" search={clearSearch} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground ml-2">
+            <X className="size-3" /> Clear
+          </Link>
+        </div>
+      )}
+
       <Card>
         <table className="w-full text-sm">
           <thead>
