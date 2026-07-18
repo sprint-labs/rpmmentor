@@ -197,7 +197,7 @@ export const submitMatchReport = createServerFn({ method: "POST" })
             report_id,
             row_index: rowIndex > 0 ? rowIndex : null,
             goalkeeper: payload.goalkeeper,
-            coach: payload.coach,
+            coach: resolvedCoach,
             team: payload.team,
             opponent: payload.opponent,
             competition: payload.competition ?? "",
