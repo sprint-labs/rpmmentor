@@ -114,6 +114,16 @@ export function MentorDashboard({ user }: Props) {
     return map;
   }, [filteredUpcoming]);
 
+  const mentorName = useMemo(
+    () => mentors.find((m) => m.id === data?.mentorProfileId)?.name ?? user.name,
+    [data?.mentorProfileId, user.name]
+  );
+  const periodSearch = useMemo(() => lastNDaysSearch(14), []);
+  const reportsSearch = { ...periodSearch, coach: mentorName };
+  const interactionsSearch = { ...periodSearch, mentorId: data?.mentorProfileId ?? user.mentorId ?? "" };
+  const mediaSearch = { ...periodSearch, uploaderName: mentorName };
+  const outstandingSearch = { ...periodSearch, coach: mentorName };
+
   const toggleFilter = (type: string) => {
     setFilters((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
