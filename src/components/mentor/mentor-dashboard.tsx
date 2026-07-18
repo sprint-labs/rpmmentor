@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowUpRight, CalendarClock, ChevronDown, ChevronRight, FileText, Video, AlertTriangle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowUpRight, CalendarClock, CalendarPlus, ChevronDown, ChevronRight, FileText, Video, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card, StatCard, SectionTitle, Avatar, TierBadge, TierLevelBadge, Pill } from "@/components/primitives";
 import { getMentorDashboardStats } from "@/lib/mentor-dashboard.functions";
+import type { MentorUpcomingInteraction } from "@/lib/mentor-dashboard.functions";
 import type { Tier } from "@/lib/mock-data";
 import type { SessionUser } from "@/lib/auth";
 
@@ -39,11 +41,41 @@ function formatRelativeTime(iso: string) {
   return `${days}d ago`;
 }
 
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function startOfWeekMonday(d: Date) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function interactionGroupLabel(date: string) {
+  const now = new Date();
+  const today = startOfDay(now);
+  const eventDay = startOfDay(new Date(date));
+  const daysDiff = Math.floor((eventDay - today) / 86400000);
+  if (daysDiff === 0) return "Today";
+  if (daysDiff === 1) return "Tomorrow";
+  const thisWeek = startOfWeekMonday(now);
+  const eventWeek = startOfWeekMonday(new Date(date));
+  if (eventWeek === thisWeek) return "This week";
+  if (eventWeek === thisWeek + 7 * 86400000) return "Next week";
+  return "Later";
+}
+
+const groupOrder = ["Today", "Tomorrow", "This week", "Next week", "Later"] as const;
+
 export function MentorDashboard({ user }: Props) {
+  const [rangeDays, setRangeDays] = useState(14);
   const fetchStats = useServerFn(getMentorDashboardStats);
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["mentor-dashboard-stats"],
-    queryFn: () => fetchStats(),
+    queryKey: ["mentor-dashboard-stats", rangeDays],
+    queryFn: () => fetchStats({ data: { days: rangeDays } }),
   });
 
   const firstName = user.name.split(" ")[0];
@@ -52,6 +84,17 @@ export function MentorDashboard({ user }: Props) {
   const updatedAt = data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined;
   const period = "Last 14 days";
   const [showOutstanding, setShowOutstanding] = useState(false);
+
+  const groupedUpcoming = useMemo(() => {
+    const map = new Map<string, MentorUpcomingInteraction[]>();
+    for (const item of upcoming) {
+      const label = interactionGroupLabel(item.date);
+      const list = map.get(label) ?? [];
+      list.push(item);
+      map.set(label, list);
+    }
+    return map;
+  }, [upcoming]);
 
   return (
     <div className="space-y-6">
@@ -221,37 +264,97 @@ export function MentorDashboard({ user }: Props) {
           Upcoming Interactions
         </SectionTitle>
 
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <span className="text-xs text-muted-foreground">
+            {isLoading ? "Loading…" : `Next ${rangeDays} days`}
+          </span>
+          <div className="flex items-center gap-1" role="tablist" aria-label="Interaction range">
+            {[7, 14, 30].map((d) => (
+              <button
+                key={d}
+                role="tab"
+                aria-selected={rangeDays === d}
+                onClick={() => setRangeDays(d)}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] uppercase tracking-wider rounded-md border transition-colors",
+                  rangeDays === d
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-transparent text-muted-foreground border-border hover:border-primary/50"
+                )}
+              >
+                {d}d
+              </button>
+            ))}
+          </div>
+        </div>
+
         {upcoming.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-6 text-center">
-            {isLoading ? "Loading…" : "No upcoming interactions in the next 14 days."}
+          <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+            <div className="size-10 rounded-full bg-muted grid place-items-center">
+              <CalendarPlus className="size-5 text-muted-foreground" />
+            </div>
+            <div className="max-w-xs">
+              <p className="text-sm font-medium text-foreground">
+                {isLoading ? "Loading your calendar…" : "No interactions scheduled"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isLoading
+                  ? "This may take a moment."
+                  : `There are no upcoming interactions in the next ${rangeDays} days.`}
+              </p>
+            </div>
+            <Link
+              to="/interactions"
+              className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-accent/40 text-primary inline-flex items-center gap-1"
+            >
+              Schedule interaction <ArrowUpRight className="size-3" />
+            </Link>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {upcoming.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 py-2.5">
-                <Avatar initials={e.gkInitials ?? "—"} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-sm truncate">{e.gkName ?? "Unassigned"}</span>
-                    {e.gkStatus && <TierBadge tier={e.gkStatus as Tier} />}
-                    {e.gkFreeAgent && <Pill tone="warning">Free Agent</Pill>}
-                    {e.gkTierLevel && <TierLevelBadge level={e.gkTierLevel} />}
+          <div className="space-y-4">
+            {groupOrder.map((label) => {
+              const list = groupedUpcoming.get(label);
+              if (!list || list.length === 0) return null;
+              return (
+                <div key={label}>
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {label}
+                    </h3>
+                    <span className="text-[10px] tabular-nums text-muted-foreground/70">
+                      {list.length}
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {e.gkClub ? `${e.gkClub}${e.gkLeague ? ` — ${e.gkLeague}` : ""}` : "Free Agent"}
+                  <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
+                    {list.map((e) => (
+                      <div key={e.id} className="flex items-center gap-3 py-2.5 px-3">
+                        <Avatar initials={e.gkInitials ?? "—"} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm truncate">{e.gkName ?? "Unassigned"}</span>
+                            {e.gkStatus && <TierBadge tier={e.gkStatus as Tier} />}
+                            {e.gkFreeAgent && <Pill tone="warning">Free Agent</Pill>}
+                            {e.gkTierLevel && <TierLevelBadge level={e.gkTierLevel} />}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {e.gkClub ? `${e.gkClub}${e.gkLeague ? ` — ${e.gkLeague}` : ""}` : "Free Agent"}
+                          </div>
+                        </div>
+                        <div className="hidden md:block text-sm font-medium text-foreground/90 truncate max-w-[240px]">
+                          {e.plannedType ?? e.type}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-xs font-medium tabular-nums font-mono flex items-center gap-1 justify-end">
+                            <CalendarClock className="size-3 text-muted-foreground" />
+                            {formatEventDateTime(e.date)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="hidden md:block text-sm font-medium text-foreground/90 truncate max-w-[240px]">
-                  {e.plannedType ?? e.type}
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-medium tabular-nums font-mono flex items-center gap-1 justify-end">
-                    <CalendarClock className="size-3 text-muted-foreground" />
-                    {formatEventDateTime(e.date)}
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

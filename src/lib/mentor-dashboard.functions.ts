@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 import { goalkeepers, interactions, reports, media, calendarEvents, mentors } from "@/lib/mock-data";
 import type { TierLevel } from "@/lib/mock-data";
 
@@ -80,9 +81,16 @@ function mapPlannedType(type: string): UpcomingPlannedType | null {
  * not to a roster of assigned goalkeepers. Mentors work collaboratively
  * across the whole RPM roster.
  */
+const dashboardInputSchema = z
+  .object({
+    days: z.coerce.number().int().min(1).max(60).default(14),
+  })
+  .default({ days: 14 });
+
 export const getMentorDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MentorDashboardStats> => {
+  .inputValidator((data) => dashboardInputSchema.parse(data))
+  .handler(async ({ context, data }): Promise<MentorDashboardStats> => {
     const { supabase, userId } = context;
 
     const [{ data: profile }, { data: roles }] = await Promise.all([
@@ -97,8 +105,9 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
       mentorId = "m-david-rouse";
     }
 
+    const days = data.days;
     const now = Date.now();
-    const in14 = now + 14 * 86400000;
+    const inRange = now + days * 86400000;
     const ago14 = now - 14 * 86400000;
 
     if (!mentorId) {
@@ -200,7 +209,7 @@ export const getMentorDashboardStats = createServerFn({ method: "GET" })
 
     // Upcoming interactions: this mentor's calendar in the next 14 days.
     const upcomingEvents = calendarEvents
-      .filter((e) => e.mentorId === mentorId && +new Date(e.date) >= now && +new Date(e.date) <= in14)
+      .filter((e) => e.mentorId === mentorId && +new Date(e.date) >= now && +new Date(e.date) <= inRange)
       .sort((a, b) => +new Date(a.date) - +new Date(b.date));
 
     const upcomingList: MentorUpcomingInteraction[] = upcomingEvents.map((e) => {
