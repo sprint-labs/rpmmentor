@@ -178,6 +178,7 @@ export function MentorDashboard({ user }: Props) {
         <Link
           to="/reports"
           search={reportsSearch}
+          onClick={() => trackClick("reports-submitted", "/reports")}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="View match reports"
         >
@@ -192,6 +193,7 @@ export function MentorDashboard({ user }: Props) {
         <Link
           to="/interactions"
           search={interactionsSearch}
+          onClick={() => trackClick("interactions-logged", "/interactions")}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-info/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info"
           aria-label="View interactions"
         >
@@ -206,6 +208,7 @@ export function MentorDashboard({ user }: Props) {
         <Link
           to="/media"
           search={mediaSearch}
+          onClick={() => trackClick("clips-posted", "/media")}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="View match clips"
         >
@@ -220,6 +223,7 @@ export function MentorDashboard({ user }: Props) {
         <Link
           to="/reports"
           search={outstandingSearch}
+          onClick={() => trackClick("outstanding-actions", "/reports")}
           className="block rounded-lg transition-transform hover:-translate-y-0.5 hover:ring-1 hover:ring-destructive/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
           aria-label="View outstanding actions"
         >
