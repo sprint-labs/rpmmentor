@@ -62,6 +62,9 @@ export function getSessionReports(): MatchReportRow[] {
 export function insertMentorInteraction(
   row: Omit<MentorInteractionRow, "id">,
 ): MentorInteractionRow {
+  if (!ALLOWED_INTERACTION_TYPES.includes(row.interaction_type as AllowedInteractionType)) {
+    throw new InvalidInteractionTypeError(String(row.interaction_type));
+  }
   const full: MentorInteractionRow = { id: `mi-${crypto.randomUUID()}`, ...row };
   interactions.unshift(full);
   emit();
