@@ -204,7 +204,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   const { user } = useAuth();
   const submitFn = useServerFn(submitMatchReport);
 
-  const canOverrideCoach = !!user && (user.role === "super_admin" || user.role === "admin" || user.role === "mentor_manager");
+  
 
   const [done, setDone] = useState<{ report_id: string; average: number } | null>(null);
   const [goalkeeper, setGoalkeeper] = useState("");
