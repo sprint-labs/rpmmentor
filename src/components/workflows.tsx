@@ -434,7 +434,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
       const pid = key.slice(6) as PillarId;
       setScores((prev) => ({ ...prev, [pid]: snap.scores[pid] }));
     } else if (key === "goalkeeper") setGoalkeeper(snap.goalkeeper);
-    else if (key === "coach") { if (canOverrideCoach) setCoach(snap.coach); }
+    else if (key === "competition") setCompetition(snap.competition);
     else if (key === "team") setTeam(snap.team);
     else if (key === "opponent") setOpponent(snap.opponent);
     else if (key === "matchDate") { if (snap.matchDate) setMatchDate(snap.matchDate); }
