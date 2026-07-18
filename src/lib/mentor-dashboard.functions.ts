@@ -2,6 +2,21 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { goalkeepers, interactions, reports, media, calendarEvents, dutyStatusForGk } from "@/lib/mock-data";
 
+export interface MentorUpcomingInteraction {
+  id: string;
+  date: string;
+  title: string;
+  type: string;
+  gkId: string | null;
+  gkName: string | null;
+  gkInitials: string | null;
+  gkTier: string | null;
+  gkClub: string | null;
+  gkLeague: string | null;
+  gkFreeAgent: boolean;
+  gkInjured: boolean;
+}
+
 export interface MentorDashboardStats {
   mentorProfileId: string | null;
   totalGoalkeepers: number;
@@ -9,6 +24,7 @@ export interface MentorDashboardStats {
   reportsLast14: number;
   clipsLast14: number;
   overdueReports: number;
+  upcomingList: MentorUpcomingInteraction[];
 }
 
 /**
