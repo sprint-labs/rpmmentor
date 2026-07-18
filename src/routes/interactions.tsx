@@ -27,7 +27,7 @@ const TYPES = ["All", "Live Match Observation", "Training Ground Visit", "Coffee
 const PLANNED_TO_TYPE: Record<string, (typeof TYPES)[number]> = {
   "Attend Live Match": "Live Match Observation",
   "Training Ground Visit": "Training Ground Visit",
-  "Coffee Meeting": "Coffee Catch Up",
+  "Coffee Catch Up": "Coffee Catch Up",
 };
 
 function resolveType(param: string): (typeof TYPES)[number] {
