@@ -145,7 +145,7 @@ export function MentorDashboard({ user }: Props) {
             ? "Loading your dashboard…"
             : isError
               ? "Couldn't load your dashboard."
-              : "Your reporting activity — last 14 days"}
+              : `Your reporting activity — last ${rangeDays} days`}
         </p>
         {isError && (
           <button
