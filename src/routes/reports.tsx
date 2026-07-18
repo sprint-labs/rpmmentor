@@ -32,8 +32,9 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
+  const { from, to, coach } = Route.useSearch();
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
-  const [coachFilter, setCoachFilter] = useState<string>("All");
+  const [coachFilter, setCoachFilter] = useState<string>(coach || "All");
   const router = useRouter();
   const listFn = useServerFn(listMatchReports);
 
@@ -51,15 +52,32 @@ function ReportsPage() {
     return () => window.removeEventListener("rpm:report-submitted", h);
   }, [refetch, router]);
 
+  useEffect(() => {
+    if (coach) setCoachFilter(coach);
+  }, [coach]);
+
   const coaches = useMemo(() => {
     const s = new Set<string>();
     reports.forEach((r) => r.coach && s.add(r.coach));
     return ["All", ...Array.from(s).sort()];
   }, [reports]);
 
-  const filtered = coachFilter === "All"
-    ? reports
-    : reports.filter((r) => r.coach === coachFilter);
+  const filtered = useMemo(() => {
+    let list = coachFilter === "All" ? reports : reports.filter((r) => r.coach === coachFilter);
+    if (from && to) {
+      const start = new Date(from).getTime();
+      const end = new Date(to).getTime();
+      list = list.filter((r) => {
+        if (!r.match_date) return false;
+        const t = new Date(r.match_date).getTime();
+        return t >= start && t <= end;
+      });
+    }
+    return list;
+  }, [reports, coachFilter, from, to]);
+
+  const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
+  const clearSearch = { from: "", to: "", coach: "" };
 
   return (
     <div className="space-y-5">
