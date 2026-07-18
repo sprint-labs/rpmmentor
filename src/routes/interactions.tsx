@@ -118,7 +118,7 @@ function InteractionsPage() {
                     description={
                       hasFilters
                         ? "Try broadening the date range, mentor or type filter to see more touchpoints."
-                        : "Log the first touchpoint — a call, meeting, match observation or WhatsApp exchange — to begin the interaction record."
+                        : "Log the first touchpoint — a call, coffee catch up, or match observation — to begin the interaction record."
                     }
                     primaryAction={
                       hasFilters ? (
