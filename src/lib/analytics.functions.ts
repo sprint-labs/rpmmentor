@@ -29,7 +29,7 @@ export const logDashboardClick = createServerFn({ method: "POST" })
       mentor_profile_id: data.mentorProfileId ?? null,
       mentor_name: data.mentorName ?? null,
       effective_role: data.effectiveRole ?? null,
-      metadata: data.metadata ?? {},
+      metadata: (data.metadata ?? {}) as never,
     });
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
