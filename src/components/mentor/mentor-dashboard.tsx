@@ -95,7 +95,7 @@ export function MentorDashboard({ user }: Props) {
   const upcoming = data?.upcomingList ?? [];
   const outstanding = data?.outstandingItems ?? [];
   const updatedAt = data?.lastUpdatedAt ? formatRelativeTime(data.lastUpdatedAt) : undefined;
-  const period = "Last 14 days";
+  const period = `Last ${rangeDays} days`;
   const [showOutstanding, setShowOutstanding] = useState(false);
 
   const filteredUpcoming = useMemo(() => {
@@ -120,7 +120,7 @@ export function MentorDashboard({ user }: Props) {
     if (user.actualRole === "mentor") return user.name;
     return undefined;
   }, [data?.mentorProfileId, user.mentorId, user.actualRole, user.name]);
-  const periodSearch = useMemo(() => lastNDaysSearch(14), []);
+  const periodSearch = useMemo(() => lastNDaysSearch(rangeDays), [rangeDays]);
   const reportsSearch = { ...periodSearch, coach: mentorName ?? "" };
   const interactionsSearch = { ...periodSearch, mentorId: data?.mentorProfileId ?? user.mentorId ?? "" };
   const mediaSearch = { ...periodSearch, uploaderName: mentorName ?? "" };
