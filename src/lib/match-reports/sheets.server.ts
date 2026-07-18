@@ -22,14 +22,59 @@ function authHeaders(): HeadersInit {
   };
 }
 
+/**
+ * Fetch through the connector gateway with automatic retry + exponential
+ * backoff for transient failures (502/503/504, 429, and network errors).
+ *
+ * Non-retryable statuses (4xx other than 429) return immediately so the
+ * caller can surface the real error. Successful responses return on the
+ * first try — retries only fire when the gateway itself is flaky.
+ */
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 4;
+const BASE_DELAY_MS = 400;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function gatewayFetch(path: string, init?: RequestInit): Promise<Response> {
   const url = `${GATEWAY_BASE}${path}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: { ...authHeaders(), ...(init?.headers ?? {}) },
-  });
-  return res;
+  let lastErr: unknown = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...init,
+        headers: { ...authHeaders(), ...(init?.headers ?? {}) },
+      });
+      if (!RETRYABLE_STATUSES.has(res.status) || attempt === MAX_ATTEMPTS) {
+        return res;
+      }
+      // Honor Retry-After when present, else exponential backoff with jitter.
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const backoff = Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : BASE_DELAY_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 200);
+      console.warn(
+        `[sheets] gateway ${res.status} on attempt ${attempt}/${MAX_ATTEMPTS}; retrying in ${backoff}ms`,
+      );
+      await sleep(backoff);
+      continue;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === MAX_ATTEMPTS) break;
+      const backoff = BASE_DELAY_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 200);
+      console.warn(
+        `[sheets] network error on attempt ${attempt}/${MAX_ATTEMPTS}: ${(err as Error)?.message}; retrying in ${backoff}ms`,
+      );
+      await sleep(backoff);
+    }
+  }
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error("Google Sheets gateway request failed after retries.");
 }
+
 
 /** Fetch all data rows (skips header). Returns raw string rows + first-row offset (2). */
 export async function readAllRows(): Promise<{ rows: string[][]; firstDataRow: number }> {
