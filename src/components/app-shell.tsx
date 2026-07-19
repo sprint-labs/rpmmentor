@@ -64,11 +64,9 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background text-foreground">
       <div className="flex flex-1 flex-col min-w-0">
         <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-sidebar/95 backdrop-blur sticky top-0 z-10">
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <img src="/gkhq-icon.svg" alt="GK.HQ" width={36} height={36} className="size-9" />
-            <span className="hidden sm:inline font-display uppercase tracking-[0.04em] font-bold text-base">
-              GK.<span className="text-gk-green">HQ</span>
-            </span>
+            <img src="/gkhq-wordmark.svg" alt="GK.HQ" className="hidden sm:inline h-6 w-auto" />
           </div>
           <div className="flex-1" />
 
