@@ -147,6 +147,20 @@
   --sidebar-accent-foreground: #F0EEE9;
   --sidebar-border: #2E2E2E;
   --sidebar-ring: #2EF900;
+  /* Carbon palette aliases */
+  --carbon-bg: #0A0A0A;
+  --carbon-section: #101010;
+  --carbon-panel: #151515;
+  --carbon-card: #1A1A1A;
+  --carbon-raised: #222222;
+  --carbon-border: #2E2E2E;
+  --cloud-dancer: #F0EEE9;
+  --gk-green: #2EF900;
+  --signal-blue: #14AEFF;
+  --flux-magenta: #DA14FF;
+  --ember-orange: #FF6514;
+  --rating-good: #A7D900;
+  --rating-danger: #FF3B36;
 }
 
 
