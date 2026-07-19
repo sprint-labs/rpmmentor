@@ -64,11 +64,9 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background text-foreground">
       <div className="flex flex-1 flex-col min-w-0">
         <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-sidebar/95 backdrop-blur sticky top-0 z-10">
-          <div className="flex items-center gap-3 shrink-0">
-            <img src="/app-icon-120.png" alt="GK.HQ" width={36} height={36} className="size-9 rounded-[6px]" />
-            <span className="hidden sm:inline font-display uppercase tracking-[0.04em] font-bold text-base">
-              GK.<span className="text-gk-green">HQ</span>
-            </span>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <img src="/gkhq-icon.svg" alt="GK.HQ" width={36} height={36} className="size-9" />
+            <img src="/gkhq-wordmark.svg" alt="GK.HQ" className="hidden sm:inline h-6 w-auto" />
           </div>
           <div className="flex-1" />
 
@@ -194,7 +192,7 @@ export function AppShell() {
           <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setNavOpen(false)} />
           <aside className="fixed inset-y-0 right-0 z-50 w-72 flex flex-col border-l border-sidebar-border bg-sidebar shadow-2xl">
             <div className="flex items-center gap-2.5 px-5 h-14 border-b border-sidebar-border">
-              <img src="/app-icon-120.png" alt="GKHQ" width={28} height={28} className="size-7 rounded-[6px] shrink-0" />
+              <img src="/gkhq-icon.svg" alt="GKHQ" width={28} height={28} className="size-7 shrink-0" />
               <div className="flex flex-col leading-tight min-w-0 flex-1">
                 <span className="text-sm font-semibold tracking-tight truncate">{user.name}</span>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">{ROLE_LABEL[user.role]}</span>
