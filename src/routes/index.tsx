@@ -50,13 +50,15 @@ function Dashboard() {
         <SectionTitle action={<Link to="/goalkeepers" className="text-xs text-primary inline-flex items-center gap-1">View goalkeepers <ArrowUpRight className="size-3" /></Link>}>
           Duty of Care · Traffic Light
         </SectionTitle>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {([
-            { level: "green", label: "On Track", count: dutyOverview.green, hint: "Contact within 21 days" },
-            { level: "amber", label: "Attention", count: dutyOverview.amber, hint: "22+ days since contact" },
+            { level: "up_to_date", label: "Up to date", count: dutyOverview.up_to_date, hint: "On cadence for tier", bar: "bg-success" },
+            { level: "due_soon", label: "Due soon", count: dutyOverview.due_soon, hint: "Approaching cadence", bar: "bg-warning" },
+            { level: "overdue", label: "Overdue", count: dutyOverview.overdue, hint: "Past required cadence", bar: "bg-destructive" },
+            { level: "not_required", label: "Not required", count: dutyOverview.not_required, hint: "Tier 4 — no formal duty", bar: "bg-muted-foreground/50" },
+            { level: "not_enough_data", label: "Not enough data", count: dutyOverview.not_enough_data, hint: "Missing tier or interactions", bar: "bg-muted-foreground/50" },
           ] as const).map((b) => {
             const pct = Math.round((b.count / Math.max(1, dutyOverview.total)) * 100);
-            const bar = b.level === "green" ? "bg-success" : "bg-warning";
             return (
               <div key={b.level} className="rounded-md border border-border/60 bg-accent/20 p-3">
                 <div className="flex items-center justify-between">
@@ -68,7 +70,7 @@ function Dashboard() {
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1">{b.hint}</div>
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-2">
-                  <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+                  <div className={`h-full ${b.bar}`} style={{ width: `${pct}%` }} />
                 </div>
                 <div className="text-[10px] text-muted-foreground mt-1 tabular-nums font-mono">{pct}% of roster</div>
               </div>
