@@ -70,7 +70,8 @@ function AccountPage() {
           </dl>
         </Card>
 
-        <Card title="Change password">
+        <Card>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.06em] mb-3">Change password</h2>
           <form onSubmit={onSubmit} className="space-y-3">
             <div>
               <label className="text-xs uppercase tracking-[0.06em] text-muted-foreground">New password</label>
