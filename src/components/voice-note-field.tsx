@@ -25,6 +25,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 interface Props {
   onTranscribed: (text: string, mode: "replace" | "append") => void;
+  onAudioAttach?: (audio: { blob: Blob; mimeType: string; durationSec: number }) => void | Promise<void>;
   className?: string;
 }
 
