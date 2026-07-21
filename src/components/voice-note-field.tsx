@@ -457,6 +457,29 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 </div>
               )}
             </div>
+          ) : cancelled ? (
+            <div className="rounded-md border border-border bg-background p-2.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <XCircle className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="text-xs text-foreground">
+                  <div className="font-medium">Transcription cancelled</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">The audio recording is still saved. Retry whenever you're ready, or save it without a transcript.</div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                  <RotateCcw className="size-3" />Retry transcription
+                </button>
+                {onAudioAttach && (
+                  <button type="button" onClick={attachAudio} disabled={attached || attaching} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-50">
+                    {attached ? "Audio saved" : attaching ? "Saving…" : "Save audio without transcript"}
+                  </button>
+                )}
+                <button type="button" onClick={reset} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                  Discard
+                </button>
+              </div>
+            </div>
           ) : transcript ? (
 
             <>
