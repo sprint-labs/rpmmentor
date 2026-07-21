@@ -404,9 +404,16 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                     <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Attempt {attempt}</span>
                   )}
                 </div>
-                <button type="button" onClick={cancelTranscription} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
-                  <X className="size-3" />Cancel
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {onAudioAttach && (
+                    <button type="button" onClick={() => void saveWithoutTranscript()} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                      Save without transcript
+                    </button>
+                  )}
+                  <button type="button" onClick={cancelTranscription} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                    <X className="size-3" />Cancel
+                  </button>
+                </div>
               </div>
               <div className="flex gap-1" aria-hidden>
                 {(["preparing", "uploading", "transcribing"] as const).map((p) => {
