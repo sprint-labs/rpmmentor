@@ -24,9 +24,18 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+interface VoiceDraft {
+  transcript: string;
+  tokens: Array<{ token: string; confidence: number }>;
+  avgConfidence: number | null;
+  reviewed: boolean;
+}
+
 interface Props {
   onTranscribed: (text: string, mode: "replace" | "append") => void;
   onAudioAttach?: (audio: { blob: Blob; mimeType: string; durationSec: number }) => void | Promise<void>;
+  draft?: VoiceDraft | null;
+  onDraftChange?: (draft: VoiceDraft | null) => void;
   className?: string;
 }
 
