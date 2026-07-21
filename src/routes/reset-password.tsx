@@ -77,6 +77,12 @@ function ResetPasswordPage() {
       setError(err.message || "Could not update password.");
       return;
     }
+    // Best-effort audit log before we tear down the recovery session.
+    try {
+      await recordPasswordRecovery();
+    } catch {
+      // don't block the user on audit failures
+    }
     // Sign the temporary recovery session out so the user must sign in with
     // the new password.
     await supabase.auth.signOut();
