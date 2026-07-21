@@ -304,6 +304,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       await attachAudio();
     }
     toast.success("Audio saved — type your notes in Comments below");
+  };
+
+
 
   const handleApply = (mode: "append" | "replace") => {
     if (!reviewed) {
