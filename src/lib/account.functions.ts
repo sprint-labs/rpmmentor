@@ -73,5 +73,14 @@ export const changePassword = createServerFn({ method: "POST" })
       throw new Error(updErr.message || "Could not update password.");
     }
 
+    const { logPasswordChange } = await import(
+      "@/lib/security/password-audit.server"
+    );
+    await logPasswordChange({
+      userId: context.userId,
+      actorId: context.userId,
+      eventType: "self_change",
+    });
+
     return { ok: true as const };
   });
