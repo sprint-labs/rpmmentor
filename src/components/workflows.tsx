@@ -10,6 +10,7 @@ import {
   type MediaAsset, type MediaKind,
 } from "@/lib/media-store";
 import { HandwrittenNotesField } from "@/components/handwritten-notes-field";
+import { VoiceNoteField } from "@/components/voice-note-field";
 import { submitMatchReport } from "@/lib/match-reports/reports.functions";
 import {
   PILLAR_IDS, PILLAR_LABELS, averageOfScores, type PillarId,
@@ -671,6 +672,11 @@ function ReportForm({ onDone }: { onDone: () => void }) {
 
       <HandwrittenNotesField
         context={goalkeeper ? `Match notes on ${goalkeeper} vs ${opponent || "opponent"}` : undefined}
+        onTranscribed={(text, mode) =>
+          setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
+        }
+      />
+      <VoiceNoteField
         onTranscribed={(text, mode) =>
           setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
         }
