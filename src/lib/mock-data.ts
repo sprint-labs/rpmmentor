@@ -569,35 +569,79 @@ export function formatRelative(iso: string) {
   return `${Math.floor(d / 30)}mo ago`;
 }
 
-// ---------- Duty-of-care traffic light ----------
-// Green  = contact within 21 days (on track)
-// Amber  = 22+ days (attention required)
-export type DutyLevel = "green" | "amber";
+// ---------- Duty-of-care status ----------
+// Determined by the goalkeeper's confirmed tier and qualifying live interactions:
+//   Tier 1 → 2 live contacts / month     (~15 day cadence)
+//   Tier 2 → 1 live contact  / month     (~30 day cadence)
+//   Tier 3 → 3-6 per season              (~60 day cadence)
+//   Tier 4 → no formal duty of care
+// Qualifying live interactions: Live Match Observation, Training Ground Visit, Coffee Catch Up.
+// Phone Calls do not count toward duty of care.
+export type DutyLevel =
+  | "up_to_date"
+  | "due_soon"
+  | "overdue"
+  | "not_required"
+  | "not_enough_data";
+
+export const DUTY_LABELS: Record<DutyLevel, string> = {
+  up_to_date: "Up to date",
+  due_soon: "Due soon",
+  overdue: "Overdue",
+  not_required: "Not required",
+  not_enough_data: "Not enough data",
+};
+
 export interface DutyStatus { level: DutyLevel; label: string; days: number; }
 
+const DUTY_QUALIFYING_TYPES: InteractionType[] = [
+  "Live Match Observation",
+  "Training Ground Visit",
+  "Coffee Catch Up",
+];
+
+const DUTY_TIER_INTERVAL_DAYS: Partial<Record<Status, number>> = {
+  "Tier 1": 15,
+  "Tier 2": 30,
+  "Tier 3": 60,
+};
+
+function dutyResult(level: DutyLevel, days: number): DutyStatus {
+  return { level, label: DUTY_LABELS[level], days };
+}
+
 export function dutyStatusForGk(gk: Goalkeeper): DutyStatus {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(gk.lastInteraction).getTime()) / 86400000));
-  if (days <= 21) return { level: "green", label: "On Track", days };
-  return { level: "amber", label: "Attention", days };
+  if (gk.status === "Tier 4") return dutyResult("not_required", 0);
+  const interval = DUTY_TIER_INTERVAL_DAYS[gk.status];
+  if (!interval) return dutyResult("not_enough_data", 0);
+  const qualifying = interactions
+    .filter((i) => i.gkId === gk.id && DUTY_QUALIFYING_TYPES.includes(i.type))
+    .map((i) => new Date(i.date).getTime())
+    .filter((t) => Number.isFinite(t));
+  if (!qualifying.length) return dutyResult("not_enough_data", 0);
+  const latest = Math.max(...qualifying);
+  const days = Math.max(0, Math.floor((Date.now() - latest) / 86400000));
+  if (days > interval) return dutyResult("overdue", days);
+  if (days > Math.floor(interval * 0.75)) return dutyResult("due_soon", days);
+  return dutyResult("up_to_date", days);
 }
 
 export function dutyStatusForMentor(mentorId: string): DutyStatus {
-  const m = getMentor(mentorId);
   const gks = goalkeepers.filter((g) => g.mentorId === mentorId);
-  // Mentors with no assigned GKs (directors/support) — judge by target completion only.
-  if (!gks.length) {
-    if (!m?.targetInteractions) return { level: "green", label: "Support", days: 0 };
-    const pct = (m.completedThisMonth / m.targetInteractions) * 100;
-    if (pct >= 80) return { level: "green", label: "On Track", days: 0 };
-    return { level: "amber", label: "Behind", days: 0 };
-  }
-  const counts = gks.reduce((acc, g) => { acc[dutyStatusForGk(g).level]++; return acc; }, { green: 0, amber: 0 } as Record<DutyLevel, number>);
-  if (counts.amber > 0) return { level: "amber", label: `${counts.amber} need attention`, days: 0 };
-  return { level: "green", label: "All on track", days: 0 };
+  if (!gks.length) return dutyResult("not_enough_data", 0);
+  const levels = gks.map((g) => dutyStatusForGk(g).level);
+  if (levels.includes("overdue")) return dutyResult("overdue", 0);
+  if (levels.includes("due_soon")) return dutyResult("due_soon", 0);
+  if (levels.some((l) => l === "up_to_date")) return dutyResult("up_to_date", 0);
+  if (levels.every((l) => l === "not_required")) return dutyResult("not_required", 0);
+  return dutyResult("not_enough_data", 0);
 }
 
 export const dutyOverview = (() => {
-  const counts = goalkeepers.reduce((acc, g) => { acc[dutyStatusForGk(g).level]++; return acc; }, { green: 0, amber: 0 } as Record<DutyLevel, number>);
+  const counts: Record<DutyLevel, number> = {
+    up_to_date: 0, due_soon: 0, overdue: 0, not_required: 0, not_enough_data: 0,
+  };
+  goalkeepers.forEach((g) => { counts[dutyStatusForGk(g).level]++; });
   return { ...counts, total: goalkeepers.length };
 })();
 

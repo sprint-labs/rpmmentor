@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageHeader, Card, TierBadge, Avatar, TrafficLight, DutyBadge, StatCard } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
-import { goalkeepers, formatRelative, dutyStatusForGk, dutyOverview } from "@/lib/mock-data";
+import { goalkeepers, dutyStatusForGk, dutyOverview, DUTY_LABELS, type DutyLevel } from "@/lib/mock-data";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
 
@@ -17,7 +17,7 @@ function GoalkeepersLayout() {
 function GoalkeepersList() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("All");
-  const [duty, setDuty] = useState<"all" | "green" | "amber">("all");
+  const [duty, setDuty] = useState<"all" | DutyLevel>("all");
   const filtered = goalkeepers.filter((g) => {
     if (cat === "UK Based" && g.region !== "UK Based") return false;
     if (cat === "Overseas" && g.region !== "Overseas") return false;
@@ -33,18 +33,22 @@ function GoalkeepersList() {
   const CATS = ["All", "UK Based", "Overseas", "Academy", "Tier 1-2", "Tier 3-4", "Free Agents"] as const;
   const DUTIES: { id: typeof duty; label: string; count: number }[] = [
     { id: "all", label: "All", count: dutyOverview.total },
-    { id: "green", label: "On Track", count: dutyOverview.green },
-    { id: "amber", label: "Attention", count: dutyOverview.amber },
+    { id: "up_to_date", label: DUTY_LABELS.up_to_date, count: dutyOverview.up_to_date },
+    { id: "due_soon", label: DUTY_LABELS.due_soon, count: dutyOverview.due_soon },
+    { id: "overdue", label: DUTY_LABELS.overdue, count: dutyOverview.overdue },
+    { id: "not_required", label: DUTY_LABELS.not_required, count: dutyOverview.not_required },
+    { id: "not_enough_data", label: DUTY_LABELS.not_enough_data, count: dutyOverview.not_enough_data },
   ];
   return (
     <div className="space-y-5">
       <PageHeader title="Goalkeepers" description={`${goalkeepers.length} RPM clients under management across the UK and internationally.`} />
-      <DataSourceBanner classification="mock" extra="Roster, assigned-mentor fields, duty traffic-light counts and last-contact times are illustrative." />
+      <DataSourceBanner classification="mock" extra="Roster, duty-of-care status and last-contact times are illustrative." />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Under Care" value={dutyOverview.total} />
-        <StatCard label="On Track · ≤21d" value={dutyOverview.green} hint="Duty fulfilled" />
-        <StatCard label="Attention · 22d+" value={dutyOverview.amber} hint="Contact required" accent="warning" />
+        <StatCard label="Up to date" value={dutyOverview.up_to_date} hint="Duty fulfilled" />
+        <StatCard label="Due soon" value={dutyOverview.due_soon} hint="Approaching cadence" accent="warning" />
+        <StatCard label="Overdue" value={dutyOverview.overdue} hint="Action required" accent="destructive" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -101,10 +105,7 @@ function GoalkeepersList() {
                   <td className="px-2 text-muted-foreground">{gk.nationality}</td>
                   <td className="px-2 text-muted-foreground tabular-nums font-mono">{gk.contractUntil === "—" ? "—" : gk.contractUntil.slice(0, 4)}</td>
                   <td className="px-2">
-                    <div className="flex items-center gap-2">
-                      <DutyBadge level={d.level} label={d.label} />
-                      <span className="text-[11px] text-muted-foreground tabular-nums font-mono">{formatRelative(gk.lastInteraction)}</span>
-                    </div>
+                    <DutyBadge level={d.level} label={d.label} />
                   </td>
                   <td className="px-4 text-right tabular-nums font-mono font-medium">{gk.rating}</td>
                 </tr>

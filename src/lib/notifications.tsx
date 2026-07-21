@@ -38,8 +38,12 @@ function load<T>(k: string, fallback: T): T {
 }
 function persist(k: string, v: unknown) { if (typeof window !== "undefined") { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } } }
 
-function rank(l: DutyLevel) { return l === "green" ? 0 : 1; }
+const RANK: Record<DutyLevel, number> = {
+  not_required: 0, up_to_date: 1, not_enough_data: 2, due_soon: 3, overdue: 4,
+};
+function rank(l: DutyLevel) { return RANK[l]; }
 export function severityFor(from: DutyLevel, to: DutyLevel): "high" | "medium" | "low" {
+  if (to === "overdue" && rank(to) > rank(from)) return "high";
   if (rank(to) > rank(from)) return "medium";
   return "low";
 }
@@ -48,8 +52,8 @@ function seedFromCurrent(): DutyNotif[] {
   const out: DutyNotif[] = [];
   goalkeepers.forEach((gk, i) => {
     const cur = dutyStatusForGk(gk).level;
-    if (cur === "green") return;
-    const from: DutyLevel = "green";
+    if (cur === "up_to_date" || cur === "not_required") return;
+    const from: DutyLevel = "up_to_date";
     out.push({
       id: `seed-${gk.id}`,
       gkId: gk.id,
@@ -99,8 +103,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     } else if (fresh.length) {
       fresh.forEach((n) => {
         const verb = rank(n.to) > rank(n.from) ? "escalated" : "improved";
-        const fn = n.to === "amber" ? toast.warning : toast.success;
-        fn(`Duty ${verb}: ${n.gkName}`, { description: `${n.from.toUpperCase()} → ${n.to.toUpperCase()}` });
+        const fn = n.to === "overdue" ? toast.error : n.to === "due_soon" ? toast.warning : toast.success;
+        const label = (l: DutyLevel) => l.replace(/_/g, " ").toUpperCase();
+        fn(`Duty ${verb}: ${n.gkName}`, { description: `${label(n.from)} → ${label(n.to)}` });
       });
       setItems((prev) => {
         const next = [...fresh, ...prev].slice(0, 80);
@@ -117,13 +122,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const clearAll = () => { setItems([]); persist(STORAGE_KEY, []); };
 
   const sendSummaryNow = () => {
-    const ambers = items.filter((i) => i.to === "amber").length;
+    const attn = items.filter((i) => i.to === "overdue" || i.to === "due_soon").length;
     const recipients = prefs.recipients.filter(Boolean);
     if (!recipients.length) { toast.error("Add at least one recipient first"); return; }
     const next = { ...prefs, lastSent: new Date().toISOString() };
     setPrefs(next);
     toast.success("Duty-of-care summary queued", {
-      description: `${ambers} amber · delivered to ${recipients.join(", ")}`,
+      description: `${attn} needing attention · delivered to ${recipients.join(", ")}`,
     });
   };
 

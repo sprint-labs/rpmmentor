@@ -109,7 +109,7 @@ function DutyNotificationsPanel() {
     { id: "weekly", label: "Weekly", hint: "Monday 08:00" },
   ];
 
-  const ambers = items.filter((i) => i.to === "amber").length;
+  const attn = items.filter((i) => i.to === "overdue" || i.to === "due_soon").length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -128,16 +128,18 @@ function DutyNotificationsPanel() {
         <div className="max-h-[420px] overflow-y-auto divide-y divide-border/60">
           {items.length === 0 && <div className="text-xs text-muted-foreground py-8 text-center">No duty changes recorded yet.</div>}
           {items.map((n) => {
-            const tone = n.to === "amber" ? "bg-warning" : "bg-success";
-            const sev = n.to === "amber" ? "warning" : "info";
+            const tone = n.to === "overdue" ? "bg-destructive" : n.to === "due_soon" ? "bg-warning" : n.to === "up_to_date" ? "bg-success" : "bg-muted-foreground/50";
+            const sev: "destructive" | "warning" | "info" | "muted" =
+              n.to === "overdue" ? "destructive" : n.to === "due_soon" ? "warning" : n.to === "up_to_date" ? "info" : "muted";
+            const label = (l: string) => l.replace(/_/g, " ");
             return (
               <div key={n.id} className={`flex items-center gap-3 py-2.5 ${!n.read ? "" : "opacity-70"}`}>
                 <span className={`size-2.5 rounded-full ${tone} shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm"><span className="font-medium">{n.gkName}</span> · duty moved <span className="uppercase text-muted-foreground">{n.from}</span> → <span className="uppercase font-medium">{n.to}</span></div>
+                  <div className="text-sm"><span className="font-medium">{n.gkName}</span> · duty moved <span className="uppercase text-muted-foreground">{label(n.from)}</span> → <span className="uppercase font-medium">{label(n.to)}</span></div>
                   <div className="text-[11px] text-muted-foreground">{formatRelative(n.date)}</div>
                 </div>
-                <Pill tone={sev as "destructive" | "warning" | "info"}>{n.to}</Pill>
+                <Pill tone={sev === "muted" ? "muted" : sev}>{label(n.to)}</Pill>
                 <Link to="/goalkeepers/$gkId" params={{ gkId: n.gkId }} onClick={() => markRead(n.id)} className="text-xs text-primary">Open →</Link>
               </div>
             );
@@ -189,7 +191,7 @@ function DutyNotificationsPanel() {
         </div>
 
         <div className="rounded-md border border-border p-2.5 bg-accent/20 text-[11px] text-muted-foreground space-y-1">
-          <div>Current queue: <span className="text-foreground font-medium">{ambers} amber</span></div>
+          <div>Current queue: <span className="text-foreground font-medium">{attn} needing attention</span></div>
           {prefs.lastSent && <div>Last sent: {formatRelative(prefs.lastSent)}</div>}
         </div>
 
