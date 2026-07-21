@@ -676,6 +676,11 @@ function ReportForm({ onDone }: { onDone: () => void }) {
           setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
         }
       />
+      <VoiceNoteField
+        onTranscribed={(text, mode) =>
+          setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
+        }
+      />
       <Field label="Comments">
         <textarea rows={5} className={taCls} value={comments}
           onChange={(e) => setComments(e.target.value)} maxLength={5000}
