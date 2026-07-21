@@ -94,6 +94,18 @@ function SystemUsersPage() {
     },
   });
 
+  const resetMutation = useMutation({
+    mutationFn: (u: ManagedUserRow) => resetPassword({ data: { userId: u.id } }),
+    onSuccess: (res, u) => {
+      setConfirmReset(null);
+      setTempPassword({ email: u.email || res.email, password: res.tempPassword });
+      toast.success(`Password reset for ${u.name || u.email}`);
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to reset password");
+    },
+  });
+
   if (!canManage) {
     return (
       <div className="max-w-lg mx-auto mt-16 rounded-lg border border-border bg-card p-6 text-center">
