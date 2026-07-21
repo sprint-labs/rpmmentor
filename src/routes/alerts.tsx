@@ -109,7 +109,7 @@ function DutyNotificationsPanel() {
     { id: "weekly", label: "Weekly", hint: "Monday 08:00" },
   ];
 
-  const ambers = items.filter((i) => i.to === "amber").length;
+  const attn = items.filter((i) => i.to === "overdue" || i.to === "due_soon").length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
