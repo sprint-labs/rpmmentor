@@ -106,57 +106,60 @@ function AccountPage() {
     <div className="mx-auto w-full max-w-xl space-y-5 px-4 sm:px-0">
       <PageHeader title="Account" description="Manage your sign-in credentials." />
 
-      <Card className="overflow-hidden">
-        <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
-          <div className="flex size-11 sm:size-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold tracking-wider">
+      <Card className="p-4 relative overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:bg-primary">
+        <div className="flex items-center gap-3">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground font-semibold tracking-wider">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm sm:text-base font-semibold truncate">{user?.name ?? "—"}</div>
+            <div className="text-sm font-semibold truncate">{user?.name ?? "—"}</div>
             <div className="font-mono text-xs text-muted-foreground truncate">{user?.email ?? "—"}</div>
           </div>
-          <span className="shrink-0 rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-accent/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <Shield className="size-3" />
             {user?.role ?? "—"}
           </span>
         </div>
       </Card>
 
-      <Card className="p-4 sm:p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.06em]">Change password</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Confirm your current password, then set a new one of at least 8 characters.
-          </p>
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Change password</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Confirm your current password, then set a new one of at least 8 characters.
+            </p>
+          </div>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Current password</label>
+            <label className="block text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Current password</label>
             <input
               type={show ? "text" : "password"}
               autoComplete="current-password"
               value={current}
               onChange={(e) => { setCurrent(e.target.value); setOk(false); }}
-              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="w-full h-10 px-3 rounded-md bg-input border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="Enter your current password"
               required
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">New password</label>
+            <label className="block text-[11px] uppercase tracking-wider text-muted-foreground font-medium">New password</label>
             <input
               type={show ? "text" : "password"}
               autoComplete="new-password"
               value={pw}
               onChange={(e) => { setPw(e.target.value); setOk(false); }}
               aria-invalid={tooShort || sameAsCurrent || undefined}
-              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 aria-invalid:border-destructive/70"
+              className="w-full h-10 px-3 rounded-md bg-input border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 aria-invalid:border-destructive/70"
               placeholder="At least 8 characters"
               required
               minLength={8}
             />
 
             {pw.length > 0 && (
-              <div className="space-y-2 pt-1">
+              <div className="space-y-2 pt-2 rounded-md border border-border/60 bg-accent/20 p-3">
                 <div className="flex gap-1" aria-hidden="true">
                   {[0, 1, 2, 3].map((i) => (
                     <div
@@ -207,14 +210,14 @@ function AccountPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Confirm new password</label>
+            <label className="block text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Confirm new password</label>
             <input
               type={show ? "text" : "password"}
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => { setConfirm(e.target.value); setOk(false); }}
               aria-invalid={mismatch || undefined}
-              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 aria-invalid:border-destructive/70"
+              className="w-full h-10 px-3 rounded-md bg-input border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 aria-invalid:border-destructive/70"
               placeholder="Repeat new password"
               required
             />
@@ -230,9 +233,9 @@ function AccountPage() {
               </p>
             ) : null}
           </div>
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between pt-2">
             <label className="flex items-center gap-2 text-xs text-muted-foreground select-none">
-              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} className="rounded border-border bg-input" />
               Show passwords
             </label>
             <button
