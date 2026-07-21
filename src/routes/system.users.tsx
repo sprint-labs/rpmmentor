@@ -159,11 +159,10 @@ function SystemUsersPage() {
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden bg-card">
-        <div className="hidden md:grid grid-cols-[1fr_160px_200px_44px] gap-3 px-4 py-2.5 border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground font-medium bg-muted/30">
+        <div className="hidden md:grid grid-cols-[1fr_160px_180px] gap-3 px-4 py-2.5 border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground font-medium bg-muted/30">
           <div>User</div>
           <div>Current role</div>
-          <div>Assign role</div>
-          <div />
+          <div className="text-right">Actions</div>
         </div>
 
         {query.isLoading ? (
