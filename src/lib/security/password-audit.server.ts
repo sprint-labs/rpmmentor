@@ -39,7 +39,7 @@ export async function logPasswordChange(params: {
       event_type: params.eventType,
       ip_address: ip,
       user_agent: userAgent,
-      metadata: params.metadata ?? {},
+      metadata: (params.metadata ?? {}) as never,
     });
   } catch (err) {
     console.error("[password-audit] failed to record event", err);
