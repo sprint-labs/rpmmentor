@@ -286,6 +286,25 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     }
   };
 
+  const saveWithoutTranscript = async () => {
+    // Abort any in-flight transcription but keep the audio.
+    abortRef.current?.abort();
+    abortRef.current = null;
+    clearPhaseTimer();
+    setPhase("idle");
+    setErrorMsg(null);
+    setCancelled(false);
+    // Clear any partial transcript so Comments isn't nudged toward stale text.
+    setTranscript(null);
+    setTokens([]);
+    setAvgConfidence(null);
+    setReviewed(false);
+    setSkipped(true);
+    if (onAudioAttach && !attached && blobRef.current) {
+      await attachAudio();
+    }
+    toast.success("Audio saved — type your notes in Comments below");
+
   const handleApply = (mode: "append" | "replace") => {
     if (!reviewed) {
       toast.error("Review the transcript first — tick 'I've reviewed this' below.");
