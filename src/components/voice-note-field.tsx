@@ -135,12 +135,17 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     phaseTimerRef.current = setInterval(() => setPhaseElapsed((s) => s + 1), 1000);
   };
 
+  const logAttempt = (status: AttemptLogEntry["status"], message?: string) => {
+    setAttemptLog((prev) => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, timestamp: Date.now(), status, message }]);
+  };
+
   const transcribe = async (dataUrl: string) => {
     setErrorMsg(null);
     setReviewed(false);
     setTranscript(null);
     setTokens([]);
     setAvgConfidence(null);
+    logAttempt("started");
     const controller = new AbortController();
     abortRef.current = controller;
     enterPhase("uploading");
@@ -156,11 +161,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       });
       if (controller.signal.aborted) return;
       if (!result.ok) {
-        setErrorMsg(result.error || "Transcription failed.");
+        const msg = result.error || "Transcription failed.";
+        setErrorMsg(msg);
+        logAttempt("error", msg);
       } else {
         setTranscript(result.text);
         setTokens(result.tokens ?? []);
         setAvgConfidence(result.avgConfidence ?? null);
+        logAttempt("success");
         toast.success("Voice note transcribed — review before applying");
       }
     } catch (e) {
@@ -168,7 +176,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
         // Silent — user-initiated cancel.
         return;
       }
-      setErrorMsg(e instanceof Error ? e.message : "Transcription failed. Check your connection and try again.");
+      const msg = e instanceof Error ? e.message : "Transcription failed. Check your connection and try again.";
+      setErrorMsg(msg);
+      logAttempt("error", msg);
     } finally {
       clearTimeout(flipTimer);
       clearPhaseTimer();
