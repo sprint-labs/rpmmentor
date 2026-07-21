@@ -31,6 +31,13 @@ interface VoiceDraft {
   reviewed: boolean;
 }
 
+interface AttemptLogEntry {
+  id: string;
+  timestamp: number;
+  status: "started" | "success" | "error";
+  message?: string;
+}
+
 interface Props {
   onTranscribed: (text: string, mode: "replace" | "append") => void;
   onAudioAttach?: (audio: { blob: Blob; mimeType: string; durationSec: number }) => void | Promise<void>;
