@@ -475,7 +475,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                     {attached ? "Audio saved" : attaching ? "Saving…" : "Save audio without transcript"}
                   </button>
                 )}
-                <button type="button" onClick={reset} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = window.confirm("Discard this voice note and its saved audio? This cannot be undone.");
+                    if (ok) reset();
+                  }}
+                  className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent"
+                >
                   Discard
                 </button>
               </div>
