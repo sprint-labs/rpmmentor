@@ -17,8 +17,8 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
-  const { user, session } = useAuth();
-  if (!session) return <Navigate to="/login" />;
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" />;
 
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
