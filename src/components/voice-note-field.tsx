@@ -147,6 +147,10 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   };
 
   const transcribe = async (dataUrl: string) => {
+    // Snapshot the current transcript state so a subsequent cancel can be undone.
+    preTranscribeSnapshotRef.current = transcript
+      ? { transcript, tokens, avgConfidence, reviewed }
+      : null;
     setErrorMsg(null);
     setReviewed(false);
     setTranscript(null);
