@@ -61,6 +61,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [attemptLog, setAttemptLog] = useState<AttemptLogEntry[]>([]);
+  const [cancelled, setCancelled] = useState(false);
   const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(!!draft?.transcript);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
