@@ -117,10 +117,12 @@ function SystemUsersPage() {
       u.email.toLowerCase().includes(q.toLowerCase()),
   );
 
-  const changeRole = (u: ManagedUserRow, next: RoleOrNone) => {
-    const nextRole = next === "" ? null : next;
-    if (nextRole === u.role) return;
-    mutation.mutate({ userId: u.id, role: nextRole, name: u.name || u.email });
+  const changeRole = (u: ManagedUserRow, next: Role | null) => {
+    if (next === u.role) {
+      setEditUser(null);
+      return;
+    }
+    mutation.mutate({ userId: u.id, role: next, name: u.name || u.email });
   };
 
   return (
