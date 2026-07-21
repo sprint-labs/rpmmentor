@@ -38,9 +38,8 @@ function load<T>(k: string, fallback: T): T {
 }
 function persist(k: string, v: unknown) { if (typeof window !== "undefined") { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } } }
 
-function rank(l: DutyLevel) { return l === "green" ? 0 : l === "amber" ? 1 : 2; }
+function rank(l: DutyLevel) { return l === "green" ? 0 : 1; }
 export function severityFor(from: DutyLevel, to: DutyLevel): "high" | "medium" | "low" {
-  if (to === "red") return "high";
   if (rank(to) > rank(from)) return "medium";
   return "low";
 }
@@ -50,7 +49,7 @@ function seedFromCurrent(): DutyNotif[] {
   goalkeepers.forEach((gk, i) => {
     const cur = dutyStatusForGk(gk).level;
     if (cur === "green") return;
-    const from: DutyLevel = cur === "red" ? "amber" : "green";
+    const from: DutyLevel = "green";
     out.push({
       id: `seed-${gk.id}`,
       gkId: gk.id,
@@ -100,7 +99,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     } else if (fresh.length) {
       fresh.forEach((n) => {
         const verb = rank(n.to) > rank(n.from) ? "escalated" : "improved";
-        const fn = n.to === "red" ? toast.error : n.to === "amber" ? toast.warning : toast.success;
+        const fn = n.to === "amber" ? toast.warning : toast.success;
         fn(`Duty ${verb}: ${n.gkName}`, { description: `${n.from.toUpperCase()} → ${n.to.toUpperCase()}` });
       });
       setItems((prev) => {
@@ -118,14 +117,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const clearAll = () => { setItems([]); persist(STORAGE_KEY, []); };
 
   const sendSummaryNow = () => {
-    const reds = items.filter((i) => i.to === "red").length;
     const ambers = items.filter((i) => i.to === "amber").length;
     const recipients = prefs.recipients.filter(Boolean);
     if (!recipients.length) { toast.error("Add at least one recipient first"); return; }
     const next = { ...prefs, lastSent: new Date().toISOString() };
     setPrefs(next);
     toast.success("Duty-of-care summary queued", {
-      description: `${reds} red · ${ambers} amber · delivered to ${recipients.join(", ")}`,
+      description: `${ambers} amber · delivered to ${recipients.join(", ")}`,
     });
   };
 

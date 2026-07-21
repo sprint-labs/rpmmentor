@@ -81,7 +81,6 @@ function DutyNotificationsPanel() {
     { id: "weekly", label: "Weekly", hint: "Monday 08:00" },
   ];
 
-  const reds = items.filter((i) => i.to === "red").length;
   const ambers = items.filter((i) => i.to === "amber").length;
 
   return (
@@ -90,7 +89,7 @@ function DutyNotificationsPanel() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Duty Status Notifications</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Triggered when a goalkeeper's traffic light changes (e.g. amber → red).</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Triggered when a goalkeeper's traffic light changes (e.g. green → amber).</div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground tabular-nums font-mono">{unread} unread · {items.length} total</span>
@@ -101,8 +100,8 @@ function DutyNotificationsPanel() {
         <div className="max-h-[420px] overflow-y-auto divide-y divide-border/60">
           {items.length === 0 && <div className="text-xs text-muted-foreground py-8 text-center">No duty changes recorded yet.</div>}
           {items.map((n) => {
-            const tone = n.to === "red" ? "bg-destructive" : n.to === "amber" ? "bg-warning" : "bg-success";
-            const sev = n.to === "red" ? "destructive" : n.to === "amber" ? "warning" : "info";
+            const tone = n.to === "amber" ? "bg-warning" : "bg-success";
+            const sev = n.to === "amber" ? "warning" : "info";
             return (
               <div key={n.id} className={`flex items-center gap-3 py-2.5 ${!n.read ? "" : "opacity-70"}`}>
                 <span className={`size-2.5 rounded-full ${tone} shrink-0`} />
