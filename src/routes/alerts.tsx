@@ -6,15 +6,27 @@ import { AlertTriangle, Mail, Send, Check, Trash2 } from "lucide-react";
 import { useNotifications, type EmailFrequency } from "@/lib/notifications";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/alerts")({ component: withPermission(AlertsPage, "alerts.view") });
 
+const GROUPS = ["Overdue observation", "Overdue contact", "Missing report", "Upcoming match", "Expiring action"] as const;
+type Group = (typeof GROUPS)[number];
+type Filter = "all" | Group;
+
 function AlertsPage() {
+  const [filter, setFilter] = useState<Filter>("all");
   const high = alerts.filter((a) => a.severity === "high").length;
   const med = alerts.filter((a) => a.severity === "medium").length;
   const low = alerts.filter((a) => a.severity === "low").length;
 
-  const groups = ["Overdue observation", "Overdue contact", "Missing report", "Upcoming match", "Expiring action"] as const;
+  const groups = GROUPS;
+  const visibleGroups: readonly Group[] = filter === "all" ? groups : [filter];
+
+  const filterTabs: { id: Filter; label: string; count: number }[] = [
+    { id: "all", label: "All", count: alerts.length },
+    ...groups.map((g) => ({ id: g as Filter, label: g, count: alerts.filter((a) => a.kind === g).length })),
+  ];
 
   return (
     <div className="space-y-5">
@@ -31,8 +43,24 @@ function AlertsPage() {
         <StatCard label="Low" value={low} accent="info" />
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        {filterTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setFilter(t.id)}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors",
+              filter === t.id ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-accent/40",
+            )}
+          >
+            {t.label}
+            <span className="tabular-nums font-mono text-[10px] text-muted-foreground">{t.count}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-5">
-        {groups.map((g) => {
+        {visibleGroups.map((g) => {
           const list = alerts.filter((a) => a.kind === g);
           if (!list.length) return null;
           return (
