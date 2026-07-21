@@ -191,12 +191,16 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
       blobRef.current = blob;
       mimeRef.current = type.split(";")[0];
       durationRef.current = elapsed;
+      enterPhase("preparing");
       try {
         const dataUrl = await blobToDataUrl(blob);
         dataUrlRef.current = dataUrl;
+        setAttempt(1);
         await transcribe(dataUrl);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not read audio");
+        clearPhaseTimer();
+        setPhase("idle");
+        setErrorMsg(e instanceof Error ? e.message : "Could not read the recorded audio.");
       }
     };
     rec.start();
@@ -217,9 +221,10 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
 
   const retry = () => {
     if (!dataUrlRef.current) return;
-    setTranscript(null);
-    transcribe(dataUrlRef.current);
+    setAttempt((n) => n + 1);
+    void transcribe(dataUrlRef.current);
   };
+
 
   const attachAudio = async () => {
     if (!onAudioAttach || attached || attaching) return;
