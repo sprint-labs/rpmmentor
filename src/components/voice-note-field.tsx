@@ -67,6 +67,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const abortRef = useRef<AbortController | null>(null);
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
 
   const run = useServerFn(transcribeVoiceNote);
   const busy = phase !== "idle";
