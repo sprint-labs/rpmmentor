@@ -14,7 +14,7 @@
  *                          occurred_at, notes, outcome, follow_up, transcript_source)
  *   match_reports         (id uuid pk, player_id fk, mentor_profile_id fk, report_type,
  *                          occurred_at, overall_rating, summary, scores jsonb)
- *   duty_of_care_status   (player_id pk fk, level 'green'|'amber'|'red', days_since_contact,
+ *   duty_of_care_status   (player_id pk fk, level 'green'|'amber', days_since_contact,
  *                          last_contact_at, computed_at) — view/materialised view
  *   media_items           (id uuid pk, player_id fk, uploaded_by fk, kind, title, size_bytes)
  *
