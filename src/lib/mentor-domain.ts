@@ -192,25 +192,34 @@ export function selectAssignedPlayers(_mentorProfileId: string): PlayerRow[] {
 
 /** Duty of care rows for the full roster, ordered worst-first. */
 export function selectDutyOfCareForMentor(_mentorProfileId: string): DutyOfCareRow[] {
-  const rank: Record<DutyLevel, number> = { amber: 0, green: 1 };
+  const rank: Record<DutyLevel, number> = {
+    overdue: 0, due_soon: 1, up_to_date: 2, not_enough_data: 3, not_required: 4,
+  };
   return goalkeepers
     .map((g) => toDutyRow(g.id)!)
     .sort((a, b) => rank[a.level] - rank[b.level] || b.days_since_contact - a.days_since_contact);
 }
 
-/** Roster roll-up (green/amber counts). */
+/** Roster roll-up by duty level. */
 export function selectDutyRollup(mentorProfileId: string) {
   const rows = selectDutyOfCareForMentor(mentorProfileId);
   const total = rows.length || 1;
-  const green = rows.filter((r) => r.level === "green").length;
-  const amber = rows.filter((r) => r.level === "amber").length;
-  return { total: rows.length, green, amber, greenPct: (green / total) * 100, amberPct: (amber / total) * 100 };
+  const upToDate = rows.filter((r) => r.level === "up_to_date").length;
+  const dueSoon = rows.filter((r) => r.level === "due_soon").length;
+  const overdue = rows.filter((r) => r.level === "overdue").length;
+  return {
+    total: rows.length,
+    upToDate, dueSoon, overdue,
+    upToDatePct: (upToDate / total) * 100,
+    dueSoonPct: (dueSoon / total) * 100,
+    overduePct: (overdue / total) * 100,
+  };
 }
 
-/** Overdue players (amber + red), most-urgent first. Used for the priority queue. */
+/** Overdue / due-soon players, most-urgent first. Used for the priority queue. */
 export function selectOverduePlayers(mentorProfileId: string, limit = 5) {
   return selectDutyOfCareForMentor(mentorProfileId)
-    .filter((d) => d.level !== "green")
+    .filter((d) => d.level === "overdue" || d.level === "due_soon")
     .slice(0, limit)
     .map((d) => ({ duty: d, player: toPlayerRow(d.player_id)! }));
 }
