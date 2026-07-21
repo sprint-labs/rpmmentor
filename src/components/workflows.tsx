@@ -562,7 +562,6 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    void attachMediaToReport;
     setError(null);
     setFieldErrors({});
     setSubmitting(true);
@@ -587,6 +586,13 @@ function ReportForm({ onDone }: { onDone: () => void }) {
           },
         },
       });
+      if (selectedMedia.length > 0) {
+        try {
+          await attachMediaToReport(res.report_id, selectedMedia, user);
+        } catch (attachErr) {
+          console.warn("attachMediaToReport failed", attachErr);
+        }
+      }
       if (user) clearDraft(user.id);
       setDone({ report_id: res.report_id, average: res.average });
       try { window.dispatchEvent(new CustomEvent("rpm:report-submitted", { detail: res })); } catch { /* ignore */ }
@@ -680,6 +686,30 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         onTranscribed={(text, mode) =>
           setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
         }
+        onAudioAttach={async ({ blob, mimeType, durationSec }) => {
+          if (!user) throw new Error("Sign in required to save audio.");
+          const gk = goalkeepers.find(
+            (g) => g.name.trim().toLowerCase() === goalkeeper.trim().toLowerCase(),
+          );
+          if (!gk) throw new Error("Select a known goalkeeper before saving the voice note.");
+          const ext = (mimeType.split("/")[1] || "webm").split(";")[0];
+          const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+          const filename = `voice-note-${stamp}.${ext}`;
+          const file = new File([blob], filename, { type: mimeType });
+          const contextLabel = opponent
+            ? `${gk.name} vs ${opponent} · ${matchDate}`
+            : `${gk.name} · ${matchDate}`;
+          const asset = await uploadMedia({
+            file,
+            gkId: gk.id,
+            title: `Voice note — ${contextLabel}`,
+            notes: `Recorded voice note (${Math.round(durationSec)}s) captured during Match Report submission.`,
+            kind: "audio",
+            ratingTags: ["Coaching point"],
+            user,
+          });
+          setSelectedMedia((prev) => (prev.includes(asset.id) ? prev : [...prev, asset.id]));
+        }}
       />
       <Field label="Comments">
         <textarea rows={5} className={taCls} value={comments}
