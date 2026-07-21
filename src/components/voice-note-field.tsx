@@ -150,6 +150,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setTokens([]);
     setAvgConfidence(null);
     setCancelled(false);
+    setSkipped(false);
     logAttempt("started");
     const controller = new AbortController();
     abortRef.current = controller;
