@@ -105,10 +105,7 @@ function GoalkeepersList() {
                   <td className="px-2 text-muted-foreground">{gk.nationality}</td>
                   <td className="px-2 text-muted-foreground tabular-nums font-mono">{gk.contractUntil === "—" ? "—" : gk.contractUntil.slice(0, 4)}</td>
                   <td className="px-2">
-                    <div className="flex items-center gap-2">
-                      <DutyBadge level={d.level} label={d.label} />
-                      <span className="text-[11px] text-muted-foreground tabular-nums font-mono">{formatRelative(gk.lastInteraction)}</span>
-                    </div>
+                    <DutyBadge level={d.level} label={d.label} />
                   </td>
                   <td className="px-4 text-right tabular-nums font-mono font-medium">{gk.rating}</td>
                 </tr>
