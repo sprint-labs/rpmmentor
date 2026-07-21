@@ -124,7 +124,7 @@ export const transcribeVoiceNote = createServerFn({ method: "POST" })
 
     const form = new FormData();
     form.append("model", "openai/gpt-4o-mini-transcribe");
-    form.append("file", new Blob([bytes], { type: mime }), `voice-note.${ext}`);
+    form.append("file", new Blob([bytes.buffer.slice(0) as ArrayBuffer], { type: mime }), `voice-note.${ext}`);
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
       method: "POST",
