@@ -20,6 +20,7 @@ import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SystemUsersRouteImport } from './routes/system.users'
 import { Route as SystemPermissionsRouteImport } from './routes/system.permissions'
@@ -85,6 +86,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -136,6 +142,7 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/alerts': typeof AlertsRoute
   '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/alerts': typeof AlertsRoute
   '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/alerts': typeof AlertsRoute
   '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/alerts'
     | '/audit'
     | '/calendar'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/alerts'
     | '/audit'
     | '/calendar'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/alerts'
     | '/audit'
     | '/calendar'
@@ -272,6 +284,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AlertsRoute: typeof AlertsRoute
   AuditRoute: typeof AuditRoute
   CalendarRoute: typeof CalendarRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -461,6 +481,7 @@ const ReportsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AlertsRoute: AlertsRoute,
   AuditRoute: AuditRoute,
   CalendarRoute: CalendarRoute,
