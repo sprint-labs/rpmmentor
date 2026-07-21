@@ -220,6 +220,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   });
   const [comments, setComments] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
+  const [voiceTranscript, setVoiceTranscript] = useState<import("@/lib/match-reports/draft-store").VoiceTranscriptDraft | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setFieldErrors] = useState<Record<string, string>>({});
@@ -240,6 +241,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
 
   const currentSnapshot = (): ReportDraftSnapshot => ({
     goalkeeper, coach, competition, team, opponent, matchDate, scores, comments, selectedMedia,
+    voiceTranscript,
   });
 
   const applySnapshot = (d: ReportDraftSnapshot) => {
@@ -252,6 +254,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     setScores(d.scores);
     setComments(d.comments);
     setSelectedMedia(d.selectedMedia);
+    setVoiceTranscript(d.voiceTranscript ?? null);
   };
 
   // Restore on mount.
@@ -325,7 +328,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     }, 5000);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, draftLoaded, done, conflict, goalkeeper, coach, competition, team, opponent, matchDate, scores, comments, selectedMedia]);
+  }, [user, draftLoaded, done, conflict, goalkeeper, coach, competition, team, opponent, matchDate, scores, comments, selectedMedia, voiceTranscript]);
 
   const discardDraft = () => {
     if (!user) return;
@@ -341,6 +344,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     });
     setComments("");
     setSelectedMedia([]);
+    setVoiceTranscript(null);
     setDraftSavedAt(null);
     setDraftRestoredFrom(null);
     localVersionRef.current = 0;
@@ -683,6 +687,8 @@ function ReportForm({ onDone }: { onDone: () => void }) {
         }
       />
       <VoiceNoteField
+        draft={voiceTranscript}
+        onDraftChange={setVoiceTranscript}
         onTranscribed={(text, mode) =>
           setComments((prev) => (mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`))
         }

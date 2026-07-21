@@ -19,6 +19,13 @@
  */
 import type { PillarId } from "./schema";
 
+export interface VoiceTranscriptDraft {
+  transcript: string;
+  tokens: Array<{ token: string; confidence: number }>;
+  avgConfidence: number | null;
+  reviewed: boolean;
+}
+
 export interface ReportDraftSnapshot {
   goalkeeper: string;
   coach: string;
@@ -29,6 +36,7 @@ export interface ReportDraftSnapshot {
   scores: Record<PillarId, number>;
   comments: string;
   selectedMedia: string[];
+  voiceTranscript?: VoiceTranscriptDraft | null;
 }
 
 export interface ReportDraft extends ReportDraftSnapshot {

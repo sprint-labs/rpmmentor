@@ -24,26 +24,36 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+interface VoiceDraft {
+  transcript: string;
+  tokens: Array<{ token: string; confidence: number }>;
+  avgConfidence: number | null;
+  reviewed: boolean;
+}
+
 interface Props {
   onTranscribed: (text: string, mode: "replace" | "append") => void;
   onAudioAttach?: (audio: { blob: Blob; mimeType: string; durationSec: number }) => void | Promise<void>;
+  draft?: VoiceDraft | null;
+  onDraftChange?: (draft: VoiceDraft | null) => void;
   className?: string;
 }
 
 type Phase = "idle" | "preparing" | "uploading" | "transcribing";
 
-export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Props) {
+export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftChange, className }: Props) {
   const [recording, setRecording] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [phaseElapsed, setPhaseElapsed] = useState(0);
-  const [transcript, setTranscript] = useState<string | null>(null);
-  const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>([]);
-  const [avgConfidence, setAvgConfidence] = useState<number | null>(null);
-  const [reviewed, setReviewed] = useState(false);
+  const [transcript, setTranscript] = useState<string | null>(draft?.transcript ?? null);
+  const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>(draft?.tokens ?? []);
+  const [avgConfidence, setAvgConfidence] = useState<number | null>(draft?.avgConfidence ?? null);
+  const [reviewed, setReviewed] = useState<boolean>(draft?.reviewed ?? false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(!!draft?.transcript);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -78,6 +88,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
     if (audioUrl) URL.revokeObjectURL(audioUrl);
   }, [audioUrl]);
 
+  // Sync transcript/review state up into the parent draft so it persists across reloads.
+  useEffect(() => {
+    if (!onDraftChange) return;
+    if (transcript == null) onDraftChange(null);
+    else onDraftChange({ transcript, tokens, avgConfidence, reviewed });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript, tokens, avgConfidence, reviewed]);
+
   const reset = () => {
     abortRef.current?.abort();
     clearPhaseTimer();
@@ -96,6 +114,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
     durationRef.current = 0;
     setAttached(false);
     setElapsed(0);
+    setRestoredFromDraft(false);
   };
 
   const enterPhase = (p: Exclude<Phase, "idle">) => {
@@ -288,7 +307,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
         )}
       </div>
 
-      {!audioUrl && !recording && !busy && (
+      {!audioUrl && !recording && !busy && !transcript && (
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={start} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90">
             <Mic className="size-3.5" />Record voice note
@@ -312,9 +331,15 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
         </div>
       )}
 
-      {audioUrl && (
+      {(audioUrl || transcript) && (
         <div className="flex flex-col gap-2">
-          <audio src={audioUrl} controls className="w-full h-8" />
+          {audioUrl ? (
+            <audio src={audioUrl} controls className="w-full h-8" />
+          ) : restoredFromDraft ? (
+            <div className="text-[11px] text-muted-foreground italic border border-dashed border-border rounded-md p-2">
+              Transcript restored from your saved draft. The original audio isn't kept in the draft — re-record to update it.
+            </div>
+          ) : null}
           {busy ? (
             <div className="rounded-md border border-border bg-background p-2.5 space-y-2">
               <div className="flex items-center justify-between gap-2">
@@ -430,7 +455,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
                 </button>
               </div>
 
-              {onAudioAttach && (
+              {onAudioAttach && blobRef.current && (
                 <div className="text-[11px] mt-1">
                   {attaching ? (
                     <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="size-3 animate-spin" />Saving audio to Media Library…</span>
