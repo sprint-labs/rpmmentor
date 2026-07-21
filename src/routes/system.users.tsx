@@ -55,6 +55,7 @@ function SystemUsersPage() {
       setRole({ data: { userId: vars.userId, role: vars.role } }),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
+      setEditUser(null);
       toast.success(
         vars.role ? `${vars.name} → ${ROLE_LABEL[vars.role]}` : `${vars.name}: role revoked`,
       );
