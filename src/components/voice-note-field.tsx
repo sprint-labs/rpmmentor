@@ -88,6 +88,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     if (audioUrl) URL.revokeObjectURL(audioUrl);
   }, [audioUrl]);
 
+  // Sync transcript/review state up into the parent draft so it persists across reloads.
+  useEffect(() => {
+    if (!onDraftChange) return;
+    if (transcript == null) onDraftChange(null);
+    else onDraftChange({ transcript, tokens, avgConfidence, reviewed });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript, tokens, avgConfidence, reviewed]);
+
   const reset = () => {
     abortRef.current?.abort();
     clearPhaseTimer();
