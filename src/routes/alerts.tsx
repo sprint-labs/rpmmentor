@@ -191,7 +191,7 @@ function DutyNotificationsPanel() {
         </div>
 
         <div className="rounded-md border border-border p-2.5 bg-accent/20 text-[11px] text-muted-foreground space-y-1">
-          <div>Current queue: <span className="text-foreground font-medium">{ambers} amber</span></div>
+          <div>Current queue: <span className="text-foreground font-medium">{attn} needing attention</span></div>
           {prefs.lastSent && <div>Last sent: {formatRelative(prefs.lastSent)}</div>}
         </div>
 
