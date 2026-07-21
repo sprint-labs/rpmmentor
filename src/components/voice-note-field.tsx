@@ -442,6 +442,35 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 </div>
               )}
             </div>
+          ) : skipped ? (
+            <div className="rounded-md border border-gk-green/40 bg-gk-green/5 p-2.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="size-3.5 text-gk-green mt-0.5 shrink-0" />
+                <div className="text-xs text-foreground">
+                  <div className="font-medium">Audio saved without transcript</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {attached
+                      ? "The recording is linked to this report. Type your notes directly into Comments below — you can transcribe later if you want."
+                      : "The recording is kept in this draft. Type your notes directly into Comments below — you can transcribe later if you want."}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                  <RotateCcw className="size-3" />Transcribe now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ok = window.confirm("Discard this voice note and its saved audio? This cannot be undone.");
+                    if (ok) reset();
+                  }}
+                  className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent"
+                >
+                  Discard
+                </button>
+              </div>
+            </div>
           ) : errorMsg ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2.5 space-y-2">
               <div className="flex items-start gap-2">
