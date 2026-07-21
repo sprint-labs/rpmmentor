@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2, AlertTriangle, History } from "lucide-react";
+import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2, AlertTriangle, History, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { transcribeVoiceNote } from "@/lib/api/transcribe.functions";
 
@@ -61,6 +61,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [attemptLog, setAttemptLog] = useState<AttemptLogEntry[]>([]);
+  const [cancelled, setCancelled] = useState(false);
   const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(!!draft?.transcript);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -120,6 +121,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setPhaseElapsed(0);
     setAttempt(0);
     setAttemptLog([]);
+    setCancelled(false);
     dataUrlRef.current = null;
     blobRef.current = null;
     durationRef.current = 0;
@@ -145,6 +147,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setTranscript(null);
     setTokens([]);
     setAvgConfidence(null);
+    setCancelled(false);
     logAttempt("started");
     const controller = new AbortController();
     abortRef.current = controller;
@@ -193,6 +196,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     clearPhaseTimer();
     setPhase("idle");
     setErrorMsg(null);
+    setCancelled(true);
     toast.message("Transcription cancelled");
   };
 
@@ -452,6 +456,29 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                   </ul>
                 </div>
               )}
+            </div>
+          ) : cancelled ? (
+            <div className="rounded-md border border-border bg-background p-2.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <XCircle className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="text-xs text-foreground">
+                  <div className="font-medium">Transcription cancelled</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">The audio recording is still saved. Retry whenever you're ready, or save it without a transcript.</div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                  <RotateCcw className="size-3" />Retry transcription
+                </button>
+                {onAudioAttach && (
+                  <button type="button" onClick={attachAudio} disabled={attached || attaching} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-50">
+                    {attached ? "Audio saved" : attaching ? "Saving…" : "Save audio without transcript"}
+                  </button>
+                )}
+                <button type="button" onClick={reset} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                  Discard
+                </button>
+              </div>
             </div>
           ) : transcript ? (
 
