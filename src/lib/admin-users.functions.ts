@@ -197,3 +197,34 @@ export const deleteManagedUser = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+const resetPasswordInput = z.object({ userId: z.string().uuid() });
+
+export const resetManagedUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => resetPasswordInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: myRoles, error: roleErr } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (roleErr) throw new Error(roleErr.message);
+    if (!myRoles?.some((r) => r.role === "super_admin")) throw new Error("Forbidden");
+
+    if (data.userId === context.userId) {
+      throw new Error("You cannot reset your own password from this screen.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const tempPassword = `${crypto.randomUUID().replace(/-/g, "")}Aa1!`;
+
+    const { data: updated, error: updErr } = await supabaseAdmin.auth.admin.updateUserById(
+      data.userId,
+      { password: tempPassword },
+    );
+    if (updErr || !updated?.user) {
+      throw new Error(updErr?.message ?? "Failed to reset password");
+    }
+
+    return { ok: true as const, email: updated.user.email ?? "", tempPassword };
+  });
+
