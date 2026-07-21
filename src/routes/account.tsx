@@ -176,18 +176,18 @@ function AccountPage() {
                   </span>
                   <span className="text-muted-foreground">{pw.length} chars</span>
                 </div>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
                   {RULES.map((r) => {
                     const passed = r.test(pw);
                     return (
                       <li
                         key={r.id}
-                        className={`flex items-center gap-1.5 ${
+                        className={`flex items-center gap-1.5 min-w-0 ${
                           passed ? "text-gk-green" : "text-muted-foreground"
                         }`}
                       >
-                        {passed ? <Check className="size-3" /> : <X className="size-3 opacity-60" />}
-                        <span>{r.label}</span>
+                        {passed ? <Check className="size-3 shrink-0" /> : <X className="size-3 opacity-60 shrink-0" />}
+                        <span className="truncate">{r.label}</span>
                       </li>
                     );
                   })}
