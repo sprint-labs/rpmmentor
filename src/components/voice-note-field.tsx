@@ -75,6 +75,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const preTranscribeSnapshotRef = useRef<VoiceDraft | null>(null);
+  const cancelledPhaseRef = useRef<Phase>("idle");
+  const cancelledElapsedRef = useRef<number>(0);
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -144,6 +147,10 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   };
 
   const transcribe = async (dataUrl: string) => {
+    // Snapshot the current transcript state so a subsequent cancel can be undone.
+    preTranscribeSnapshotRef.current = transcript
+      ? { transcript, tokens, avgConfidence, reviewed }
+      : null;
     setErrorMsg(null);
     setReviewed(false);
     setTranscript(null);
@@ -194,14 +201,44 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   };
 
   const cancelTranscription = () => {
+    cancelledPhaseRef.current = phase;
+    cancelledElapsedRef.current = phaseElapsed;
     abortRef.current?.abort();
     abortRef.current = null;
     clearPhaseTimer();
     setPhase("idle");
     setErrorMsg(null);
     setCancelled(true);
-    toast.message("Transcription cancelled");
+    toast.message("Transcription cancelled", {
+      action: { label: "Undo", onClick: () => undoCancel() },
+    });
   };
+
+  const undoCancel = () => {
+    const snap = preTranscribeSnapshotRef.current;
+    setCancelled(false);
+    if (snap) {
+      // Restore the prior reviewed transcript exactly as it was.
+      setTranscript(snap.transcript);
+      setTokens(snap.tokens);
+      setAvgConfidence(snap.avgConfidence);
+      setReviewed(snap.reviewed);
+      logAttempt("error", "Cancellation undone — restored previous transcript");
+      toast.success("Restored previous transcript");
+      return;
+    }
+    // No prior transcript to restore — resume by re-running transcription on the saved audio.
+    const url = dataUrlRef.current;
+    if (!url) {
+      toast.error("No saved audio to resume from");
+      return;
+    }
+    logAttempt("error", "Cancellation undone — resuming transcription");
+    toast.message("Resuming transcription…");
+    setAttempt((a) => a + 1);
+    void transcribe(url);
+  };
+
 
 
 
@@ -524,12 +561,20 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 <XCircle className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="text-xs text-foreground">
                   <div className="font-medium">Transcription cancelled</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">The audio recording is still saved. Retry whenever you're ready, or save it without a transcript.</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {cancelledPhaseRef.current !== "idle" && (
+                      <>Stopped during <span className="font-mono uppercase tracking-wider">{cancelledPhaseRef.current}</span>{cancelledElapsedRef.current ? ` at ${cancelledElapsedRef.current}s` : ""}. </>
+                    )}
+                    The audio recording is still saved. Undo to continue where you left off, retry, or save without a transcript.
+                  </div>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
-                  <RotateCcw className="size-3" />Retry transcription
+                <button type="button" onClick={undoCancel} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                  <RotateCcw className="size-3" />Undo cancellation
+                </button>
+                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                  Retry from scratch
                 </button>
                 {onAudioAttach && (
                   <button type="button" onClick={() => void saveWithoutTranscript()} disabled={attaching} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-50">
