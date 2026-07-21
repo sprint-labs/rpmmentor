@@ -317,6 +317,17 @@ function SystemUsersPage() {
         />
       )}
 
+      {confirmReset && (
+        <ConfirmDialog
+          title={`Reset password for ${confirmReset.name || confirmReset.email}?`}
+          message="A new temporary password will be generated. The user's current password will stop working immediately. You'll be shown the new password once — copy it now, it can't be retrieved later."
+          confirmLabel="Generate new password"
+          busy={resetMutation.isPending}
+          onCancel={() => setConfirmReset(null)}
+          onConfirm={() => resetMutation.mutate(confirmReset)}
+        />
+      )}
+
       {tempPassword && (
         <TempPasswordDialog
           email={tempPassword.email}
