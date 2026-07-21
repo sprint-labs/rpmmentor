@@ -119,6 +119,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
       if (blob.size < 2048) { toast.error("That recording was too short — please try again."); return; }
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
+      blobRef.current = blob;
+      mimeRef.current = type.split(";")[0];
+      durationRef.current = elapsed;
       try {
         const dataUrl = await blobToDataUrl(blob);
         dataUrlRef.current = dataUrl;
