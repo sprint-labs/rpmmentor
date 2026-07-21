@@ -190,7 +190,7 @@ function SystemUsersPage() {
               return (
                 <li
                   key={u.id}
-                  className="grid md:grid-cols-[1fr_160px_200px_44px] gap-3 px-4 py-3 items-center"
+                  className="grid md:grid-cols-[1fr_160px_180px] gap-3 px-4 py-3 items-center"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="size-8 rounded-full bg-accent grid place-items-center text-xs font-semibold shrink-0">
@@ -227,24 +227,16 @@ function SystemUsersPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={u.role ?? ""}
-                      onChange={(e) => changeRole(u, e.target.value as RoleOrNone)}
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setEditUser(u)}
                       disabled={isSelf || busy}
-                      title={isSelf ? "You can't change your own role from this screen" : undefined}
-                      className="flex-1 h-9 px-2 rounded-md border border-border bg-input/60 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={isSelf ? "You can't change your own role from this screen" : "Edit roles"}
+                      className="inline-flex h-8 px-2.5 items-center gap-1.5 rounded-md border border-border text-xs font-medium hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <option value="">— No role —</option>
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {ROLE_LABEL[r]}
-                        </option>
-                      ))}
-                    </select>
-                    {busy && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
-                  </div>
-                  <div className="flex justify-end">
+                      {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Pencil className="size-3.5" />}
+                      Edit roles
+                    </button>
                     <button
                       onClick={() => setConfirmDelete(u)}
                       disabled={isSelf}
