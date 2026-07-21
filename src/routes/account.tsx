@@ -1,9 +1,10 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { KeyRound, Loader2, Check } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, Card } from "@/components/primitives";
+import { changePassword } from "@/lib/account.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/account")({
@@ -20,6 +21,9 @@ function AccountPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
 
+  const changePasswordFn = useServerFn(changePassword);
+
+  const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
@@ -28,23 +32,28 @@ function AccountPage() {
 
   const tooShort = pw.length > 0 && pw.length < 8;
   const mismatch = confirm.length > 0 && pw !== confirm;
-  const canSubmit = pw.length >= 8 && pw === confirm && !busy;
+  const sameAsCurrent = pw.length > 0 && pw === current;
+  const canSubmit =
+    current.length > 0 && pw.length >= 8 && pw === confirm && !sameAsCurrent && !busy;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
     setBusy(true);
     setOk(false);
-    const { error } = await supabase.auth.updateUser({ password: pw });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message || "Could not update password");
-      return;
+    try {
+      await changePasswordFn({ data: { currentPassword: current, newPassword: pw } });
+      setOk(true);
+      setCurrent("");
+      setPw("");
+      setConfirm("");
+      toast.success("Password updated");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not update password";
+      toast.error(msg);
+    } finally {
+      setBusy(false);
     }
-    setOk(true);
-    setPw("");
-    setConfirm("");
-    toast.success("Password updated");
   }
 
   const initials = (user?.name ?? user?.email ?? "?")
@@ -77,9 +86,23 @@ function AccountPage() {
       <Card>
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-[0.06em]">Change password</h2>
-          <p className="text-xs text-muted-foreground mt-1">Use at least 8 characters. You'll stay signed in after updating.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Confirm your current password, then set a new one of at least 8 characters.
+          </p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+          <div className="space-y-1.5">
+            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Current password</label>
+            <input
+              type={show ? "text" : "password"}
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => { setCurrent(e.target.value); setOk(false); }}
+              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="Enter your current password"
+              required
+            />
+          </div>
           <div className="space-y-1.5">
             <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">New password</label>
             <input
@@ -93,9 +116,12 @@ function AccountPage() {
               minLength={8}
             />
             {tooShort && <p className="text-[11px] text-warning">Must be at least 8 characters.</p>}
+            {sameAsCurrent && !tooShort && (
+              <p className="text-[11px] text-warning">New password must differ from your current one.</p>
+            )}
           </div>
           <div className="space-y-1.5">
-            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Confirm password</label>
+            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Confirm new password</label>
             <input
               type={show ? "text" : "password"}
               autoComplete="new-password"
