@@ -107,15 +107,15 @@ function AccountPage() {
       <PageHeader title="Account" description="Manage your sign-in credentials." />
 
       <Card className="p-4 relative overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:bg-primary">
-        <div className="flex items-center gap-3">
+        <div className="grid grid-cols-[auto_1fr] items-center gap-3 sm:flex sm:flex-wrap sm:items-center">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground font-semibold tracking-wider">
             {initials}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <div className="text-sm font-semibold truncate">{user?.name ?? "—"}</div>
             <div className="font-mono text-xs text-muted-foreground truncate">{user?.email ?? "—"}</div>
           </div>
-          <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-accent/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="col-span-2 shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-accent/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <Shield className="size-3" />
             {user?.role ?? "—"}
           </span>
