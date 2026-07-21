@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { recordPasswordRecovery } from "@/lib/account.functions";
 import loginLogo from "@/assets/gkhq-design-system.svg.asset.json";
 
 export const Route = createFileRoute("/reset-password")({
@@ -75,6 +76,12 @@ function ResetPasswordPage() {
     if (err) {
       setError(err.message || "Could not update password.");
       return;
+    }
+    // Best-effort audit log before we tear down the recovery session.
+    try {
+      await recordPasswordRecovery();
+    } catch {
+      // don't block the user on audit failures
     }
     // Sign the temporary recovery session out so the user must sign in with
     // the new password.
