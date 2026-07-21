@@ -3,7 +3,7 @@
 // Not real operational records; every consumer surface is labelled Mock via
 // src/lib/data-classification.tsx.
 
-export type Status = "Elite" | "First Team" | "Development" | "Prospect" | "Free Agent";
+export type Status = "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4" | "Academy" | "Free Agent";
 // Legacy alias — many components still import Tier.
 export type Tier = Status;
 
