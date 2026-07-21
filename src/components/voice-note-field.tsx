@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { transcribeVoiceNote } from "@/lib/api/transcribe.functions";
+
 
 const MAX_SECONDS = 180;
 
@@ -29,15 +30,20 @@ interface Props {
   className?: string;
 }
 
+type Phase = "idle" | "preparing" | "uploading" | "transcribing";
+
 export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Props) {
   const [recording, setRecording] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [phaseElapsed, setPhaseElapsed] = useState(0);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>([]);
   const [avgConfidence, setAvgConfidence] = useState<number | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -47,10 +53,17 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
   const mimeRef = useRef<string>("audio/webm");
   const durationRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
 
   const run = useServerFn(transcribeVoiceNote);
+  const busy = phase !== "idle";
+
+  const clearPhaseTimer = () => {
+    if (phaseTimerRef.current) { clearInterval(phaseTimerRef.current); phaseTimerRef.current = null; }
+  };
 
   const cleanupStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -60,16 +73,24 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
 
   useEffect(() => () => {
     cleanupStream();
+    clearPhaseTimer();
+    abortRef.current?.abort();
     if (audioUrl) URL.revokeObjectURL(audioUrl);
   }, [audioUrl]);
 
   const reset = () => {
+    abortRef.current?.abort();
+    clearPhaseTimer();
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
     setTranscript(null);
     setTokens([]);
     setAvgConfidence(null);
     setReviewed(false);
+    setErrorMsg(null);
+    setPhase("idle");
+    setPhaseElapsed(0);
+    setAttempt(0);
     dataUrlRef.current = null;
     blobRef.current = null;
     durationRef.current = 0;
@@ -77,16 +98,35 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
     setElapsed(0);
   };
 
+  const enterPhase = (p: Exclude<Phase, "idle">) => {
+    clearPhaseTimer();
+    setPhase(p);
+    setPhaseElapsed(0);
+    phaseTimerRef.current = setInterval(() => setPhaseElapsed((s) => s + 1), 1000);
+  };
+
   const transcribe = async (dataUrl: string) => {
-    setBusy(true);
+    setErrorMsg(null);
     setReviewed(false);
+    setTranscript(null);
+    setTokens([]);
+    setAvgConfidence(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    enterPhase("uploading");
+    // Optimistically flip to "transcribing" once upload buffering finishes (~1.2s).
+    const flipTimer = setTimeout(() => {
+      if (!controller.signal.aborted) enterPhase("transcribing");
+    }, 1200);
     try {
-      const result = await run({ data: { audioDataUrl: dataUrl } });
+      const call = run({ data: { audioDataUrl: dataUrl } });
+      const result = await new Promise<Awaited<typeof call>>((resolve, reject) => {
+        controller.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+        call.then(resolve, reject);
+      });
+      if (controller.signal.aborted) return;
       if (!result.ok) {
-        toast.error(result.error);
-        setTranscript(null);
-        setTokens([]);
-        setAvgConfidence(null);
+        setErrorMsg(result.error || "Transcription failed.");
       } else {
         setTranscript(result.text);
         setTokens(result.tokens ?? []);
@@ -94,11 +134,28 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
         toast.success("Voice note transcribed — review before applying");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Transcription failed");
+      if ((e as { name?: string } | null)?.name === "AbortError") {
+        // Silent — user-initiated cancel.
+        return;
+      }
+      setErrorMsg(e instanceof Error ? e.message : "Transcription failed. Check your connection and try again.");
     } finally {
-      setBusy(false);
+      clearTimeout(flipTimer);
+      clearPhaseTimer();
+      if (abortRef.current === controller) abortRef.current = null;
+      setPhase("idle");
     }
   };
+
+  const cancelTranscription = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    clearPhaseTimer();
+    setPhase("idle");
+    setErrorMsg(null);
+    toast.message("Transcription cancelled");
+  };
+
 
 
   const start = async () => {
@@ -134,12 +191,16 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
       blobRef.current = blob;
       mimeRef.current = type.split(";")[0];
       durationRef.current = elapsed;
+      enterPhase("preparing");
       try {
         const dataUrl = await blobToDataUrl(blob);
         dataUrlRef.current = dataUrl;
+        setAttempt(1);
         await transcribe(dataUrl);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not read audio");
+        clearPhaseTimer();
+        setPhase("idle");
+        setErrorMsg(e instanceof Error ? e.message : "Could not read the recorded audio.");
       }
     };
     rec.start();
@@ -160,9 +221,10 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
 
   const retry = () => {
     if (!dataUrlRef.current) return;
-    setTranscript(null);
-    transcribe(dataUrlRef.current);
+    setAttempt((n) => n + 1);
+    void transcribe(dataUrlRef.current);
   };
+
 
   const attachAudio = async () => {
     if (!onAudioAttach || attached || attaching) return;
@@ -254,8 +316,61 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
         <div className="flex flex-col gap-2">
           <audio src={audioUrl} controls className="w-full h-8" />
           {busy ? (
-            <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Transcribing…</div>
+            <div className="rounded-md border border-border bg-background p-2.5 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-2 text-xs">
+                  <Loader2 className="size-3.5 animate-spin text-primary" />
+                  <span className="font-medium text-foreground">
+                    {phase === "preparing" && "Preparing audio…"}
+                    {phase === "uploading" && "Uploading to AI…"}
+                    {phase === "transcribing" && "Transcribing speech…"}
+                  </span>
+                  <span className="text-[10px] font-mono tabular-nums text-muted-foreground">{phaseElapsed}s</span>
+                  {attempt > 1 && (
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Attempt {attempt}</span>
+                  )}
+                </div>
+                <button type="button" onClick={cancelTranscription} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                  <X className="size-3" />Cancel
+                </button>
+              </div>
+              <div className="flex gap-1" aria-hidden>
+                {(["preparing", "uploading", "transcribing"] as const).map((p) => {
+                  const order = { preparing: 0, uploading: 1, transcribing: 2 };
+                  const active = order[phase as keyof typeof order] >= order[p];
+                  return (
+                    <div key={p} className={`h-1 flex-1 rounded-full ${active ? "bg-primary" : "bg-border"} ${phase === p ? "animate-pulse" : ""}`} />
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Your recording is preserved — cancel any time to keep the audio and retry later.</p>
+            </div>
+          ) : errorMsg ? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="size-3.5 text-destructive mt-0.5 shrink-0" />
+                <div className="text-xs text-foreground">
+                  <div className="font-medium text-destructive">Transcription failed</div>
+                  <div className="text-muted-foreground mt-0.5">{errorMsg}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">Your audio is still saved — retry, or copy the recording out and try later.</div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                  <RotateCcw className="size-3" />Retry transcription
+                </button>
+                {onAudioAttach && (
+                  <button type="button" onClick={attachAudio} disabled={attached || attaching} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-50">
+                    {attached ? "Audio saved" : attaching ? "Saving…" : "Save audio without transcript"}
+                  </button>
+                )}
+                <button type="button" onClick={reset} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                  Discard
+                </button>
+              </div>
+            </div>
           ) : transcript ? (
+
             <>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Transcript — review before applying</div>
