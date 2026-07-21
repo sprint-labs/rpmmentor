@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { KeyRound, Loader2, Check, X, AlertCircle } from "lucide-react";
+import { KeyRound, Loader2, Check, X, AlertCircle, Shield } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { PageHeader, Card } from "@/components/primitives";
