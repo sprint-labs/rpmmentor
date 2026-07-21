@@ -269,6 +269,15 @@ function SystemUsersPage() {
         />
       )}
 
+      {editUser && (
+        <EditRoleDialog
+          user={editUser}
+          busy={mutation.isPending}
+          onCancel={() => setEditUser(null)}
+          onSubmit={(role) => changeRole(editUser, role)}
+        />
+      )}
+
       {confirmDelete && (
         <ConfirmDialog
           title={`Delete ${confirmDelete.name || confirmDelete.email}?`}
