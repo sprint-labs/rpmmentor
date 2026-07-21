@@ -390,6 +390,22 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 })}
               </div>
               <p className="text-[10px] text-muted-foreground">Your recording is preserved — cancel any time to keep the audio and retry later.</p>
+              {attemptLog.length > 1 && (
+                <div className="pt-1 border-t border-border">
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1">
+                    <History className="size-3" />Previous attempts: {attemptLog.length - 1}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {attemptLog.slice(0, -1).map((entry, i) => (
+                      <span key={entry.id} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] ${entry.status === "error" ? "bg-destructive/15 text-destructive" : entry.status === "success" ? "bg-gk-green/15 text-gk-green" : "bg-primary/15 text-primary"}`}>
+                        {i + 1}. {new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        {entry.status === "error" && <AlertTriangle className="size-3" />}
+                        {entry.status === "success" && <CheckCircle2 className="size-3" />}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : errorMsg ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2.5 space-y-2">
