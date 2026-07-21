@@ -67,6 +67,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const abortRef = useRef<AbortController | null>(null);
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
 
   const run = useServerFn(transcribeVoiceNote);
   const busy = phase !== "idle";
@@ -399,13 +401,61 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
             <>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Transcript — review before applying</div>
-                {overallLabel && (
-                  <span className={`inline-flex items-center gap-1 h-5 px-1.5 rounded-md border text-[10px] font-mono uppercase tracking-wider ${overallClass}`}>
-                    {overallLabel} confidence · {Math.round((avgConfidence ?? 0) * 100)}%
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5">
+                  {overallLabel && !editing && (
+                    <span className={`inline-flex items-center gap-1 h-5 px-1.5 rounded-md border text-[10px] font-mono uppercase tracking-wider ${overallClass}`}>
+                      {overallLabel} confidence · {Math.round((avgConfidence ?? 0) * 100)}%
+                    </span>
+                  )}
+                  {!editing && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditValue(transcript); setEditing(true); }}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
               </div>
-              {tokens.length > 0 ? (
+              {editing ? (
+                <>
+                  <textarea
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    rows={6}
+                    className="w-full text-xs bg-background border border-border rounded-md p-2 font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Edit the transcript…"
+                  />
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[10px] text-muted-foreground">Saving edits clears confidence highlights and resets the review checkbox.</span>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(false)}
+                        className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = editValue.trim();
+                          if (!next) { toast.error("Transcript can't be empty"); return; }
+                          setTranscript(next);
+                          setTokens([]);
+                          setAvgConfidence(null);
+                          setReviewed(false);
+                          setEditing(false);
+                        }}
+                        className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90"
+                      >
+                        Save edits
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : tokens.length > 0 ? (
                 <div className="text-xs whitespace-pre-wrap bg-background border border-border rounded-md p-2 max-h-40 overflow-y-auto leading-relaxed">
                   {tokens.map((t, i) => {
                     const b = bucketOf(t.confidence);
@@ -424,36 +474,41 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
               ) : (
                 <div className="text-xs whitespace-pre-wrap bg-background border border-border rounded-md p-2 max-h-40 overflow-y-auto">{transcript}</div>
               )}
-              {tokens.length > 0 && (
+              {!editing && tokens.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-amber-500/50" />Medium ({medCount})</span>
                   <span className="inline-flex items-center gap-1"><span className="inline-block size-2 rounded-sm bg-destructive/50" />Low ({lowCount})</span>
                   <span className="opacity-70">Hover a highlighted word to see its score.</span>
                 </div>
               )}
-              <label className="inline-flex items-center gap-1.5 text-[11px] text-foreground select-none">
-                <input
-                  type="checkbox"
-                  checked={reviewed}
-                  onChange={(e) => setReviewed(e.target.checked)}
-                  className="size-3.5 accent-primary"
-                />
-                I've reviewed the highlighted segments
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" disabled={!reviewed} onClick={() => handleApply("append")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">
-                  Append to comments
-                </button>
-                <button type="button" disabled={!reviewed} onClick={() => handleApply("replace")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">
-                  Replace comments
-                </button>
-                <button type="button" onClick={() => { navigator.clipboard?.writeText(transcript); toast.success("Copied"); }} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
-                  Copy
-                </button>
-                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
-                  <RotateCcw className="size-3" />Retry
-                </button>
-              </div>
+              {!editing && (
+                <>
+                  <label className="inline-flex items-center gap-1.5 text-[11px] text-foreground select-none">
+                    <input
+                      type="checkbox"
+                      checked={reviewed}
+                      onChange={(e) => setReviewed(e.target.checked)}
+                      className="size-3.5 accent-primary"
+                    />
+                    I've reviewed the highlighted segments
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button type="button" disabled={!reviewed} onClick={() => handleApply("append")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">
+                      Append to comments
+                    </button>
+                    <button type="button" disabled={!reviewed} onClick={() => handleApply("replace")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">
+                      Replace comments
+                    </button>
+                    <button type="button" onClick={() => { navigator.clipboard?.writeText(transcript); toast.success("Copied"); }} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                      Copy
+                    </button>
+                    <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                      <RotateCcw className="size-3" />Retry
+                    </button>
+                  </div>
+                </>
+              )}
+
 
               {onAudioAttach && blobRef.current && (
                 <div className="text-[11px] mt-1">
