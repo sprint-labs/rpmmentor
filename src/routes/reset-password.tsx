@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { recordPasswordRecovery } from "@/lib/account.functions";
 import loginLogo from "@/assets/gkhq-design-system.svg.asset.json";
 
 export const Route = createFileRoute("/reset-password")({
