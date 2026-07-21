@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { transcribeVoiceNote } from "@/lib/api/transcribe.functions";
+
 
 const MAX_SECONDS = 180;
 
