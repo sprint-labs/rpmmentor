@@ -14,7 +14,7 @@
  *                          occurred_at, notes, outcome, follow_up, transcript_source)
  *   match_reports         (id uuid pk, player_id fk, mentor_profile_id fk, report_type,
  *                          occurred_at, overall_rating, summary, scores jsonb)
- *   duty_of_care_status   (player_id pk fk, level 'green'|'amber'|'red', days_since_contact,
+ *   duty_of_care_status   (player_id pk fk, level 'green'|'amber', days_since_contact,
  *                          last_contact_at, computed_at) — view/materialised view
  *   media_items           (id uuid pk, player_id fk, uploaded_by fk, kind, title, size_bytes)
  *
@@ -192,20 +192,19 @@ export function selectAssignedPlayers(_mentorProfileId: string): PlayerRow[] {
 
 /** Duty of care rows for the full roster, ordered worst-first. */
 export function selectDutyOfCareForMentor(_mentorProfileId: string): DutyOfCareRow[] {
-  const rank: Record<DutyLevel, number> = { red: 0, amber: 1, green: 2 };
+  const rank: Record<DutyLevel, number> = { amber: 0, green: 1 };
   return goalkeepers
     .map((g) => toDutyRow(g.id)!)
     .sort((a, b) => rank[a.level] - rank[b.level] || b.days_since_contact - a.days_since_contact);
 }
 
-/** Roster roll-up (green/amber/red counts). */
+/** Roster roll-up (green/amber counts). */
 export function selectDutyRollup(mentorProfileId: string) {
   const rows = selectDutyOfCareForMentor(mentorProfileId);
   const total = rows.length || 1;
   const green = rows.filter((r) => r.level === "green").length;
   const amber = rows.filter((r) => r.level === "amber").length;
-  const red = rows.filter((r) => r.level === "red").length;
-  return { total: rows.length, green, amber, red, greenPct: (green / total) * 100, amberPct: (amber / total) * 100, redPct: (red / total) * 100 };
+  return { total: rows.length, green, amber, greenPct: (green / total) * 100, amberPct: (amber / total) * 100 };
 }
 
 /** Overdue players (amber + red), most-urgent first. Used for the priority queue. */

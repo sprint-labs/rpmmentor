@@ -140,7 +140,7 @@ export function AppShell() {
                         <div className="px-4 py-8 text-center text-xs text-muted-foreground">No duty status changes.</div>
                       ) : (
                         notif.items.slice(0, 30).map((n) => {
-                          const tone = n.to === "red" ? "bg-destructive" : n.to === "amber" ? "bg-warning" : "bg-success";
+                          const tone = n.to === "amber" ? "bg-warning" : "bg-success";
                           return (
                             <Link
                               key={n.id}
