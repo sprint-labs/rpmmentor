@@ -226,7 +226,14 @@ export function AppShell() {
                 );
               })}
             </nav>
-            <div className="p-3 border-t border-sidebar-border">
+            <div className="p-3 border-t border-sidebar-border space-y-2">
+              <Link
+                to={"/account" as never}
+                onClick={() => setNavOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-border text-xs uppercase tracking-[0.06em] font-semibold hover:bg-accent"
+              >
+                <KeyRound className="size-4" />Account
+              </Link>
               <button
                 onClick={() => { signOut(); setNavOpen(false); navigate({ to: "/login" as never }); }}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-border text-xs uppercase tracking-[0.06em] font-semibold hover:bg-accent"
