@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, ShieldOff, Users, Search, Loader2, AlertCircle, UserPlus, Trash2, Copy, Pencil } from "lucide-react";
+import { ShieldCheck, ShieldOff, Users, Search, Loader2, AlertCircle, UserPlus, Trash2, Copy, Pencil, KeyRound } from "lucide-react";
 import { useAuth, ROLE_LABEL, type Role } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import {
   setManagedUserRole,
   createManagedUser,
   deleteManagedUser,
+  resetManagedUserPassword,
   type ManagedUserRow,
 } from "@/lib/admin-users.functions";
 
@@ -34,12 +35,14 @@ function SystemUsersPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState<ManagedUserRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ManagedUserRow | null>(null);
+  const [confirmReset, setConfirmReset] = useState<ManagedUserRow | null>(null);
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null);
 
   const list = useServerFn(listManagedUsers);
   const setRole = useServerFn(setManagedUserRole);
   const createUser = useServerFn(createManagedUser);
   const deleteUser = useServerFn(deleteManagedUser);
+  const resetPassword = useServerFn(resetManagedUserPassword);
   const qc = useQueryClient();
 
   const canManage = !!user && can("system.manage");
@@ -88,6 +91,18 @@ function SystemUsersPage() {
     },
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Failed to delete user");
+    },
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: (u: ManagedUserRow) => resetPassword({ data: { userId: u.id } }),
+    onSuccess: (res, u) => {
+      setConfirmReset(null);
+      setTempPassword({ email: u.email || res.email, password: res.tempPassword });
+      toast.success(`Password reset for ${u.name || u.email}`);
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to reset password");
     },
   });
 
@@ -159,7 +174,7 @@ function SystemUsersPage() {
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden bg-card">
-        <div className="hidden md:grid grid-cols-[1fr_160px_180px] gap-3 px-4 py-2.5 border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground font-medium bg-muted/30">
+        <div className="hidden md:grid grid-cols-[1fr_160px_240px] gap-3 px-4 py-2.5 border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground font-medium bg-muted/30">
           <div>User</div>
           <div>Current role</div>
           <div className="text-right">Actions</div>
@@ -190,7 +205,7 @@ function SystemUsersPage() {
               return (
                 <li
                   key={u.id}
-                  className="grid md:grid-cols-[1fr_160px_180px] gap-3 px-4 py-3 items-center"
+                  className="grid md:grid-cols-[1fr_160px_240px] gap-3 px-4 py-3 items-center"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="size-8 rounded-full bg-accent grid place-items-center text-xs font-semibold shrink-0">
@@ -236,6 +251,18 @@ function SystemUsersPage() {
                     >
                       {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Pencil className="size-3.5" />}
                       Edit roles
+                    </button>
+                    <button
+                      onClick={() => setConfirmReset(u)}
+                      disabled={isSelf || (resetMutation.isPending && resetMutation.variables?.id === u.id)}
+                      title={isSelf ? "You can't reset your own password from this screen" : "Reset password"}
+                      className="size-8 grid place-items-center rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      {resetMutation.isPending && resetMutation.variables?.id === u.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <KeyRound className="size-4" />
+                      )}
                     </button>
                     <button
                       onClick={() => setConfirmDelete(u)}
@@ -287,6 +314,17 @@ function SystemUsersPage() {
           busy={deleteMutation.isPending}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => deleteMutation.mutate(confirmDelete)}
+        />
+      )}
+
+      {confirmReset && (
+        <ConfirmDialog
+          title={`Reset password for ${confirmReset.name || confirmReset.email}?`}
+          message="A new temporary password will be generated. The user's current password will stop working immediately. You'll be shown the new password once — copy it now, it can't be retrieved later."
+          confirmLabel="Generate new password"
+          busy={resetMutation.isPending}
+          onCancel={() => setConfirmReset(null)}
+          onConfirm={() => resetMutation.mutate(confirmReset)}
         />
       )}
 
