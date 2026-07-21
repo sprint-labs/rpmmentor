@@ -103,8 +103,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     } else if (fresh.length) {
       fresh.forEach((n) => {
         const verb = rank(n.to) > rank(n.from) ? "escalated" : "improved";
-        const fn = n.to === "amber" ? toast.warning : toast.success;
-        fn(`Duty ${verb}: ${n.gkName}`, { description: `${n.from.toUpperCase()} → ${n.to.toUpperCase()}` });
+        const fn = n.to === "overdue" ? toast.error : n.to === "due_soon" ? toast.warning : toast.success;
+        const label = (l: DutyLevel) => l.replace(/_/g, " ").toUpperCase();
+        fn(`Duty ${verb}: ${n.gkName}`, { description: `${label(n.from)} → ${label(n.to)}` });
       });
       setItems((prev) => {
         const next = [...fresh, ...prev].slice(0, 80);
