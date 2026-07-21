@@ -201,14 +201,44 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   };
 
   const cancelTranscription = () => {
+    cancelledPhaseRef.current = phase;
+    cancelledElapsedRef.current = phaseElapsed;
     abortRef.current?.abort();
     abortRef.current = null;
     clearPhaseTimer();
     setPhase("idle");
     setErrorMsg(null);
     setCancelled(true);
-    toast.message("Transcription cancelled");
+    toast.message("Transcription cancelled", {
+      action: { label: "Undo", onClick: () => undoCancel() },
+    });
   };
+
+  const undoCancel = () => {
+    const snap = preTranscribeSnapshotRef.current;
+    setCancelled(false);
+    if (snap) {
+      // Restore the prior reviewed transcript exactly as it was.
+      setTranscript(snap.transcript);
+      setTokens(snap.tokens);
+      setAvgConfidence(snap.avgConfidence);
+      setReviewed(snap.reviewed);
+      logAttempt("error", "Cancellation undone — restored previous transcript");
+      toast.success("Restored previous transcript");
+      return;
+    }
+    // No prior transcript to restore — resume by re-running transcription on the saved audio.
+    const url = dataUrlRef.current;
+    if (!url) {
+      toast.error("No saved audio to resume from");
+      return;
+    }
+    logAttempt("error", "Cancellation undone — resuming transcription");
+    toast.message("Resuming transcription…");
+    setAttempt((a) => a + 1);
+    void transcribe(url);
+  };
+
 
 
 
