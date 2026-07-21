@@ -233,15 +233,15 @@ function AccountPage() {
               </p>
             ) : null}
           </div>
-          <div className="flex items-center justify-between pt-2">
-            <label className="flex items-center gap-2 text-xs text-muted-foreground select-none">
-              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} className="rounded border-border bg-input" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground select-none shrink-0">
+              <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} className="rounded border-border bg-input shrink-0" />
               Show passwords
             </label>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 w-full sm:w-auto px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : ok ? <Check className="size-4" /> : <KeyRound className="size-4" />}
               {busy ? "Updating…" : ok ? "Updated" : "Update password"}
