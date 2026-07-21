@@ -43,8 +43,24 @@ function AlertsPage() {
         <StatCard label="Low" value={low} accent="info" />
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        {filterTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setFilter(t.id)}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors",
+              filter === t.id ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-accent/40",
+            )}
+          >
+            {t.label}
+            <span className="tabular-nums font-mono text-[10px] text-muted-foreground">{t.count}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-5">
-        {groups.map((g) => {
+        {visibleGroups.map((g) => {
           const list = alerts.filter((a) => a.kind === g);
           if (!list.length) return null;
           return (
