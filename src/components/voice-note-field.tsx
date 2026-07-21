@@ -179,12 +179,38 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
   };
 
   const handleApply = (mode: "append" | "replace") => {
+    if (!reviewed) {
+      toast.error("Review the transcript first — tick 'I've reviewed this' below.");
+      return;
+    }
     onTranscribed(transcript ?? "", mode);
     void attachAudio();
   };
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(elapsed % 60).padStart(2, "0");
+
+  // Confidence bucket for a token: high (≥0.85), medium (0.6–0.85), low (<0.6)
+  const bucketOf = (c: number): "high" | "med" | "low" => (c >= 0.85 ? "high" : c >= 0.6 ? "med" : "low");
+  const bucketClass = (b: "high" | "med" | "low") =>
+    b === "low"
+      ? "bg-destructive/25 text-destructive-foreground underline decoration-destructive decoration-wavy underline-offset-2"
+      : b === "med"
+      ? "bg-amber-500/25 text-foreground"
+      : "";
+  const lowCount = tokens.filter((t) => bucketOf(t.confidence) === "low").length;
+  const medCount = tokens.filter((t) => bucketOf(t.confidence) === "med").length;
+  const overallLabel =
+    avgConfidence == null ? null : avgConfidence >= 0.85 ? "High" : avgConfidence >= 0.6 ? "Medium" : "Low";
+  const overallClass =
+    avgConfidence == null
+      ? ""
+      : avgConfidence >= 0.85
+      ? "text-gk-green border-gk-green/40"
+      : avgConfidence >= 0.6
+      ? "text-amber-500 border-amber-500/40"
+      : "text-destructive border-destructive/40";
+
 
   return (
     <div className={`rounded-md border border-dashed border-border bg-accent/10 p-3 space-y-3 ${className ?? ""}`}>
