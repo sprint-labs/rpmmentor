@@ -38,8 +38,12 @@ function load<T>(k: string, fallback: T): T {
 }
 function persist(k: string, v: unknown) { if (typeof window !== "undefined") { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } } }
 
-function rank(l: DutyLevel) { return l === "green" ? 0 : 1; }
+const RANK: Record<DutyLevel, number> = {
+  not_required: 0, up_to_date: 1, not_enough_data: 2, due_soon: 3, overdue: 4,
+};
+function rank(l: DutyLevel) { return RANK[l]; }
 export function severityFor(from: DutyLevel, to: DutyLevel): "high" | "medium" | "low" {
+  if (to === "overdue" && rank(to) > rank(from)) return "high";
   if (rank(to) > rank(from)) return "medium";
   return "low";
 }
@@ -48,8 +52,8 @@ function seedFromCurrent(): DutyNotif[] {
   const out: DutyNotif[] = [];
   goalkeepers.forEach((gk, i) => {
     const cur = dutyStatusForGk(gk).level;
-    if (cur === "green") return;
-    const from: DutyLevel = "green";
+    if (cur === "up_to_date" || cur === "not_required") return;
+    const from: DutyLevel = "up_to_date";
     out.push({
       id: `seed-${gk.id}`,
       gkId: gk.id,
