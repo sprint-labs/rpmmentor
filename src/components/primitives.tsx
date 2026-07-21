@@ -5,18 +5,21 @@ import { cn } from "@/lib/utils";
 import { TIER_DEFINITIONS } from "@/lib/mock-data";
 import type { Tier, DutyLevel } from "@/lib/mock-data";
 
+const DUTY_TONES: Record<DutyLevel, { dot: string; badge: string }> = {
+  up_to_date: { dot: "bg-success", badge: "bg-success/15 text-success border-success/30" },
+  due_soon: { dot: "bg-warning", badge: "bg-warning/15 text-warning border-warning/30" },
+  overdue: { dot: "bg-destructive", badge: "bg-destructive/15 text-destructive border-destructive/40" },
+  not_required: { dot: "bg-muted-foreground/50", badge: "bg-muted text-muted-foreground border-border" },
+  not_enough_data: { dot: "bg-muted-foreground/50", badge: "bg-muted text-muted-foreground border-border" },
+};
+
 export function TrafficLight({ level, size = 10 }: { level: DutyLevel; size?: number }) {
-  const tone = level === "green" ? "bg-success" : "bg-warning";
-  return <span className={cn("inline-block rounded-full shrink-0 ring-2 ring-background", tone)} style={{ width: size, height: size }} aria-label={`duty ${level}`} />;
+  return <span className={cn("inline-block rounded-full shrink-0 ring-2 ring-background", DUTY_TONES[level].dot)} style={{ width: size, height: size }} aria-label={`duty ${level}`} />;
 }
 
 export function DutyBadge({ level, label }: { level: DutyLevel; label: string }) {
-  const tone =
-    level === "green"
-      ? "bg-success/15 text-success border-success/30"
-      : "bg-warning/15 text-warning border-warning/30";
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap", tone)}>
+    <span className={cn("inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap", DUTY_TONES[level].badge)}>
       <TrafficLight level={level} size={6} />
       {label}
     </span>
