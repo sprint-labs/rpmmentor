@@ -62,8 +62,17 @@ function AccountPage() {
   const tooShort = pw.length > 0 && pw.length < 8;
   const mismatch = confirm.length > 0 && pw !== confirm;
   const sameAsCurrent = pw.length > 0 && pw === current;
+  const strength = useMemo(
+    () => scorePassword(pw, [user?.email ?? "", user?.name ?? "", current]),
+    [pw, current, user?.email, user?.name],
+  );
   const canSubmit =
-    current.length > 0 && pw.length >= 8 && pw === confirm && !sameAsCurrent && !busy;
+    current.length > 0 &&
+    pw.length >= 8 &&
+    pw === confirm &&
+    !sameAsCurrent &&
+    strength >= 2 &&
+    !busy;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
