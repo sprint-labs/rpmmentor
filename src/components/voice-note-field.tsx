@@ -41,18 +41,19 @@ interface Props {
 
 type Phase = "idle" | "preparing" | "uploading" | "transcribing";
 
-export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Props) {
+export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftChange, className }: Props) {
   const [recording, setRecording] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [phaseElapsed, setPhaseElapsed] = useState(0);
-  const [transcript, setTranscript] = useState<string | null>(null);
-  const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>([]);
-  const [avgConfidence, setAvgConfidence] = useState<number | null>(null);
-  const [reviewed, setReviewed] = useState(false);
+  const [transcript, setTranscript] = useState<string | null>(draft?.transcript ?? null);
+  const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>(draft?.tokens ?? []);
+  const [avgConfidence, setAvgConfidence] = useState<number | null>(draft?.avgConfidence ?? null);
+  const [reviewed, setReviewed] = useState<boolean>(draft?.reviewed ?? false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(!!draft?.transcript);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
