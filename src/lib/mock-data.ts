@@ -355,7 +355,7 @@ export const goalkeepers: Goalkeeper[] = SEED.map((s, i) => {
   const region = deriveRegion(s);
   const mentorId = status === "Free Agent" ? "m-david-rouse" : ASSIGN_POOL[i % ASSIGN_POOL.length];
   const o = RATING_OVERRIDE[s.name];
-  const baseRating = status === "Elite" ? between(78, 90) : status === "First Team" ? between(70, 84) : status === "Development" ? between(64, 78) : status === "Prospect" ? between(58, 72) : between(60, 75);
+  const baseRating = status === "Tier 1" ? between(78, 90) : status === "Tier 2" ? between(70, 84) : status === "Tier 3" ? between(64, 78) : status === "Academy" ? between(58, 72) : between(60, 75);
   const gk: Goalkeeper = {
     id: `gk-${s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     name: s.name,
