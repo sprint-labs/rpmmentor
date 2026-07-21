@@ -29,7 +29,7 @@ interface Props {
   className?: string;
 }
 
-export function VoiceNoteField({ onTranscribed, className }: Props) {
+export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Props) {
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
