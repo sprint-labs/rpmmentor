@@ -344,6 +344,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
     });
     setComments("");
     setSelectedMedia([]);
+    setVoiceTranscript(null);
     setDraftSavedAt(null);
     setDraftRestoredFrom(null);
     localVersionRef.current = 0;
