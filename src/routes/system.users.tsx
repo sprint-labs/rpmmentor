@@ -32,6 +32,7 @@ function SystemUsersPage() {
   const { user, can } = useAuth();
   const [q, setQ] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [editUser, setEditUser] = useState<ManagedUserRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ManagedUserRow | null>(null);
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null);
 
