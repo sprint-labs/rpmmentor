@@ -220,6 +220,7 @@ function ReportForm({ onDone }: { onDone: () => void }) {
   });
   const [comments, setComments] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
+  const [voiceTranscript, setVoiceTranscript] = useState<import("@/lib/match-reports/draft-store").VoiceTranscriptDraft | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setFieldErrors] = useState<Record<string, string>>({});
