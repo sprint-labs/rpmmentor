@@ -47,73 +47,82 @@ function AccountPage() {
     toast.success("Password updated");
   }
 
+  const initials = (user?.name ?? user?.email ?? "?")
+    .split(/\s+/)
+    .map((s) => s[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-3xl space-y-6">
       <PageHeader title="Account" description="Manage your sign-in credentials." />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.06em] mb-3">Your account</h2>
-          <dl className="text-sm space-y-2">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Name</dt>
-              <dd className="font-medium">{user?.name ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Email</dt>
-              <dd className="font-mono text-xs">{user?.email ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Role</dt>
-              <dd className="uppercase tracking-wider text-xs">{user?.role ?? "—"}</dd>
-            </div>
-          </dl>
-        </Card>
+      <Card className="p-0 overflow-hidden">
+        <div className="flex items-center gap-4 p-5 border-b border-border/60 bg-muted/20">
+          <div className="flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold tracking-wider">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="text-base font-semibold truncate">{user?.name ?? "—"}</div>
+            <div className="font-mono text-xs text-muted-foreground truncate">{user?.email ?? "—"}</div>
+          </div>
+          <span className="ml-auto shrink-0 rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            {user?.role ?? "—"}
+          </span>
+        </div>
+      </Card>
 
-        <Card>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.06em] mb-3">Change password</h2>
-          <form onSubmit={onSubmit} className="space-y-3">
-            <div>
-              <label className="text-xs uppercase tracking-[0.06em] text-muted-foreground">New password</label>
-              <input
-                type={show ? "text" : "password"}
-                autoComplete="new-password"
-                value={pw}
-                onChange={(e) => { setPw(e.target.value); setOk(false); }}
-                className="mt-1 w-full h-9 px-2 rounded-md bg-input/60 border border-border text-sm"
-                placeholder="At least 8 characters"
-                required
-                minLength={8}
-              />
-              {tooShort && <p className="text-[11px] text-warning mt-1">Must be at least 8 characters.</p>}
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-[0.06em] text-muted-foreground">Confirm password</label>
-              <input
-                type={show ? "text" : "password"}
-                autoComplete="new-password"
-                value={confirm}
-                onChange={(e) => { setConfirm(e.target.value); setOk(false); }}
-                className="mt-1 w-full h-9 px-2 rounded-md bg-input/60 border border-border text-sm"
-                required
-              />
-              {mismatch && <p className="text-[11px] text-destructive mt-1">Passwords do not match.</p>}
-            </div>
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Card>
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.06em]">Change password</h2>
+          <p className="text-xs text-muted-foreground mt-1">Use at least 8 characters. You'll stay signed in after updating.</p>
+        </div>
+        <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+          <div className="space-y-1.5">
+            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">New password</label>
+            <input
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              value={pw}
+              onChange={(e) => { setPw(e.target.value); setOk(false); }}
+              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="At least 8 characters"
+              required
+              minLength={8}
+            />
+            {tooShort && <p className="text-[11px] text-warning">Must be at least 8 characters.</p>}
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-xs uppercase tracking-[0.06em] text-muted-foreground">Confirm password</label>
+            <input
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => { setConfirm(e.target.value); setOk(false); }}
+              className="w-full h-10 px-3 rounded-md bg-input/60 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="Repeat new password"
+              required
+            />
+            {mismatch && <p className="text-[11px] text-destructive">Passwords do not match.</p>}
+          </div>
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground select-none">
               <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
               Show passwords
             </label>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : ok ? <Check className="size-4" /> : <KeyRound className="size-4" />}
               {busy ? "Updating…" : ok ? "Updated" : "Update password"}
             </button>
-          </form>
-        </Card>
-      </div>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }
