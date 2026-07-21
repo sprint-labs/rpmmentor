@@ -10,6 +10,7 @@ import {
   type MediaAsset, type MediaKind,
 } from "@/lib/media-store";
 import { HandwrittenNotesField } from "@/components/handwritten-notes-field";
+import { VoiceNoteField } from "@/components/voice-note-field";
 import { submitMatchReport } from "@/lib/match-reports/reports.functions";
 import {
   PILLAR_IDS, PILLAR_LABELS, averageOfScores, type PillarId,
