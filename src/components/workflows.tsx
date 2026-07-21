@@ -1195,7 +1195,7 @@ function GoalkeeperForm({ onDone }: { onDone: () => void }) {
         <Field label="Club"><input className={inputCls} placeholder="e.g. Shamrock Rovers" /></Field>
         <Field label="League"><input className={inputCls} placeholder="e.g. League of Ireland" /></Field>
         <Field label="Height"><input className={inputCls} placeholder="e.g. 192cm" /></Field>
-        <Field label="Status"><select className={selectCls}>{["Prospect", "Development", "First Team", "Elite", "Free Agent"].map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <Field label="Status"><select className={selectCls}>{["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Academy", "Free Agent"].map((t) => <option key={t}>{t}</option>)}</select></Field>
         <Field label="Contract Until"><input type="date" className={inputCls} /></Field>
         <Field label="Recommendation"><select className={selectCls}>{["Monitor", "Sign", "Loan", "Develop", "Retain", "Pass"].map((t) => <option key={t}>{t}</option>)}</select></Field>
       </div>
