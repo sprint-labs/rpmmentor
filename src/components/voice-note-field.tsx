@@ -152,6 +152,25 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, className }: Prop
     transcribe(dataUrlRef.current);
   };
 
+  const attachAudio = async () => {
+    if (!onAudioAttach || attached || attaching) return;
+    if (!blobRef.current) return;
+    setAttaching(true);
+    try {
+      await onAudioAttach({ blob: blobRef.current, mimeType: mimeRef.current, durationSec: durationRef.current });
+      setAttached(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save audio to Media Library");
+    } finally {
+      setAttaching(false);
+    }
+  };
+
+  const handleApply = (mode: "append" | "replace") => {
+    onTranscribed(transcript ?? "", mode);
+    void attachAudio();
+  };
+
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(elapsed % 60).padStart(2, "0");
 
