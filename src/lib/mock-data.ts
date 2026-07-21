@@ -3,7 +3,7 @@
 // Not real operational records; every consumer surface is labelled Mock via
 // src/lib/data-classification.tsx.
 
-export type Status = "Elite" | "First Team" | "Development" | "Prospect" | "Free Agent";
+export type Status = "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4" | "Academy" | "Free Agent";
 // Legacy alias — many components still import Tier.
 export type Tier = Status;
 
@@ -304,12 +304,10 @@ const OVERSEAS_LEAGUES = new Set(["Serie A", "MLS", "Danish Superliga", "Allsven
 
 function deriveStatus(s: Seed): Status {
   if (s.league === "Free Agent") return "Free Agent";
-  if (s.age <= 17) return "Prospect";
-  // Elite — Premier League regulars and the two hero profiles
-  const ELITE = new Set(["James Beadle", "Marcus Bettinelli", "Brandon Austin", "Asmir Begovic"]);
-  if (ELITE.has(s.name)) return "Elite";
-  if (s.age <= 21) return "Development";
-  return "First Team";
+  // Academy: goalkeepers currently playing at U15/U16/U17/U18 level.
+  // Proxy in mock data: age <= 18 (no U-league seeds present).
+  if (s.age <= 18) return "Academy";
+  return `Tier ${deriveTierLevel(s)}` as Status;
 }
 function deriveRegion(s: Seed): Region {
   if (s.league === "Free Agent") return "Free Agent";
@@ -357,7 +355,7 @@ export const goalkeepers: Goalkeeper[] = SEED.map((s, i) => {
   const region = deriveRegion(s);
   const mentorId = status === "Free Agent" ? "m-david-rouse" : ASSIGN_POOL[i % ASSIGN_POOL.length];
   const o = RATING_OVERRIDE[s.name];
-  const baseRating = status === "Elite" ? between(78, 90) : status === "First Team" ? between(70, 84) : status === "Development" ? between(64, 78) : status === "Prospect" ? between(58, 72) : between(60, 75);
+  const baseRating = status === "Tier 1" ? between(78, 90) : status === "Tier 2" ? between(70, 84) : status === "Tier 3" ? between(64, 78) : status === "Academy" ? between(58, 72) : between(60, 75);
   const gk: Goalkeeper = {
     id: `gk-${s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
     name: s.name,
@@ -372,7 +370,7 @@ export const goalkeepers: Goalkeeper[] = SEED.map((s, i) => {
     contractUntil: contractISO(s.contract),
     height: `${between(186, 200)}cm`,
     foot: rand() > 0.25 ? "Right" : "Left",
-    lastInteraction: daysFromNow(-between(1, status === "Elite" ? 14 : 40)),
+    lastInteraction: daysFromNow(-between(1, status === "Tier 1" ? 14 : 40)),
     nextInteraction: daysFromNow(between(-2, 28)),
     rating: o?.rating ?? baseRating,
     potential: o?.potential ?? Math.min(99, baseRating + between(4, 14)),
@@ -603,7 +601,7 @@ export const dutyOverview = (() => {
   return { ...counts, total: goalkeepers.length };
 })();
 
-const STATUSES: Status[] = ["Elite", "First Team", "Development", "Prospect", "Free Agent"];
+const STATUSES: Status[] = ["Tier 1", "Tier 2", "Tier 3", "Tier 4", "Academy", "Free Agent"];
 
 export const stats = {
   totalGks: goalkeepers.length,

@@ -22,13 +22,15 @@ function GoalkeepersList() {
     if (cat === "UK Based" && g.region !== "UK Based") return false;
     if (cat === "Overseas" && g.region !== "Overseas") return false;
     if (cat === "Free Agents" && g.status !== "Free Agent") return false;
-    if (cat === "Prospects" && g.status !== "Prospect") return false;
-    if (cat === "First Team Professionals" && g.status !== "First Team" && g.status !== "Elite") return false;
+    if (cat === "Academy" && g.status !== "Academy") return false;
+    if (cat === "Free Agents" && g.status !== "Free Agent") return false;
+    if (cat === "Tier 1-2" && g.status !== "Tier 1" && g.status !== "Tier 2") return false;
+    if (cat === "Tier 3-4" && g.status !== "Tier 3" && g.status !== "Tier 4") return false;
     if (duty !== "all" && dutyStatusForGk(g).level !== duty) return false;
     if (q && !`${g.name} ${g.club} ${g.nationality} ${g.league}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
-  const CATS = ["All", "UK Based", "Overseas", "Prospects", "First Team Professionals", "Free Agents"] as const;
+  const CATS = ["All", "UK Based", "Overseas", "Academy", "Tier 1-2", "Tier 3-4", "Free Agents"] as const;
   const DUTIES: { id: typeof duty; label: string; count: number }[] = [
     { id: "all", label: "All", count: dutyOverview.total },
     { id: "green", label: "On Track", count: dutyOverview.green },
