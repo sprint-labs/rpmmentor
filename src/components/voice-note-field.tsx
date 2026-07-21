@@ -75,6 +75,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const preTranscribeSnapshotRef = useRef<VoiceDraft | null>(null);
+  const cancelledPhaseRef = useRef<Phase>("idle");
+  const cancelledElapsedRef = useRef<number>(0);
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [editing, setEditing] = useState(false);
