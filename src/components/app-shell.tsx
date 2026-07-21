@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABEL, type Permission, type Role } from "@/lib/auth";
 import { useEffect, useRef, useState } from "react";
@@ -226,7 +226,14 @@ export function AppShell() {
                 );
               })}
             </nav>
-            <div className="p-3 border-t border-sidebar-border">
+            <div className="p-3 border-t border-sidebar-border space-y-2">
+              <Link
+                to={"/account" as never}
+                onClick={() => setNavOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-border text-xs uppercase tracking-[0.06em] font-semibold hover:bg-accent"
+              >
+                <KeyRound className="size-4" />Account
+              </Link>
               <button
                 onClick={() => { signOut(); setNavOpen(false); navigate({ to: "/login" as never }); }}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-border text-xs uppercase tracking-[0.06em] font-semibold hover:bg-accent"
