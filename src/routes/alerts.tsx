@@ -6,15 +6,27 @@ import { AlertTriangle, Mail, Send, Check, Trash2 } from "lucide-react";
 import { useNotifications, type EmailFrequency } from "@/lib/notifications";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/alerts")({ component: withPermission(AlertsPage, "alerts.view") });
 
+const GROUPS = ["Overdue observation", "Overdue contact", "Missing report", "Upcoming match", "Expiring action"] as const;
+type Group = (typeof GROUPS)[number];
+type Filter = "all" | Group;
+
 function AlertsPage() {
+  const [filter, setFilter] = useState<Filter>("all");
   const high = alerts.filter((a) => a.severity === "high").length;
   const med = alerts.filter((a) => a.severity === "medium").length;
   const low = alerts.filter((a) => a.severity === "low").length;
 
-  const groups = ["Overdue observation", "Overdue contact", "Missing report", "Upcoming match", "Expiring action"] as const;
+  const groups = GROUPS;
+  const visibleGroups: readonly Group[] = filter === "all" ? groups : [filter];
+
+  const filterTabs: { id: Filter; label: string; count: number }[] = [
+    { id: "all", label: "All", count: alerts.length },
+    ...groups.map((g) => ({ id: g as Filter, label: g, count: alerts.filter((a) => a.kind === g).length })),
+  ];
 
   return (
     <div className="space-y-5">
