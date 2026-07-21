@@ -370,7 +370,7 @@ export const goalkeepers: Goalkeeper[] = SEED.map((s, i) => {
     contractUntil: contractISO(s.contract),
     height: `${between(186, 200)}cm`,
     foot: rand() > 0.25 ? "Right" : "Left",
-    lastInteraction: daysFromNow(-between(1, status === "Elite" ? 14 : 40)),
+    lastInteraction: daysFromNow(-between(1, status === "Tier 1" ? 14 : 40)),
     nextInteraction: daysFromNow(between(-2, 28)),
     rating: o?.rating ?? baseRating,
     potential: o?.potential ?? Math.min(99, baseRating + between(4, 14)),
