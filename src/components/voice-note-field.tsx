@@ -455,7 +455,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 </button>
               </div>
 
-              {onAudioAttach && (
+              {onAudioAttach && blobRef.current && (
                 <div className="text-[11px] mt-1">
                   {attaching ? (
                     <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="size-3 animate-spin" />Saving audio to Media Library…</span>
