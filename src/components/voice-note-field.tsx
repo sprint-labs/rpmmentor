@@ -234,10 +234,16 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setPhase("idle");
     setErrorMsg(null);
     setCancelled(true);
+    // Start a cooldown that scales with the number of transcription attempts so far.
+    const cooldownMs = cooldownMsForAttempts(attempt);
+    const readyAt = Date.now() + cooldownMs;
+    setRetryAvailableAt(readyAt);
+    setNowTick(Date.now());
     toast.message("Transcription cancelled", {
       action: { label: "Undo", onClick: () => undoCancel() },
     });
   };
+
 
   const undoCancel = () => {
     const snap = preTranscribeSnapshotRef.current;
