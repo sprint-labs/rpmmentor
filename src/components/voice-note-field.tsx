@@ -661,6 +661,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 </button>
               </div>
             </div>
+              );
+            })()
           ) : transcript ? (
 
             <>
