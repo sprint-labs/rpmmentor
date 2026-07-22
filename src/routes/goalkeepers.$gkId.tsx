@@ -1,8 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { PageHeader, Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
-import { goalkeepers, interactions, reports, media, getMentor, formatDate, formatRelative } from "@/lib/mock-data";
+import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
+import { listMatchReports } from "@/lib/match-reports/reports.functions";
+import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
 
 export const Route = createFileRoute("/goalkeepers/$gkId")({
   loader: ({ params }) => {
@@ -20,12 +25,56 @@ const TYPE_ICON: Record<string, typeof Video> = {
   "Coffee Catch Up": UsersIcon, "Phone Call": Phone,
 };
 
+function normaliseName(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 function GkDetail() {
   const { gk } = Route.useLoaderData();
-  const mentor = getMentor(gk.mentorId);
   const gkInteractions = interactions.filter((i) => i.gkId === gk.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
-  const gkReports = reports.filter((r) => r.gkId === gk.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
   const gkMedia = media.filter((m) => m.gkId === gk.id);
+
+  const listFn = useServerFn(listMatchReports);
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ["match-reports", "all"],
+    queryFn: () => listFn(),
+    staleTime: 60_000,
+  });
+
+  const gkReports = useMemo<MatchReportRow[]>(() => {
+    const target = normaliseName(gk.name);
+    const all = data?.reports ?? [];
+    return all
+      .filter((r) => normaliseName(r.goalkeeper) === target)
+      .sort((a, b) => {
+        if (!a.match_date && !b.match_date) return 0;
+        if (!a.match_date) return 1;
+        if (!b.match_date) return -1;
+        return a.match_date < b.match_date ? 1 : a.match_date > b.match_date ? -1 : 0;
+      });
+  }, [data, gk.name]);
+
+  const averageRating = useMemo(() => {
+    const vals = gkReports.map((r) => r.average).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    if (!vals.length) return null;
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return Math.round(mean * 10) / 10;
+  }, [gkReports]);
+
+  const pillarAverages = useMemo(() => {
+    const last5 = gkReports.slice(0, 5);
+    const out: Record<PillarId, number | null> = {
+      protect_goal: null, protect_space: null, protect_air: null,
+      control_play: null, change_play: null, psych: null, physical: null,
+    };
+    for (const id of PILLAR_IDS) {
+      const vals = last5
+        .map((r) => r.scores[id])
+        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+      out[id] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
+    }
+    return out;
+  }, [gkReports]);
 
   return (
     <div className="space-y-5">
@@ -45,8 +94,7 @@ function GkDetail() {
         </div>
       </div>
 
-      <DataSourceBanner classification="mock" extra="Profile bio, ratings, assigned-mentor, interaction history, reports and media listed here are illustrative — not real operational records." />
-
+      <DataSourceBanner classification="mock" extra="Rating, Match Reports and Skill Scores are real data from the GKHQ Match Reports source. Other profile fields (bio, club/league/age, contract, interaction history and media library) remain preview data." />
 
       {gk.bio && (
         <Card className="p-4">
@@ -55,25 +103,18 @@ function GkDetail() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Mentor</div><div className="text-sm font-medium mt-1">{mentor?.name}</div></Card>
-        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Rating</div><div className="text-xl font-semibold tabular-nums font-mono mt-1">{gk.rating}</div></Card>
-        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Potential</div><div className="text-xl font-semibold tabular-nums font-mono mt-1">{gk.potential}</div></Card>
-        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Contract</div><div className="text-sm font-medium mt-1">{gk.contractUntil}</div></Card>
-        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Recommendation</div><div className="mt-1"><Pill tone={gk.recommendation === "Sign" || gk.recommendation === "Retain" ? "success" : gk.recommendation === "Pass" ? "destructive" : "info"}>{gk.recommendation}</Pill></div></Card>
-      </div>
-
-      {gk.developmentPlan && gk.developmentPlan.length > 0 && (
-        <Card className="p-4">
-          <SectionTitle>Development Plan</SectionTitle>
-          <ul className="space-y-1.5">
-            {gk.developmentPlan.map((d: string, i: number) => (
-              <li key={i} className="flex gap-2 text-sm text-muted-foreground"><span className="text-primary mt-0.5">›</span>{d}</li>
-            ))}
-          </ul>
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+        <Card className="p-3">
+          <div className="text-[10px] uppercase text-muted-foreground">Rating (avg of Match Reports)</div>
+          <div className="text-xl font-semibold tabular-nums font-mono mt-1">
+            {isLoading ? <span className="text-muted-foreground text-sm font-sans font-normal">Loading…</span>
+              : isError ? <span className="text-destructive text-sm font-sans font-normal">Unavailable</span>
+              : averageRating != null ? `${averageRating.toFixed(1)}/5`
+              : <span className="text-muted-foreground text-sm font-sans font-normal">No reports yet</span>}
+          </div>
         </Card>
-      )}
-
+        <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Contract</div><div className="text-sm font-medium mt-1">{gk.contractUntil}</div></Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 p-4">
@@ -98,31 +139,72 @@ function GkDetail() {
 
         <div className="space-y-4">
           <Card className="p-4">
-            <SectionTitle>Reports ({gkReports.length})</SectionTitle>
-            <div className="space-y-2">
-              {gkReports.slice(0, 5).map((r) => (
-                <div key={r.id} className="flex items-center gap-2 p-2 rounded-md bg-accent/20 border border-border/40">
-                  <FileText className="size-3.5 text-muted-foreground" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">{r.type}</div>
-                    <div className="text-[10px] text-muted-foreground">{formatDate(r.date)}</div>
-                  </div>
-                  <span className="text-xs font-semibold tabular-nums font-mono">{r.rating}</span>
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-2">
+              <SectionTitle>Match Reports ({isLoading ? "…" : gkReports.length})</SectionTitle>
+              {isError && (
+                <button onClick={() => refetch()} className="text-[11px] text-primary hover:underline">Retry</button>
+              )}
             </div>
+            {isLoading ? (
+              <div className="text-xs text-muted-foreground italic py-2">Loading real Match Reports…</div>
+            ) : isError ? (
+              <div className="text-xs text-destructive py-2">
+                Couldn't load Match Reports. {isFetching ? "Retrying…" : "Try again."}
+              </div>
+            ) : gkReports.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic py-2">No Match Reports recorded for this goalkeeper yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {gkReports.slice(0, 5).map((r) => (
+                  <Link
+                    key={r.report_id}
+                    to="/reports/$reportId"
+                    params={{ reportId: r.report_id }}
+                    className="flex items-center gap-2 p-2 rounded-md bg-accent/20 border border-border/40 hover:border-primary/40"
+                  >
+                    <FileText className="size-3.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium truncate">
+                        Match Report{r.opponent ? ` · vs ${r.opponent}` : ""}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {r.match_date ? formatDate(r.match_date) : "Date not recorded"}
+                        {r.competition ? ` · ${r.competition}` : ""}
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold tabular-nums font-mono">
+                      {r.average != null ? `${r.average.toFixed(1)}/5` : "—"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card className="p-4">
-            <SectionTitle>Skill Scores (latest)</SectionTitle>
-            {gkReports[0] && (
+            <SectionTitle>Skill Scores (last 5 match reports)</SectionTitle>
+            {isLoading ? (
+              <div className="text-xs text-muted-foreground italic py-2">Loading…</div>
+            ) : isError ? (
+              <div className="text-xs text-destructive py-2">Couldn't load skill scores.</div>
+            ) : gkReports.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic py-2">No skill scores available — no Match Reports for this goalkeeper.</div>
+            ) : (
               <div className="space-y-2.5">
-                {Object.entries(gkReports[0].scores).map(([k, v]) => (
-                  <div key={k}>
-                    <div className="flex justify-between text-[11px] mb-1"><span className="capitalize text-muted-foreground">{k.replace(/([A-Z])/g, " $1")}</span><span className="tabular-nums font-mono font-medium">{v}/10</span></div>
-                    <ProgressBar value={v * 10} />
-                  </div>
-                ))}
+                {PILLAR_IDS.map((id) => {
+                  const v = pillarAverages[id];
+                  return (
+                    <div key={id}>
+                      <div className="flex justify-between text-[11px] mb-1">
+                        <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
+                        <span className="tabular-nums font-mono font-medium">
+                          {v != null ? `${v.toFixed(1)}/5` : <span className="text-muted-foreground italic">not recorded</span>}
+                        </span>
+                      </div>
+                      <ProgressBar value={v != null ? (v / 5) * 100 : 0} />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>
