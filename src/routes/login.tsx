@@ -65,7 +65,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-md">
         <div className="mb-10">
-          <img src={loginLogo.url} alt="GK.HQ by RPM" className="h-40 w-auto" />
+          <img src={loginLogo.url} alt="Mentor Hub by RPM" className="h-40 w-auto" />
         </div>
 
 
