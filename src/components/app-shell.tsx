@@ -66,7 +66,7 @@ export function AppShell() {
       <div className="flex flex-1 flex-col min-w-0">
         <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-sidebar/95 backdrop-blur sticky top-0 z-10">
           <a href="https://www.rpmmentor.com" target="_blank" rel="noreferrer" className="flex items-center gap-2.5 shrink-0">
-            <img src="/gkhq-icon.svg" alt="GK.HQ" width={36} height={36} className="size-9" />
+            <BrandMark className="size-9 text-foreground/80" title="Mentor Hub" />
             <span className="hidden sm:inline font-semibold text-foreground tracking-tight">Mentor Hub</span>
           </a>
           <div className="flex-1" />
