@@ -376,8 +376,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     try {
       await onAudioAttach({ blob: blobRef.current, mimeType: mimeRef.current, durationSec: durationRef.current });
       setAttached(true);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save audio to Media Library");
+    } catch {
+      toast.error("Could not save audio to Media Library. Your recording is still available — please try again.");
     } finally {
       setAttaching(false);
     }

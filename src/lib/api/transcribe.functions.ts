@@ -181,8 +181,7 @@ export const transcribeVoiceNote = createServerFn({ method: "POST" })
     if (!res.ok) {
       if (res.status === 429) return { ok: false as const, error: "Rate limit reached — try again in a moment." };
       if (res.status === 402) return { ok: false as const, error: "AI credits exhausted — add credits in workspace settings." };
-      const detail = await res.text().catch(() => "");
-      console.error("transcribeVoiceNote gateway error", res.status, detail);
+      console.error("transcribeVoiceNote gateway error", res.status);
       return { ok: false as const, error: `Transcription failed (${res.status}).` };
     }
 
