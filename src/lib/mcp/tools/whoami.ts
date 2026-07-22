@@ -6,7 +6,7 @@ export default defineTool({
   name: "whoami",
   title: "Who am I",
   description:
-    "Return the signed-in GKHQ user's profile (name, email, title) and roles from user_roles.",
+    "Return the signed-in Mentor Hub user's profile (name, email, title) and roles from user_roles.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
