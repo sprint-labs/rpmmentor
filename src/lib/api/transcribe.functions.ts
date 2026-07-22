@@ -104,9 +104,9 @@ export const transcribeVoiceNote = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) return { ok: false as const, error: "AI service is not configured." };
 
-    const match = /^data:(audio\/[a-z0-9.+-]+);base64,(.+)$/i.exec(data.audioDataUrl);
+    const match = /^data:(audio\/[a-z0-9.+-]+)(?:;[a-z0-9.+=-]+)*;base64,(.+)$/i.exec(data.audioDataUrl);
     if (!match) return { ok: false as const, error: "Invalid audio payload." };
-    const mime = match[1].toLowerCase().split(";")[0];
+    const mime = match[1].toLowerCase();
     const b64 = match[2];
     const ext = AUDIO_EXT[mime] ?? "webm";
 
