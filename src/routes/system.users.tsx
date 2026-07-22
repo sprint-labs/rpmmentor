@@ -112,8 +112,7 @@ function SystemUsersPage() {
 
   const inviteMutation = useMutation({
     mutationFn: (vars: { email: string; name: string; title: string; role: Role | null }) => {
-      const { canonicalUrl } = await import("@/lib/canonical-url");
-      return inviteUser({ data: { ...vars, redirectTo: canonicalUrl("/reset-password") } });
+      return inviteUser({ data: { ...vars, redirectTo: `${CANONICAL_ORIGIN}/reset-password` } });
     },
     onSuccess: (res, vars) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
