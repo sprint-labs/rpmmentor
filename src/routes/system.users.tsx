@@ -34,16 +34,19 @@ function SystemUsersPage() {
   const { user, can } = useAuth();
   const [q, setQ] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [editUser, setEditUser] = useState<ManagedUserRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ManagedUserRow | null>(null);
   const [confirmReset, setConfirmReset] = useState<ManagedUserRow | null>(null);
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null);
+  const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
 
   const list = useServerFn(listManagedUsers);
   const setRole = useServerFn(setManagedUserRole);
   const createUser = useServerFn(createManagedUser);
   const deleteUser = useServerFn(deleteManagedUser);
   const resetPassword = useServerFn(resetManagedUserPassword);
+  const inviteUser = useServerFn(inviteManagedUser);
   const qc = useQueryClient();
 
   const canManage = !!user && can("system.manage");
