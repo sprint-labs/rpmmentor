@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { PageHeader, Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
+import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
