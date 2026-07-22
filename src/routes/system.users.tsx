@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, ShieldOff, Users, Search, Loader2, AlertCircle, UserPlus, Trash2, Copy, Pencil, KeyRound } from "lucide-react";
+import { ShieldCheck, ShieldOff, Users, Search, Loader2, AlertCircle, UserPlus, Trash2, Copy, Pencil, KeyRound, Mail } from "lucide-react";
 import { useAuth, ROLE_LABEL, type Role } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   createManagedUser,
   deleteManagedUser,
   resetManagedUserPassword,
+  inviteManagedUser,
   type ManagedUserRow,
 } from "@/lib/admin-users.functions";
 
@@ -33,16 +34,19 @@ function SystemUsersPage() {
   const { user, can } = useAuth();
   const [q, setQ] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [editUser, setEditUser] = useState<ManagedUserRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ManagedUserRow | null>(null);
   const [confirmReset, setConfirmReset] = useState<ManagedUserRow | null>(null);
   const [tempPassword, setTempPassword] = useState<{ email: string; password: string } | null>(null);
+  const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
 
   const list = useServerFn(listManagedUsers);
   const setRole = useServerFn(setManagedUserRole);
   const createUser = useServerFn(createManagedUser);
   const deleteUser = useServerFn(deleteManagedUser);
   const resetPassword = useServerFn(resetManagedUserPassword);
+  const inviteUser = useServerFn(inviteManagedUser);
   const qc = useQueryClient();
 
   const canManage = !!user && can("system.manage");
@@ -106,6 +110,22 @@ function SystemUsersPage() {
     },
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: (vars: { email: string; name: string; title: string; role: Role | null }) => {
+      const redirectTo = `${window.location.origin}/reset-password`;
+      return inviteUser({ data: { ...vars, redirectTo } });
+    },
+    onSuccess: (res, vars) => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY });
+      setShowInvite(false);
+      toast.success(`Invited ${vars.name}`);
+      if (res?.inviteLink) setInviteLink({ email: vars.email, url: res.inviteLink });
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to invite user");
+    },
+  });
+
   if (!canManage) {
     return (
       <div className="max-w-lg mx-auto mt-16 rounded-lg border border-border bg-card p-6 text-center">
@@ -155,12 +175,20 @@ function SystemUsersPage() {
             Add, remove, and assign roles. Changes take effect on the user's next sign-in.
           </p>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="inline-flex h-9 px-3 items-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
-        >
-          <UserPlus className="size-4" /> Add user
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowInvite(true)}
+            className="inline-flex h-9 px-3 items-center gap-2 rounded-md border border-border text-sm font-medium hover:bg-accent"
+          >
+            <Mail className="size-4" /> Invite user
+          </button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="inline-flex h-9 px-3 items-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+          >
+            <UserPlus className="size-4" /> Add user
+          </button>
+        </div>
       </div>
 
       <div className="relative max-w-sm">
@@ -293,6 +321,22 @@ function SystemUsersPage() {
           busy={createMutation.isPending}
           onCancel={() => setShowAdd(false)}
           onSubmit={(vals) => createMutation.mutate(vals)}
+        />
+      )}
+
+      {showInvite && (
+        <InviteUserDialog
+          busy={inviteMutation.isPending}
+          onCancel={() => setShowInvite(false)}
+          onSubmit={(vals) => inviteMutation.mutate(vals)}
+        />
+      )}
+
+      {inviteLink && (
+        <InviteLinkDialog
+          email={inviteLink.email}
+          url={inviteLink.url}
+          onClose={() => setInviteLink(null)}
         />
       )}
 
@@ -632,6 +676,143 @@ function EditRoleDialog({
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
             Save changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InviteUserDialog({
+  busy,
+  onCancel,
+  onSubmit,
+}: {
+  busy: boolean;
+  onCancel: () => void;
+  onSubmit: (v: { email: string; name: string; title: string; role: Role | null }) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [role, setRole] = useState<RoleOrNone>("admin");
+
+  const valid = email.includes("@") && name.trim().length > 0;
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-lg">
+        <h2 className="text-base font-semibold">Invite user</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Creates the account and generates a one-time sign-up link. The user sets their own password when they open the link.
+        </p>
+        <div className="mt-4 space-y-3">
+          <Field label="Full name">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-9 px-2 rounded-md border border-border bg-input/60 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+              placeholder="Rich Lee"
+            />
+          </Field>
+          <Field label="Email">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-9 px-2 rounded-md border border-border bg-input/60 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+              placeholder="rich@example.com"
+            />
+          </Field>
+          <Field label="Title (optional)">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full h-9 px-2 rounded-md border border-border bg-input/60 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+              placeholder="Head of Recruitment"
+            />
+          </Field>
+          <Field label="Role">
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as RoleOrNone)}
+              className="w-full h-9 px-2 rounded-md border border-border bg-input/60 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              <option value="">— No role —</option>
+              {(["super_admin", "admin", "mentor_manager", "mentor"] as Role[]).map((r) => (
+                <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="h-9 px-3 rounded-md border border-border text-sm font-medium hover:bg-accent disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() =>
+              onSubmit({
+                email: email.trim(),
+                name: name.trim(),
+                title: title.trim(),
+                role: role === "" ? null : role,
+              })
+            }
+            disabled={!valid || busy}
+            className="h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            Generate invite link
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InviteLinkDialog({
+  email,
+  url,
+  onClose,
+}: {
+  email: string;
+  url: string;
+  onClose: () => void;
+}) {
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Invite link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-lg border border-border bg-card p-5 shadow-lg">
+        <h2 className="text-base font-semibold">One-time sign-up link</h2>
+        <p className="text-sm text-muted-foreground mt-2">
+          Send this link to <span className="font-medium text-foreground">{email}</span>. Opening it signs them in once and prompts them to set a password. The link can only be used once and won't be shown again.
+        </p>
+        <div className="mt-4 rounded-md border border-border bg-muted/30 p-3 font-mono text-xs break-all">
+          {url}
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={copy}
+            className="h-9 px-3 rounded-md border border-border text-sm font-medium hover:bg-accent inline-flex items-center gap-2"
+          >
+            <Copy className="size-4" /> Copy link
+          </button>
+          <button
+            onClick={onClose}
+            className="h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+          >
+            Done
           </button>
         </div>
       </div>
