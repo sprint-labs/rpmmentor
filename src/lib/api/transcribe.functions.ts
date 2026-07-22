@@ -94,7 +94,7 @@ const VoiceInputSchema = z.object({
     .string()
     .min(64)
     .max(25_000_000)
-    .regex(/^data:audio\/[a-z0-9.+-]+;base64,/i, "Must be a base64 audio data URL"),
+    .regex(/^data:audio\/[a-z0-9.+-]+(;[a-z0-9.+=-]+)*;base64,/i, "Must be a base64 audio data URL"),
 });
 
 export const transcribeVoiceNote = createServerFn({ method: "POST" })
