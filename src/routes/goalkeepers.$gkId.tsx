@@ -74,7 +74,7 @@ function GkDetail() {
     for (const id of PILLAR_IDS) {
       const vals = last5
         .map((r) => r.scores[id])
-        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+        .filter(isValidScore);
       out[id] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
     }
     return out;
