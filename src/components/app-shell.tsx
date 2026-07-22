@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu, KeyRound } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu, KeyRound, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABEL, type Permission, type Role } from "@/lib/auth";
 import { useEffect, useRef, useState } from "react";
@@ -112,6 +113,7 @@ export function AppShell() {
               <Plus className="size-4" />{primaryAction.label}
             </button>
           )}
+          <ThemeToggle />
           {can("alerts.view") && (
             <div ref={bellRef} className="relative">
               <button onClick={() => setBellOpen((v) => !v)} className="relative size-9 grid place-items-center rounded-md border border-border hover:bg-accent">
@@ -250,3 +252,19 @@ export function AppShell() {
     </div>
   );
 }
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      onClick={toggle}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="size-9 grid place-items-center rounded-md border border-border hover:bg-accent text-foreground/80"
+    >
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    </button>
+  );
+}
+
