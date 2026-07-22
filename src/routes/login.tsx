@@ -131,7 +131,7 @@ function LoginPage() {
 
             <button type="button" onClick={async () => {
               setError(null);
-              const res = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+              const res = await lovable.auth.signInWithOAuth("apple", { redirect_uri: CANONICAL_ORIGIN });
               if (res.error) setError(res.error.message || "Apple sign-in failed.");
             }}
               className="w-full mt-2.5 flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/30 text-sm font-medium transition-colors">
