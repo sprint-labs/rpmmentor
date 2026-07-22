@@ -66,7 +66,7 @@ export function AppShell() {
         <header className="h-14 flex items-center gap-3 px-4 md:px-6 border-b border-border bg-sidebar/95 backdrop-blur sticky top-0 z-10">
           <div className="flex items-center gap-2.5 shrink-0">
             <img src="/gkhq-icon.svg" alt="GK.HQ" width={36} height={36} className="size-9" />
-            <img src="/gkhq-wordmark.svg" alt="GK.HQ" className="hidden sm:inline h-6 w-auto" />
+            <span className="hidden sm:inline font-semibold text-foreground tracking-tight">Mentor Hub</span>
           </div>
           <div className="flex-1" />
 
