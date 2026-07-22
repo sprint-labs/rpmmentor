@@ -7,6 +7,7 @@ import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/
 import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
+import { sortMatchReportsByDate } from "@/lib/match-reports/date";
 
 /** Inclusive 1–5 finite numeric guard for report scores/averages. */
 function isValidScore(v: unknown): v is number {
@@ -48,14 +49,7 @@ function GkDetail() {
   const gkReports = useMemo<MatchReportRow[]>(() => {
     const target = normaliseName(gk.name);
     const all = data?.reports ?? [];
-    return all
-      .filter((r) => normaliseName(r.goalkeeper) === target)
-      .sort((a, b) => {
-        if (!a.match_date && !b.match_date) return 0;
-        if (!a.match_date) return 1;
-        if (!b.match_date) return -1;
-        return a.match_date < b.match_date ? 1 : a.match_date > b.match_date ? -1 : 0;
-      });
+    return sortMatchReportsByDate(all.filter((r) => normaliseName(r.goalkeeper) === target));
   }, [data, gk.name]);
 
   const averageRating = useMemo(() => {
