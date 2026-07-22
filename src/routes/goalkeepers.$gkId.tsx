@@ -3,11 +3,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
-import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
-import { ArrowLeft, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
+
+/** Inclusive 1–5 finite numeric guard for report scores/averages. */
+function isValidScore(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v >= 1 && v <= 5;
+}
 
 export const Route = createFileRoute("/goalkeepers/$gkId")({
   loader: ({ params }) => {
@@ -55,7 +59,7 @@ function GkDetail() {
   }, [data, gk.name]);
 
   const averageRating = useMemo(() => {
-    const vals = gkReports.map((r) => r.average).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    const vals = gkReports.map((r) => r.average).filter(isValidScore);
     if (!vals.length) return null;
     const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
     return Math.round(mean * 10) / 10;
@@ -70,7 +74,7 @@ function GkDetail() {
     for (const id of PILLAR_IDS) {
       const vals = last5
         .map((r) => r.scores[id])
-        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+        .filter(isValidScore);
       out[id] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
     }
     return out;
@@ -94,7 +98,18 @@ function GkDetail() {
         </div>
       </div>
 
-      <DataSourceBanner classification="mock" extra="Rating, Match Reports and Skill Scores are real data from the GKHQ Match Reports source. Other profile fields (bio, club/league/age, contract, interaction history and media library) remain preview data." />
+      <div
+        role="note"
+        className="flex items-start gap-2.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-[12px] leading-snug text-muted-foreground"
+      >
+        <Info className="size-4 mt-0.5 shrink-0" />
+        <div className="min-w-0">
+          <div className="font-semibold text-[12px] leading-snug text-foreground">Data sources on this profile</div>
+          <div className="opacity-90 mt-0.5">
+            Rating, Match Reports and Skill Scores are live data from the GKHQ Match Reports source. The remaining profile fields (bio, club/league/age, contract, interaction history and media library) are preview data and not real operational records.
+          </div>
+        </div>
+      </div>
 
       {gk.bio && (
         <Card className="p-4">
