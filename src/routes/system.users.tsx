@@ -110,6 +110,22 @@ function SystemUsersPage() {
     },
   });
 
+  const inviteMutation = useMutation({
+    mutationFn: (vars: { email: string; name: string; title: string; role: Role | null }) => {
+      const redirectTo = `${window.location.origin}/reset-password`;
+      return inviteUser({ data: { ...vars, redirectTo } });
+    },
+    onSuccess: (res, vars) => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY });
+      setShowInvite(false);
+      toast.success(`Invited ${vars.name}`);
+      if (res?.inviteLink) setInviteLink({ email: vars.email, url: res.inviteLink });
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to invite user");
+    },
+  });
+
   if (!canManage) {
     return (
       <div className="max-w-lg mx-auto mt-16 rounded-lg border border-border bg-card p-6 text-center">
