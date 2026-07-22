@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu, KeyRound, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, MessageSquare, FileText, FolderOpen, BellRing, Calendar, BarChart3, Plus, LogOut, ShieldCheck, History, Check, Trash2, X, Menu, KeyRound, Sun, Moon, Plug } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABEL, type Permission, type Role } from "@/lib/auth";
@@ -25,6 +25,7 @@ const NAV: NavItem[] = [
   { to: "/executive", label: "Executive", icon: BarChart3, perm: "executive.view" },
   { to: "/system/users", label: "Users & Roles", icon: ShieldCheck, perm: "system.manage" },
   { to: "/system/permissions", label: "Permission Check", icon: ShieldCheck, perm: "system.manage" },
+  { to: "/system/integrations", label: "Integrations", icon: Plug, perm: "system.manage" },
 ];
 
 export function AppShell() {
