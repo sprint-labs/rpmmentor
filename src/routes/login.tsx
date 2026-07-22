@@ -73,7 +73,7 @@ function LoginPage() {
           <>
             <div className="mb-8">
               <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Sign in</h1>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign in with your GKHQ account.</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign in with your Mentor Hub account.</p>
             </div>
 
             <form onSubmit={handleSignIn} className="space-y-4" noValidate>
