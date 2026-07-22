@@ -141,7 +141,7 @@ function LoginPage() {
 
 
             <p className="text-[11px] text-muted-foreground mt-8 leading-relaxed">
-              GKHQ accounts are provisioned by an administrator. If you need access, contact your RPM admin.
+              Mentor Hub accounts are provisioned by an administrator. If you need access, contact your RPM admin.
             </p>
           </>
         )}
