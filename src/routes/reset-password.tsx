@@ -129,7 +129,7 @@ function ResetPasswordPage() {
                 Set a new password
               </h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                Choose a new password for your GK.HQ account. You'll be signed in with it after this.
+                Choose a new password for your Mentor Hub account. You'll be signed in with it after this.
               </p>
             </div>
 
