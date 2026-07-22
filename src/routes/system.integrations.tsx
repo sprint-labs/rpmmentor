@@ -1,0 +1,221 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { CheckCircle2, XCircle, RefreshCw, ExternalLink, FileSpreadsheet, Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { getSheetsIntegrationStatus } from "@/lib/integrations/sheets-status.functions";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/system/integrations")({
+  component: IntegrationsPage,
+  head: () => ({
+    meta: [
+      { title: "Integrations · Mentor Hub" },
+      { name: "description", content: "Google Sheets connector status and last successful write time." },
+      { property: "og:title", content: "Integrations · Mentor Hub" },
+      { property: "og:description", content: "Google Sheets connector status and last successful write time." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
+
+function fmtRelative(iso: string | null): string {
+  if (!iso) return "Never";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 0 || !Number.isFinite(diff)) return new Date(iso).toLocaleString();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
+function IntegrationsPage() {
+  const { user, can } = useAuth();
+  const fetchStatus = useServerFn(getSheetsIntegrationStatus);
+
+  const canManage = !!user && can("system.manage");
+
+  const q = useQuery({
+    queryKey: ["integration-status", "google_sheets"],
+    queryFn: () => fetchStatus(),
+    enabled: canManage,
+    refetchInterval: 30_000,
+  });
+
+  if (!canManage) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+          You need the Super Admin role to view integrations.
+        </div>
+      </div>
+    );
+  }
+
+  const s = q.data;
+  const healthy = s?.linked && s?.reachable && s?.sheetTabExists && !s?.error;
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Runtime status for connected services.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => q.refetch()}
+          disabled={q.isFetching}
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+        >
+          {q.isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          Refresh
+        </button>
+      </header>
+
+      <section className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between gap-4 border-b border-border p-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-md bg-accent p-2">
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-medium leading-tight">Google Sheets</h2>
+              <p className="text-xs text-muted-foreground">
+                Match Reports · source of truth
+              </p>
+            </div>
+          </div>
+          <StatusPill
+            healthy={!!healthy}
+            loading={q.isLoading}
+            label={
+              q.isLoading
+                ? "Checking…"
+                : !s?.linked
+                ? "Not linked"
+                : !s?.reachable
+                ? "Unreachable"
+                : !s?.sheetTabExists
+                ? "Tab missing"
+                : "Connected"
+            }
+          />
+        </div>
+
+        <dl className="divide-y divide-border text-sm">
+          <Row label="Connector">
+            <code className="text-xs">google_sheets</code>
+          </Row>
+          <Row label="Linked">
+            <BoolPill value={!!s?.linked} />
+          </Row>
+          <Row label="Gateway reachable">
+            <BoolPill value={!!s?.reachable} />
+          </Row>
+          <Row label="Spreadsheet">
+            {s?.spreadsheetTitle ? (
+              <a
+                href={`https://docs.google.com/spreadsheets/d/${s.spreadsheetId}/edit`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-primary hover:underline"
+              >
+                {s.spreadsheetTitle}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </Row>
+          <Row label="Sheet tab">
+            <span className="inline-flex items-center gap-2">
+              <span>{s?.sheetTab ?? "—"}</span>
+              {s && <BoolPill value={s.sheetTabExists} />}
+            </span>
+          </Row>
+          <Row label="Last successful write">
+            <div className="flex flex-col items-end">
+              <span className={cn(!s?.lastWriteAt && "text-muted-foreground")}>
+                {fmtRelative(s?.lastWriteAt ?? null)}
+              </span>
+              {s?.lastWriteAt && (
+                <span className="text-xs text-muted-foreground">
+                  {new Date(s.lastWriteAt).toLocaleString()}
+                </span>
+              )}
+            </div>
+          </Row>
+          <Row label="Total reports mirrored">
+            <span>{s?.totalWrites ?? 0}</span>
+          </Row>
+          <Row label="Checked">
+            <span className="text-muted-foreground">
+              {s?.checkedAt ? fmtRelative(s.checkedAt) : "—"}
+            </span>
+          </Row>
+        </dl>
+
+        {s?.error && (
+          <div className="border-t border-border bg-destructive/10 p-4 text-sm text-destructive">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Error</p>
+                <p className="mt-0.5 break-words">{s.error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right">{children}</dd>
+    </div>
+  );
+}
+
+function BoolPill({ value }: { value: boolean }) {
+  return value ? (
+    <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-xs text-success">
+      <CheckCircle2 className="h-3 w-3" /> Yes
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/15 px-2 py-0.5 text-xs text-destructive">
+      <XCircle className="h-3 w-3" /> No
+    </span>
+  );
+}
+
+function StatusPill({ healthy, loading, label }: { healthy: boolean; loading: boolean; label: string }) {
+  const tone = loading
+    ? "border-border bg-accent text-muted-foreground"
+    : healthy
+    ? "border-success/30 bg-success/15 text-success"
+    : "border-destructive/30 bg-destructive/15 text-destructive";
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium", tone)}>
+      {loading ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : healthy ? (
+        <CheckCircle2 className="h-3 w-3" />
+      ) : (
+        <XCircle className="h-3 w-3" />
+      )}
+      {label}
+    </span>
+  );
+}

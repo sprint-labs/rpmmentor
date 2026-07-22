@@ -25,6 +25,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SystemUsersRouteImport } from './routes/system.users'
 import { Route as SystemPermissionsRouteImport } from './routes/system.permissions'
+import { Route as SystemIntegrationsRouteImport } from './routes/system.integrations'
 import { Route as ReportsReportIdRouteImport } from './routes/reports.$reportId'
 import { Route as GoalkeepersGkIdRouteImport } from './routes/goalkeepers.$gkId'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -112,6 +113,11 @@ const SystemPermissionsRoute = SystemPermissionsRouteImport.update({
   path: '/system/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SystemIntegrationsRoute = SystemIntegrationsRouteImport.update({
+  id: '/system/integrations',
+  path: '/system/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
   id: '/$reportId',
   path: '/$reportId',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
     | '/.lovable/oauth/consent'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
     | '/.lovable/oauth/consent'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
     | '/.lovable/oauth/consent'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  SystemIntegrationsRoute: typeof SystemIntegrationsRoute
   SystemPermissionsRoute: typeof SystemPermissionsRoute
   SystemUsersRoute: typeof SystemUsersRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/system/integrations': {
+      id: '/system/integrations'
+      path: '/system/integrations'
+      fullPath: '/system/integrations'
+      preLoaderRoute: typeof SystemIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports/$reportId': {
       id: '/reports/$reportId'
       path: '/$reportId'
@@ -517,6 +537,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  SystemIntegrationsRoute: SystemIntegrationsRoute,
   SystemPermissionsRoute: SystemPermissionsRoute,
   SystemUsersRoute: SystemUsersRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
