@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ShieldCheck, ShieldOff, Users, Search, Loader2, AlertCircle, UserPlus, Trash2, Copy, Pencil, KeyRound, Mail } from "lucide-react";
 import { useAuth, ROLE_LABEL, type Role } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-url";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
