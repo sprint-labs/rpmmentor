@@ -39,10 +39,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GKHQ by RPM | Ops, Comms & Scouting" },
+      { title: "Mentor Hub by RPM | Ops, Comms & Scouting" },
       { name: "description", content: "Internal goalkeeper development, mentor operations and scouting intelligence platform for Refuel Performance Management." },
-      { property: "og:title", content: "GKHQ by RPM | Ops, Comms & Scouting" },
-      { name: "twitter:title", content: "GKHQ by RPM | Ops, Comms & Scouting" },
+      { property: "og:title", content: "Mentor Hub by RPM | Ops, Comms & Scouting" },
+      { name: "twitter:title", content: "Mentor Hub by RPM | Ops, Comms & Scouting" },
       { property: "og:description", content: "Internal goalkeeper development, mentor operations and scouting intelligence platform for Refuel Performance Management." },
       { name: "twitter:description", content: "Internal goalkeeper development, mentor operations and scouting intelligence platform for Refuel Performance Management." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/DKWitbl2WAUehYvkG2CKPOsUROy1/social-images/social-1784101443430-Screenshot_2026-07-15_at_05.45.49.webp" },
