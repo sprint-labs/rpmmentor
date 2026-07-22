@@ -9,8 +9,8 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
   head: () => ({
     meta: [
-      { title: "Reset password · GK.HQ" },
-      { name: "description", content: "Set a new password for your GK.HQ account." },
+      { title: "Reset password · Mentor Hub" },
+      { name: "description", content: "Set a new password for your Mentor Hub account." },
     ],
   }),
 });
