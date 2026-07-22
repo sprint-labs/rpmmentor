@@ -35,7 +35,7 @@
       {
         "name": "list_match_reports",
         "title": "List match reports",
-        "description": "List recent GKHQ match reports the signed-in user is allowed to see under Row Level Security. Returns goalkeeper, opponent, match date, coach and overall average.",
+        "description": "List recent Mentor Hub match reports the signed-in user is allowed to see under Row Level Security. Returns goalkeeper, opponent, match date, coach and overall average.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
