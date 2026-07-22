@@ -163,8 +163,10 @@ export const transcribeVoiceNote = createServerFn({ method: "POST" })
     const fileName = safeAudioFileName(data.fileName, mime);
 
     const form = new FormData();
+    const audioArrayBuffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(audioArrayBuffer).set(bytes);
     form.append("model", "openai/gpt-4o-mini-transcribe");
-    form.append("file", new Blob([bytes], { type: mime }), fileName);
+    form.append("file", new Blob([audioArrayBuffer], { type: mime }), fileName);
     form.append("response_format", "json");
     form.append("include[]", "logprobs");
 
