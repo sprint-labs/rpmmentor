@@ -142,25 +142,27 @@ const VoiceInputSchema = z.object({
 
 export const transcribeVoiceNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => {
-    const parsed = VoiceInputSchema.safeParse(data);
-    if (!parsed.success) throw new Error("Invalid audio payload.");
-    return parsed.data;
-  })
+  .inputValidator((data: unknown) => data as z.infer<typeof VoiceInputSchema>)
   .handler(async ({ data }) => {
+    const parsed = VoiceInputSchema.safeParse(data);
+    if (!parsed.success) {
+      return { ok: false as const, error: "Invalid audio payload." };
+    }
+    const payload = parsed.data;
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) return { ok: false as const, error: "AI service is not configured." };
 
-    const mime = normalizeAudioMimeType(data.mimeType);
+    const mime = normalizeAudioMimeType(payload.mimeType);
     if (!mime) return { ok: false as const, error: "Unsupported audio type." };
 
-    const bytes = decodeBase64Audio(data.audioBase64);
+    const bytes = decodeBase64Audio(payload.audioBase64);
     if (!bytes) return { ok: false as const, error: "Invalid audio payload." };
     if (bytes.byteLength < MIN_AUDIO_BYTES) {
       return { ok: false as const, error: "Recording is too short — please try again." };
     }
 
-    const fileName = safeAudioFileName(data.fileName, mime);
+    const fileName = safeAudioFileName(payload.fileName, mime);
 
     const form = new FormData();
     const audioArrayBuffer = new ArrayBuffer(bytes.byteLength);
