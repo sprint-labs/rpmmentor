@@ -6,6 +6,16 @@ import { transcribeVoiceNote } from "@/lib/api/transcribe.functions";
 
 
 const MAX_SECONDS = 180;
+const TRANSCRIPTION_FAILURE_MESSAGE = "We could not process this audio recording. Your recording is still available. Please retry or save it without a transcript.";
+
+const AUDIO_EXTENSION_BY_MIME: Record<string, string> = {
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+  "audio/mp4": "mp4",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+  "audio/x-m4a": "m4a",
+};
 
 function pickMimeType(): string {
   const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
@@ -15,13 +25,25 @@ function pickMimeType(): string {
   return "";
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(new Error("Could not read audio"));
-    r.readAsDataURL(blob);
-  });
+function normalizeMimeType(mimeType: string): string {
+  return mimeType.split(";")[0]?.trim().toLowerCase() || "audio/webm";
+}
+
+function deriveAudioFileName(mimeType: string): string {
+  const baseMime = normalizeMimeType(mimeType);
+  const ext = AUDIO_EXTENSION_BY_MIME[baseMime] ?? "webm";
+  return `voice-note-${Date.now()}.${ext}`;
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 interface VoiceDraft {
@@ -70,9 +92,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
-  const dataUrlRef = useRef<string | null>(null);
   const blobRef = useRef<Blob | null>(null);
   const mimeRef = useRef<string>("audio/webm");
+  const fileNameRef = useRef<string>("voice-note.webm");
   const durationRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -153,8 +175,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setCancelled(false);
     setSkipped(false);
     setRetryAvailableAt(0);
-    dataUrlRef.current = null;
     blobRef.current = null;
+    fileNameRef.current = "voice-note.webm";
     durationRef.current = 0;
     setAttached(false);
     setElapsed(0);
@@ -172,7 +194,13 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setAttemptLog((prev) => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, timestamp: Date.now(), status, message }]);
   };
 
-  const transcribe = async (dataUrl: string) => {
+  const transcribe = async () => {
+    const audioBlob = blobRef.current;
+    if (!audioBlob) {
+      setErrorMsg(TRANSCRIPTION_FAILURE_MESSAGE);
+      logAttempt("error", TRANSCRIPTION_FAILURE_MESSAGE);
+      return;
+    }
     // Snapshot the current transcript state so a subsequent cancel can be undone.
     preTranscribeSnapshotRef.current = transcript
       ? { transcript, tokens, avgConfidence, reviewed }
@@ -193,16 +221,17 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       if (!controller.signal.aborted) enterPhase("transcribing");
     }, 1200);
     try {
-      const call = run({ data: { audioDataUrl: dataUrl } });
+      const audioBase64 = await blobToBase64(audioBlob);
+      if (controller.signal.aborted) return;
+      const call = run({ data: { audioBase64, mimeType: mimeRef.current, fileName: fileNameRef.current } });
       const result = await new Promise<Awaited<typeof call>>((resolve, reject) => {
         controller.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
         call.then(resolve, reject);
       });
       if (controller.signal.aborted) return;
       if (!result.ok) {
-        const msg = result.error || "Transcription failed.";
-        setErrorMsg(msg);
-        logAttempt("error", msg);
+        setErrorMsg(TRANSCRIPTION_FAILURE_MESSAGE);
+        logAttempt("error", TRANSCRIPTION_FAILURE_MESSAGE);
       } else {
         setTranscript(result.text);
         setTokens(result.tokens ?? []);
@@ -215,9 +244,8 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
         // Silent — user-initiated cancel.
         return;
       }
-      const msg = e instanceof Error ? e.message : "Transcription failed. Check your connection and try again.";
-      setErrorMsg(msg);
-      logAttempt("error", msg);
+      setErrorMsg(TRANSCRIPTION_FAILURE_MESSAGE);
+      logAttempt("error", TRANSCRIPTION_FAILURE_MESSAGE);
     } finally {
       clearTimeout(flipTimer);
       clearPhaseTimer();
@@ -260,15 +288,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       return;
     }
     // No prior transcript to restore — resume by re-running transcription on the saved audio.
-    const url = dataUrlRef.current;
-    if (!url) {
+    if (!blobRef.current) {
       toast.error("No saved audio to resume from");
       return;
     }
     logAttempt("error", "Cancellation undone — resuming transcription");
     toast.message("Resuming transcription…");
     setAttempt((a) => a + 1);
-    void transcribe(url);
+    void transcribe();
   };
 
 
@@ -305,18 +332,18 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
       blobRef.current = blob;
-      mimeRef.current = type.split(";")[0];
+      mimeRef.current = type;
+      fileNameRef.current = deriveAudioFileName(type);
       durationRef.current = elapsed;
       enterPhase("preparing");
       try {
-        const dataUrl = await blobToDataUrl(blob);
-        dataUrlRef.current = dataUrl;
         setAttempt(1);
-        await transcribe(dataUrl);
+        await transcribe();
       } catch (e) {
         clearPhaseTimer();
         setPhase("idle");
-        setErrorMsg(e instanceof Error ? e.message : "Could not read the recorded audio.");
+        setErrorMsg(TRANSCRIPTION_FAILURE_MESSAGE);
+        logAttempt("error", TRANSCRIPTION_FAILURE_MESSAGE);
       }
     };
     rec.start();
@@ -336,9 +363,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   };
 
   const retry = () => {
-    if (!dataUrlRef.current) return;
+    if (!blobRef.current) return;
     setAttempt((n) => n + 1);
-    void transcribe(dataUrlRef.current);
+    void transcribe();
   };
 
 
@@ -548,7 +575,6 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 <div className="text-xs text-foreground">
                   <div className="font-medium text-destructive">Transcription failed</div>
                   <div className="text-muted-foreground mt-0.5">{errorMsg}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">Your audio is still saved — retry, or copy the recording out and try later.</div>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">

@@ -83,48 +83,90 @@ const AUDIO_EXT: Record<string, string> = {
   "audio/mp4": "mp4",
   "audio/x-m4a": "m4a",
   "audio/mpeg": "mp3",
-  "audio/mp3": "mp3",
   "audio/wav": "wav",
-  "audio/wave": "wav",
-  "audio/x-wav": "wav",
 };
 
+const MAX_AUDIO_BASE64_CHARS = 25_000_000;
+const MAX_AUDIO_BYTES = Math.floor(MAX_AUDIO_BASE64_CHARS * 3 / 4);
+const MIN_AUDIO_BYTES = 2048;
+
+function normalizeAudioMimeType(input: string): string | null {
+  const [rawBase, ...params] = input.split(";");
+  const base = rawBase.trim().toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(AUDIO_EXT, base)) return null;
+
+  for (const rawParam of params) {
+    const param = rawParam.trim();
+    if (!param) continue;
+    const [key, ...valueParts] = param.split("=");
+    const value = valueParts.join("=").trim().replace(/^"|"$/g, "");
+    if (!/^[a-z0-9.+-]+$/i.test(key.trim())) return null;
+    if (value && !/^[a-z0-9._,+-]+$/i.test(value)) return null;
+  }
+
+  return base;
+}
+
+function decodeBase64Audio(input: string): Buffer | null {
+  const compact = input.trim().replace(/\s/g, "");
+  if (!compact || compact.startsWith("data:") || compact.startsWith("blob:") || compact.includes(",")) return null;
+  if (compact.length > MAX_AUDIO_BASE64_CHARS || compact.length % 4 === 1) return null;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(compact)) return null;
+  const firstPadding = compact.indexOf("=");
+  if (firstPadding !== -1 && !/^=+$/.test(compact.slice(firstPadding))) return null;
+
+  const bytes = Buffer.from(compact, "base64");
+  if (bytes.byteLength < MIN_AUDIO_BYTES || bytes.byteLength > MAX_AUDIO_BYTES) return null;
+  if (bytes.toString("base64").replace(/=+$/u, "") !== compact.replace(/=+$/u, "")) return null;
+  return bytes;
+}
+
+function safeAudioFileName(fileName: string, mimeType: string): string {
+  const ext = AUDIO_EXT[mimeType] ?? "webm";
+  const stem = fileName
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[^a-z0-9_-]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "voice-note";
+  return `${stem}.${ext}`;
+}
+
 const VoiceInputSchema = z.object({
-  audioDataUrl: z
+  audioBase64: z
     .string()
     .min(64)
-    .max(25_000_000)
-    .regex(/^data:audio\/[a-z0-9.+-]+(;[a-z0-9.+=-]+)*;base64,/i, "Must be a base64 audio data URL"),
+    .max(MAX_AUDIO_BASE64_CHARS),
+  mimeType: z.string().min(5).max(120),
+  fileName: z.string().min(1).max(120),
 });
 
 export const transcribeVoiceNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => VoiceInputSchema.parse(data))
+  .inputValidator((data: unknown) => {
+    const parsed = VoiceInputSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Invalid audio payload.");
+    return parsed.data;
+  })
   .handler(async ({ data }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) return { ok: false as const, error: "AI service is not configured." };
 
-    const match = /^data:(audio\/[a-z0-9.+-]+)(?:;[a-z0-9.+=-]+)*;base64,(.+)$/i.exec(data.audioDataUrl);
-    if (!match) return { ok: false as const, error: "Invalid audio payload." };
-    const mime = match[1].toLowerCase();
-    const b64 = match[2];
-    const ext = AUDIO_EXT[mime] ?? "webm";
+    const mime = normalizeAudioMimeType(data.mimeType);
+    if (!mime) return { ok: false as const, error: "Unsupported audio type." };
 
-    let bytes: Uint8Array;
-    try {
-      const bin = atob(b64);
-      bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    } catch {
-      return { ok: false as const, error: "Could not decode audio." };
-    }
-    if (bytes.byteLength < 2048) {
+    const bytes = decodeBase64Audio(data.audioBase64);
+    if (!bytes) return { ok: false as const, error: "Invalid audio payload." };
+    if (bytes.byteLength < MIN_AUDIO_BYTES) {
       return { ok: false as const, error: "Recording is too short — please try again." };
     }
 
+    const fileName = safeAudioFileName(data.fileName, mime);
+
     const form = new FormData();
+    const audioArrayBuffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(audioArrayBuffer).set(bytes);
     form.append("model", "openai/gpt-4o-mini-transcribe");
-    form.append("file", new Blob([bytes.buffer.slice(0) as ArrayBuffer], { type: mime }), `voice-note.${ext}`);
+    form.append("file", new Blob([audioArrayBuffer], { type: mime }), fileName);
     form.append("response_format", "json");
     form.append("include[]", "logprobs");
 
