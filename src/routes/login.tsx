@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import loginLogo from "@/assets/gkhq-design-system.svg.asset.json";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-url";
 
 function safeNext(raw: unknown): string {
   if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//")) return "/";
@@ -53,7 +54,7 @@ function LoginPage() {
   async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!resetEmail.trim()) return;
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
+    const redirectTo = `${CANONICAL_ORIGIN}/reset-password`;
     await supabase.auth.resetPasswordForEmail(resetEmail.trim(), { redirectTo });
     setSentTo(resetEmail.trim());
     setResetEmail("");
@@ -120,7 +121,7 @@ function LoginPage() {
 
             <button type="button" onClick={async () => {
               setError(null);
-              const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+              const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: CANONICAL_ORIGIN });
               if (res.error) setError(res.error.message || "Google sign-in failed.");
             }}
               className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/30 text-sm font-medium transition-colors">
@@ -130,7 +131,7 @@ function LoginPage() {
 
             <button type="button" onClick={async () => {
               setError(null);
-              const res = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+              const res = await lovable.auth.signInWithOAuth("apple", { redirect_uri: CANONICAL_ORIGIN });
               if (res.error) setError(res.error.message || "Apple sign-in failed.");
             }}
               className="w-full mt-2.5 flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-border bg-card hover:bg-accent/30 text-sm font-medium transition-colors">
