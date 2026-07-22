@@ -59,7 +59,7 @@ function GkDetail() {
   }, [data, gk.name]);
 
   const averageRating = useMemo(() => {
-    const vals = gkReports.map((r) => r.average).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    const vals = gkReports.map((r) => r.average).filter(isValidScore);
     if (!vals.length) return null;
     const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
     return Math.round(mean * 10) / 10;
