@@ -3,11 +3,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
-import { DataSourceBanner } from "@/lib/data-classification";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
-import { ArrowLeft, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
+
+/** Inclusive 1–5 finite numeric guard for report scores/averages. */
+function isValidScore(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v >= 1 && v <= 5;
+}
 
 export const Route = createFileRoute("/goalkeepers/$gkId")({
   loader: ({ params }) => {
