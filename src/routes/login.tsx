@@ -54,7 +54,7 @@ function LoginPage() {
   async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!resetEmail.trim()) return;
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
+    const redirectTo = `${CANONICAL_ORIGIN}/reset-password`;
     await supabase.auth.resetPasswordForEmail(resetEmail.trim(), { redirectTo });
     setSentTo(resetEmail.trim());
     setResetEmail("");
