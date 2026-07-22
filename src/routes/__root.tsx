@@ -1,12 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, useRouter, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, useRouter, HeadContent, Scripts, ScriptOnce } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "@/lib/auth";
 import { NotificationsProvider } from "@/lib/notifications";
+import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { Toaster } from "@/components/ui/sonner";
+
 
 function NotFoundComponent() {
   return (
