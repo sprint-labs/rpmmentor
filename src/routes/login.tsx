@@ -65,7 +65,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-md">
         <div className="mb-10">
-          <img src={loginLogo.url} alt="GK.HQ by RPM" className="h-40 w-auto" />
+          <img src={loginLogo.url} alt="Mentor Hub by RPM" className="h-40 w-auto" />
         </div>
 
 
@@ -73,7 +73,7 @@ function LoginPage() {
           <>
             <div className="mb-8">
               <h1 className="text-4xl font-display font-bold uppercase tracking-[0.02em] leading-tight">Sign in</h1>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign in with your GKHQ account.</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">Sign in with your Mentor Hub account.</p>
             </div>
 
             <form onSubmit={handleSignIn} className="space-y-4" noValidate>
@@ -141,7 +141,7 @@ function LoginPage() {
 
 
             <p className="text-[11px] text-muted-foreground mt-8 leading-relaxed">
-              GKHQ accounts are provisioned by an administrator. If you need access, contact your RPM admin.
+              Mentor Hub accounts are provisioned by an administrator. If you need access, contact your RPM admin.
             </p>
           </>
         )}

@@ -9,8 +9,8 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
   head: () => ({
     meta: [
-      { title: "Reset password · GK.HQ" },
-      { name: "description", content: "Set a new password for your GK.HQ account." },
+      { title: "Reset password · Mentor Hub" },
+      { name: "description", content: "Set a new password for your Mentor Hub account." },
     ],
   }),
 });
@@ -94,7 +94,7 @@ function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-md">
         <div className="mb-10">
-          <img src={loginLogo.url} alt="GK.HQ by RPM" className="h-40 w-auto" />
+          <img src={loginLogo.url} alt="Mentor Hub by RPM" className="h-40 w-auto" />
         </div>
 
         {status === "checking" && (
@@ -129,7 +129,7 @@ function ResetPasswordPage() {
                 Set a new password
               </h1>
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                Choose a new password for your GK.HQ account. You'll be signed in with it after this.
+                Choose a new password for your Mentor Hub account. You'll be signed in with it after this.
               </p>
             </div>
 

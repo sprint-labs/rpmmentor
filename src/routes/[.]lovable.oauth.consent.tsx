@@ -90,15 +90,15 @@ function Consent() {
     <main className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-md">
         <div className="mb-10">
-          <img src="/gkhq-lockup.svg" alt="GK.HQ by RPM" className="h-16 w-auto" />
+          <img src="/gkhq-lockup.svg" alt="Mentor Hub by RPM" className="h-16 w-auto" />
         </div>
 
 
         <h1 className="text-3xl font-display font-bold uppercase tracking-[0.02em] leading-tight">
-          Connect {clientName} to GKHQ
+          Connect {clientName} to Mentor Hub
         </h1>
         <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-          This lets {clientName} use GKHQ as you. Access is limited by your account's permissions
+          This lets {clientName} use Mentor Hub as you. Access is limited by your account's permissions
           and Row Level Security — nothing bypasses them.
         </p>
 
