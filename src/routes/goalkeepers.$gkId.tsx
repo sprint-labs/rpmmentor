@@ -323,15 +323,15 @@ function GkDetail() {
                       {hasEnough && contributors.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {contributors.map((r) => (
-                            <Link
+                            <button
                               key={r.report_id}
-                              to="/reports/$reportId"
-                              params={{ reportId: r.report_id }}
-                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5`)}
+                              type="button"
+                              onClick={() => setPreviewId(r.report_id)}
+                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5\nClick to preview`)}
                               className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                             >
                               {reportRef(r)}
-                            </Link>
+                            </button>
                           ))}
                         </div>
                       )}
