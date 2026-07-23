@@ -85,7 +85,7 @@ const TITLES: Record<WorkflowKind, string> = {
   goalkeeper: "Add Goalkeeper",
 };
 
-export function WorkflowDialog({ kind, onClose, prefillGoalkeeper }: { kind: WorkflowKind | null; onClose: () => void; prefillGoalkeeper?: string }) {
+export function WorkflowDialog({ kind, onClose, prefillGoalkeeper, prefillMatchDate, prefillOpponent }: { kind: WorkflowKind | null; onClose: () => void; prefillGoalkeeper?: string; prefillMatchDate?: string; prefillOpponent?: string }) {
   if (!kind) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm p-4" onClick={onClose}>
@@ -105,7 +105,7 @@ export function WorkflowDialog({ kind, onClose, prefillGoalkeeper }: { kind: Wor
         </div>
         <div className="p-5 overflow-y-auto">
           {kind === "interaction" && <InteractionForm onDone={onClose} />}
-          {kind === "report" && <ReportForm onDone={onClose} prefillGoalkeeper={prefillGoalkeeper} />}
+          {kind === "report" && <ReportForm onDone={onClose} prefillGoalkeeper={prefillGoalkeeper} prefillMatchDate={prefillMatchDate} prefillOpponent={prefillOpponent} />}
           {kind === "media" && <MediaForm onDone={onClose} />}
           {kind === "goalkeeper" && <GoalkeeperForm onDone={onClose} />}
         </div>
@@ -201,7 +201,7 @@ function InteractionForm({ onDone }: { onDone: () => void }) {
  * Match Report form — writes to the RPM Match Reports Google Sheet via
  * a server function. Fields locked to the confirmed 14-column schema.
  */
-function ReportForm({ onDone, prefillGoalkeeper }: { onDone: () => void; prefillGoalkeeper?: string }) {
+function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOpponent }: { onDone: () => void; prefillGoalkeeper?: string; prefillMatchDate?: string; prefillOpponent?: string }) {
   const { user } = useAuth();
   const submitFn = useServerFn(submitMatchReport);
 
@@ -267,10 +267,14 @@ function ReportForm({ onDone, prefillGoalkeeper }: { onDone: () => void; prefill
       setDraftSavedAt(d.savedAt);
       setDraftRestoredFrom(d.savedAt);
       setSaveStatus("saved");
-      // Prefill overrides an empty goalkeeper on the restored draft.
+      // Prefill overrides empty fields on the restored draft.
       if (prefillGoalkeeper && !d.goalkeeper) setGoalkeeper(prefillGoalkeeper);
+      if (prefillMatchDate && !d.matchDate) setMatchDate(prefillMatchDate);
+      if (prefillOpponent && !d.opponent) setOpponent(prefillOpponent);
     } else {
       if (prefillGoalkeeper) setGoalkeeper(prefillGoalkeeper);
+      if (prefillMatchDate) setMatchDate(prefillMatchDate);
+      if (prefillOpponent) setOpponent(prefillOpponent);
       setSaveStatus("idle");
     }
     setDraftLoaded(true);
