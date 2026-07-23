@@ -252,3 +252,79 @@ export const ISSUE_LABEL: Record<IssueCode, string> = {
   age_dob_mismatch: "Age / DOB mismatch",
   missing_profile_image: "Missing profile image",
 };
+
+export interface Remediation {
+  action: string;
+  fields: string[];
+  hint?: string;
+}
+
+export const ISSUE_REMEDIATION: Record<IssueCode, Remediation> = {
+  missing_nationality: {
+    action: "Add the goalkeeper's nationality on their profile.",
+    fields: ["nationality"],
+    hint: "Use the country name as it appears on their passport (e.g. England, Republic of Ireland).",
+  },
+  missing_club: {
+    action: "Set the current club, or change status to Free Agent if unsigned.",
+    fields: ["club", "status"],
+  },
+  missing_league: {
+    action: "Record the league the current club plays in.",
+    fields: ["league"],
+    hint: "Use the canonical league name (e.g. Premier League, EFL Championship).",
+  },
+  missing_parent_club: {
+    action: "Add the parent club (the club that holds the contract).",
+    fields: ["parentClub", "onLoan"],
+    hint: "For non-loan players, parent club should match the current club.",
+  },
+  missing_contract: {
+    action: "Add the contract end date.",
+    fields: ["contractUntil"],
+    hint: 'Format "Month YYYY" — e.g. "June 2027".',
+  },
+  unparseable_contract: {
+    action: 'Reformat the contract end date as "Month YYYY".',
+    fields: ["contractUntil"],
+    hint: 'Example: "June 2027". Avoid abbreviations, day numbers, or slashes.',
+  },
+  contract_expired: {
+    action: "Confirm renewal and update the contract end date, or set status to Free Agent.",
+    fields: ["contractUntil", "status"],
+  },
+  contract_expiring_soon: {
+    action: "Confirm renewal intent with the club and schedule a check-in.",
+    fields: ["contractUntil"],
+    hint: "Log a Coffee Catch Up interaction to track the conversation.",
+  },
+  loan_parent_matches_club: {
+    action: "Either turn off the on-loan flag or correct the parent club.",
+    fields: ["onLoan", "parentClub"],
+  },
+  parent_club_without_loan_flag: {
+    action: "Turn on the on-loan flag, or align parent club with the current club.",
+    fields: ["onLoan", "parentClub"],
+  },
+  free_agent_with_club: {
+    action: "Clear the club field or change status away from Free Agent.",
+    fields: ["club", "status"],
+  },
+  club_without_free_agent_status: {
+    action: "Set status to Free Agent, or replace the club with the actual club name.",
+    fields: ["status", "club"],
+  },
+  missing_dob: {
+    action: "Add date of birth in DD/MM/YYYY format.",
+    fields: ["dob"],
+  },
+  age_dob_mismatch: {
+    action: "Update the age to match the DOB, or correct the DOB if wrong.",
+    fields: ["age", "dob"],
+  },
+  missing_profile_image: {
+    action: "Upload a profile portrait to the media library and link it here.",
+    fields: ["profileImage"],
+    hint: "Square, head-and-shoulders. Optional but improves recognition across the app.",
+  },
+};
