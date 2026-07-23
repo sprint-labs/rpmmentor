@@ -148,6 +148,26 @@ function GkDetail() {
               : averageRating != null ? `${averageRating.toFixed(1)}/5`
               : <span className="text-muted-foreground text-sm font-sans font-normal">No valid rating</span>}
           </div>
+          {averageRating != null && ratingContributors.length > 0 && (
+            <div className="mt-1.5">
+              <div className="text-[10px] uppercase text-muted-foreground mb-1">
+                Included ({ratingContributors.length})
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {ratingContributors.map((r) => (
+                  <Link
+                    key={r.report_id}
+                    to="/reports/$reportId"
+                    params={{ reportId: r.report_id }}
+                    title={`Overall ${r.average!.toFixed(1)}/5`}
+                    className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                  >
+                    {reportRef(r)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
           {averageRating == null && !isLoading && !isError && (
             <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
               A rating appears once match reports with valid overall scores (1–5) are recorded.
