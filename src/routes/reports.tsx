@@ -49,7 +49,7 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
-  const { from, to, coach, source, gk, openSubmit } = Route.useSearch();
+  const { from, to, coach, source, gk, openSubmit, last5Gk } = Route.useSearch();
   const navSource = getNavSource(source);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
   const [prefillGoalkeeper, setPrefillGoalkeeper] = useState<string>("");
