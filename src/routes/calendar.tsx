@@ -1,11 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
-import { calendarEvents, formatDate } from "@/lib/mock-data";
+import { calendarEvents, formatDate, goalkeepers } from "@/lib/mock-data";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
+import { X } from "lucide-react";
 
-export const Route = createFileRoute("/calendar")({ component: withPermission(CalendarPage, "calendar.view") });
+const calendarSearchSchema = z.object({
+  gkId: fallback(z.string(), "").default(""),
+});
+
+export const Route = createFileRoute("/calendar")({
+  validateSearch: zodValidator(calendarSearchSchema),
+  component: withPermission(CalendarPage, "calendar.view"),
+});
+
 
 const TONE: Record<string, "info" | "warning" | "success" | "muted" | "destructive"> = {
   "Match": "info",
