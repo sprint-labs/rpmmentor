@@ -199,6 +199,10 @@ function GkDetail() {
                 <span className="font-medium text-foreground">{ratingContributors.length} of 5</span> scored reports available.
                 Need <span className="font-medium text-foreground">{5 - ratingContributors.length}</span> more with a valid overall score (1–5) to calculate a rating.
               </div>
+              <ValidityHint>
+                A valid scored report has an overall <span className="font-medium text-foreground">Match Rating</span> between 1 and 5.
+              </ValidityHint>
+
               {ratingContributors.length > 0 && (
                 <div>
                   <div className="text-[10px] uppercase text-muted-foreground mb-1">Available so far</div>
