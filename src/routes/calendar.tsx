@@ -69,8 +69,24 @@ function CalendarPage() {
       />
       <DataSourceBanner classification="mock" extra="Calendar events shown here are illustrative and are not synced to any live scheduling source." />
 
+      {filteredGoalkeeper && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-accent/30 px-3 py-2">
+          <div className="text-sm">
+            <span className="text-muted-foreground">Showing events for</span>{" "}
+            <span className="font-medium text-foreground">{filteredGoalkeeper.name}</span>
+          </div>
+          <Link
+            to="/calendar"
+            search={{ gkId: "" }}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3.5" /> Clear filter
+          </Link>
+        </div>
+      )}
 
       {view === "month" ? (
+
         <Card className="p-3">
           <div className="grid grid-cols-7 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="px-2 py-1">{d}</div>)}
