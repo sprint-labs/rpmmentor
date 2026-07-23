@@ -19,11 +19,26 @@
  */
 import type { PillarId } from "./schema";
 
+export interface TranscriptVersion {
+  /** ISO timestamp when this version was captured. */
+  at: string;
+  /** The transcript text at this point in time. */
+  text: string;
+  /** Where the version came from. */
+  source: "ai" | "edit" | "saved";
+  /** Optional short label (e.g. "AI original", "Auto-saved edit"). */
+  label?: string;
+}
+
 export interface VoiceTranscriptDraft {
   transcript: string;
   tokens: Array<{ token: string; confidence: number }>;
   avgConfidence: number | null;
   reviewed: boolean;
+  /** The AI-generated transcript, preserved verbatim for auditability. */
+  original?: TranscriptVersion | null;
+  /** Ordered list of subsequent versions (edits + saves), oldest first. */
+  versions?: TranscriptVersion[];
 }
 
 export interface ReportDraftSnapshot {
