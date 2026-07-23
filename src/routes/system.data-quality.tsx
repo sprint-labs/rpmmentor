@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, AlertCircle, Info, CheckCircle2, Search, Download } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
-import { GOALKEEPERS } from "@/lib/mock-data";
+import { goalkeepers } from "@/lib/mock-data";
 import {
   auditRoster,
   summarise,
@@ -42,7 +42,7 @@ function DataQualityPage() {
 }
 
 function DataQualityInner() {
-  const reports = useMemo(() => auditRoster(GOALKEEPERS), []);
+  const reports = useMemo(() => auditRoster(goalkeepers), []);
   const summary = useMemo(() => summarise(reports), [reports]);
 
   const [severity, setSeverity] = useState<"all" | IssueSeverity>("all");
