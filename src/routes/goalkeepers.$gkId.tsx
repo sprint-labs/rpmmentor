@@ -400,9 +400,13 @@ function GkDetail() {
                         <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
                         <span className="tabular-nums font-mono font-medium">
                           {hasEnough && v != null
-                            ? `${v.toFixed(1)}/5 (${contributors.length}/5)`
-                            : <span className="text-muted-foreground italic" title="At least 5 valid 1–5 scores for this pillar in the last 5 reports are needed to show an average">not recorded ({contributors.length}/5)</span>}
+                            ? `${v.toFixed(1)}/5`
+                            : <span className="text-muted-foreground italic" title="At least 5 valid 1–5 scores for this pillar in the last 5 reports are needed to show an average">not recorded</span>}
                         </span>
+                      </div>
+                      <div className="flex gap-1.5 mb-1" aria-label={`${PILLAR_LABELS[id]} status: ${contributors.length} of 5 valid scores submitted`}>
+                        <Pill tone="success">{contributors.length} submitted</Pill>
+                        <Pill tone={5 - contributors.length > 0 ? "warning" : "muted"}>{5 - contributors.length} missing</Pill>
                       </div>
                       {hasEnough && <ProgressBar value={v != null ? (v / 5) * 100 : 0} />}
                       {!hasEnough && (
