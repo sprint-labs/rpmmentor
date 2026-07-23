@@ -199,9 +199,33 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   useEffect(() => {
     if (!onDraftChange) return;
     if (transcript == null) onDraftChange(null);
-    else onDraftChange({ transcript, tokens, avgConfidence, reviewed });
+    else onDraftChange({ transcript, tokens, avgConfidence, reviewed, original, versions });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcript, tokens, avgConfidence, reviewed]);
+  }, [transcript, tokens, avgConfidence, reviewed, original, versions]);
+
+  // Debounced edit versioning: 3s after the last edit, snapshot the current transcript
+  // as a new version if it differs from the most recent recorded version and from the original.
+  useEffect(() => {
+    if (transcript == null || !original) return;
+    const latest = versions.length > 0 ? versions[versions.length - 1].text : original.text;
+    if (transcript === latest) return;
+    const t = setTimeout(() => {
+      setVersions((prev) => {
+        const lastText = prev.length > 0 ? prev[prev.length - 1].text : original.text;
+        if (transcript === lastText) return prev;
+        const next: TranscriptVersion = {
+          at: new Date().toISOString(),
+          text: transcript,
+          source: "edit",
+          label: "Auto-saved edit",
+        };
+        // Cap at 20 to keep localStorage payload sensible.
+        return [...prev, next].slice(-20);
+      });
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [transcript, original, versions]);
+
 
   // Tick every 500ms while a retry cooldown is active so the countdown updates.
   useEffect(() => {
