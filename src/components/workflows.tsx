@@ -105,7 +105,7 @@ export function WorkflowDialog({ kind, onClose, prefillGoalkeeper, prefillMatchD
         </div>
         <div className="p-5 overflow-y-auto">
           {kind === "interaction" && <InteractionForm onDone={onClose} />}
-          {kind === "report" && <ReportForm onDone={onClose} prefillGoalkeeper={prefillGoalkeeper} />}
+          {kind === "report" && <ReportForm onDone={onClose} prefillGoalkeeper={prefillGoalkeeper} prefillMatchDate={prefillMatchDate} prefillOpponent={prefillOpponent} />}
           {kind === "media" && <MediaForm onDone={onClose} />}
           {kind === "goalkeeper" && <GoalkeeperForm onDone={onClose} />}
         </div>
