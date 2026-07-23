@@ -363,6 +363,12 @@ function GkDetail() {
           </Card>
         </div>
       </div>
+
+      <ReportPreviewModal
+        reportId={previewId}
+        open={previewId !== null}
+        onOpenChange={(o) => { if (!o) setPreviewId(null); }}
+      />
     </div>
   );
 }
