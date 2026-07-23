@@ -47,11 +47,20 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
+interface TranscriptVersion {
+  at: string;
+  text: string;
+  source: "ai" | "edit" | "saved";
+  label?: string;
+}
+
 interface VoiceDraft {
   transcript: string;
   tokens: Array<{ token: string; confidence: number }>;
   avgConfidence: number | null;
   reviewed: boolean;
+  original?: TranscriptVersion | null;
+  versions?: TranscriptVersion[];
 }
 
 interface AttemptLogEntry {
