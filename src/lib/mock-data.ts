@@ -187,9 +187,11 @@ export const mentors: Mentor[] = [
 // Mentors are NOT assigned to specific goalkeepers — the whole team works the roster.
 const ASSIGN_POOL = ["m-dave-watson", "m-andy-marshall", "m-jack-stern", "m-alec-chamberlain", "m-martyn-margetson", "m-martijn-middelbeek", "m-matt-beadle", "m-david-rouse"];
 
-// ---------- Goalkeepers (illustrative preview only) ----------
-// Reduced to two clearly-identifiable demo profiles — the wider roster is
-// intentionally empty until it is sourced from the live Match Reports store.
+// ---------- Goalkeepers ----------
+// Live RPM roster (113 goalkeepers). Sourced from the current client list;
+// ratings/potential/recommendation remain derived placeholders until wired to
+// the Match Reports store.
+
 type Seed = {
   name: string;
   dob: string;
