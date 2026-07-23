@@ -94,15 +94,22 @@ function GoalkeepersList() {
                   <td className="pl-4 pr-1"><TrafficLight level={d.level} /></td>
                   <td className="px-2 py-2.5">
                     <Link to="/goalkeepers/$gkId" params={{ gkId: gk.id }} className="flex items-center gap-2.5">
-                      <Avatar initials={gk.initials} size={28} />
+                      <Avatar initials={gk.initials} size={28} imageUrl={gk.profileImage} alt={`${gk.name} portrait`} />
                       <span className="font-medium">{gk.name}</span>
                     </Link>
                   </td>
                   <td className="px-2"><TierBadge tier={gk.status} /></td>
-                  <td className="px-2 text-muted-foreground">{gk.club}</td>
+                  <td className="px-2 text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span>{gk.club || "Free Agent"}</span>
+                      {gk.onLoan && gk.parentClub && (
+                        <span className="text-[10px] text-muted-foreground/80 italic">on loan from {gk.parentClub}</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-2 text-muted-foreground text-xs">{gk.league}</td>
                   <td className="px-2 tabular-nums font-mono">{gk.age}</td>
-                  <td className="px-2 text-muted-foreground">{gk.nationality}</td>
+                  <td className="px-2 text-muted-foreground">{gk.nationality || "—"}</td>
                   <td className="px-2 text-muted-foreground tabular-nums font-mono">{gk.contractUntil === "—" ? "—" : gk.contractUntil.slice(0, 4)}</td>
                   <td className="px-2">
                     <DutyBadge level={d.level} label={d.label} />
