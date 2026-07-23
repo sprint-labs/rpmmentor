@@ -26,6 +26,7 @@ import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as SystemUsersRouteImport } from './routes/system.users'
 import { Route as SystemPermissionsRouteImport } from './routes/system.permissions'
 import { Route as SystemIntegrationsRouteImport } from './routes/system.integrations'
+import { Route as SystemDataQualityRouteImport } from './routes/system.data-quality'
 import { Route as ReportsReportIdRouteImport } from './routes/reports.$reportId'
 import { Route as GoalkeepersGkIdRouteImport } from './routes/goalkeepers.$gkId'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -118,6 +119,11 @@ const SystemIntegrationsRoute = SystemIntegrationsRouteImport.update({
   path: '/system/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SystemDataQualityRoute = SystemDataQualityRouteImport.update({
+  id: '/system/data-quality',
+  path: '/system/data-quality',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
   id: '/reports/$reportId',
   path: '/reports/$reportId',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/data-quality': typeof SystemDataQualityRoute
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/data-quality': typeof SystemDataQualityRoute
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/goalkeepers/$gkId': typeof GoalkeepersGkIdRoute
   '/reports/$reportId': typeof ReportsReportIdRoute
+  '/system/data-quality': typeof SystemDataQualityRoute
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/data-quality'
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/data-quality'
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/goalkeepers/$gkId'
     | '/reports/$reportId'
+    | '/system/data-quality'
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ReportsReportIdRoute: typeof ReportsReportIdRoute
+  SystemDataQualityRoute: typeof SystemDataQualityRoute
   SystemIntegrationsRoute: typeof SystemIntegrationsRoute
   SystemPermissionsRoute: typeof SystemPermissionsRoute
   SystemUsersRoute: typeof SystemUsersRoute
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemIntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/system/data-quality': {
+      id: '/system/data-quality'
+      path: '/system/data-quality'
+      fullPath: '/system/data-quality'
+      preLoaderRoute: typeof SystemDataQualityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports/$reportId': {
       id: '/reports/$reportId'
       path: '/reports/$reportId'
@@ -527,6 +547,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ReportsReportIdRoute: ReportsReportIdRoute,
+  SystemDataQualityRoute: SystemDataQualityRoute,
   SystemIntegrationsRoute: SystemIntegrationsRoute,
   SystemPermissionsRoute: SystemPermissionsRoute,
   SystemUsersRoute: SystemUsersRoute,
