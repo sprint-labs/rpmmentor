@@ -113,6 +113,57 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
 
 
   const run = useServerFn(transcribeVoiceNote);
+  const runSummarize = useServerFn(summarizeTranscript);
+  const [summary, setSummary] = useState<StructuredSummary | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  const formatSummary = (s: StructuredSummary): string => {
+    const parts: string[] = [];
+    if (s.headline) parts.push(s.headline);
+    if (s.strengths.length) parts.push(`Strengths:\n${s.strengths.map((x) => `• ${x}`).join("\n")}`);
+    if (s.improvements.length) parts.push(`Areas to develop:\n${s.improvements.map((x) => `• ${x}`).join("\n")}`);
+    if (s.keyMoments.length) parts.push(`Key moments:\n${s.keyMoments.map((x) => `• ${x}`).join("\n")}`);
+    return parts.join("\n\n");
+  };
+
+  const requestSummary = async () => {
+    if (!transcript || transcript.trim().length < 20) {
+      toast.error("Transcript is too short to summarise.");
+      return;
+    }
+    setSummarizing(true);
+    setSummaryError(null);
+    try {
+      const res = await runSummarize({ data: { transcript } });
+      if (!res.ok) {
+        setSummaryError(res.error);
+        toast.error(res.error);
+        return;
+      }
+      setSummary(res.summary);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to summarise transcript.";
+      setSummaryError(msg);
+      toast.error(msg);
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
+  const insertSummary = (mode: "append" | "replace") => {
+    if (!summary) return;
+    onTranscribed(formatSummary(summary), mode);
+    toast.success(mode === "replace" ? "Comments replaced with summary" : "Summary appended to comments");
+  };
+
+  const updateSummaryField = <K extends keyof StructuredSummary>(key: K, value: StructuredSummary[K]) => {
+    setSummary((s) => (s ? { ...s, [key]: value } : s));
+  };
+  const updateSummaryLines = (key: "strengths" | "improvements" | "keyMoments", text: string) => {
+    const lines = text.split("\n").map((l) => l.replace(/^[\s•\-*]+/, "").trim()).filter(Boolean).slice(0, 5);
+    updateSummaryField(key, lines);
+  };
   const busy = phase !== "idle";
 
   const clearPhaseTimer = () => {
