@@ -37,9 +37,10 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
-  const { from, to, coach, source } = Route.useSearch();
+  const { from, to, coach, source, gk, openSubmit } = Route.useSearch();
   const navSource = getNavSource(source);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
+  const [prefillGoalkeeper, setPrefillGoalkeeper] = useState<string>("");
   const [coachFilter, setCoachFilter] = useState<string>(coach || "All");
   const router = useRouter();
   const listFn = useServerFn(listMatchReports);
