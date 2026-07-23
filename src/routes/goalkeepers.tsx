@@ -84,7 +84,7 @@ function GoalkeepersList() {
   const ratingMax = clampRating(Math.max(search.ratingMax, ratingMin));
 
   const update = (patch: Partial<z.infer<typeof searchSchema>>) => {
-    navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
+    navigate({ search: (prev: z.infer<typeof searchSchema>) => ({ ...prev, ...patch }), replace: true });
   };
 
   const toggleFrom = (list: string[], value: string) =>
