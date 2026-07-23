@@ -125,8 +125,13 @@ function GkDetail() {
             {isLoading ? <span className="text-muted-foreground text-sm font-sans font-normal">Loading…</span>
               : isError ? <span className="text-destructive text-sm font-sans font-normal">Unavailable</span>
               : averageRating != null ? `${averageRating.toFixed(1)}/5`
-              : <span className="text-muted-foreground text-sm font-sans font-normal">No reports yet</span>}
+              : <span className="text-muted-foreground text-sm font-sans font-normal">No valid rating</span>}
           </div>
+          {averageRating == null && !isLoading && !isError && (
+            <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
+              A rating appears once match reports with valid overall scores (1–5) are recorded.
+            </div>
+          )}
         </Card>
         <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Contract</div><div className="text-sm font-medium mt-1">{gk.contractUntil}</div></Card>
       </div>
