@@ -101,6 +101,20 @@ function GkDetail() {
   const reportRef = (r: MatchReportRow) =>
     `${r.match_date ? formatDate(r.match_date) : "undated"} · ${r.opponent?.trim() || "opponent TBC"}`;
 
+  /** Multi-line tooltip: date, opponent, and which pillars have valid 1–5 scores. */
+  const reportTooltip = (r: MatchReportRow, extra?: string) => {
+    const validPillars = PILLAR_IDS.filter((id) => isValidScore(r.scores[id]));
+    const pillarLine = validPillars.length
+      ? `Valid pillars (${validPillars.length}/${PILLAR_IDS.length}): ${validPillars.map((id) => `${PILLAR_LABELS[id]} ${r.scores[id]}/5`).join(", ")}`
+      : "No valid pillar scores (1–5) on this report";
+    return [
+      `Date: ${r.match_date ? formatDate(r.match_date) : "not recorded"}`,
+      `Opponent: ${r.opponent?.trim() || "not recorded"}`,
+      pillarLine,
+      extra ?? "",
+    ].filter(Boolean).join("\n");
+  };
+
   return (
     <div className="space-y-5">
       <Link to="/goalkeepers" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Goalkeepers</Link>
@@ -159,7 +173,7 @@ function GkDetail() {
                     key={r.report_id}
                     to="/reports/$reportId"
                     params={{ reportId: r.report_id }}
-                    title={`Overall ${r.average!.toFixed(1)}/5`}
+                    title={reportTooltip(r, `Overall: ${r.average!.toFixed(1)}/5`)}
                     className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                   >
                     {reportRef(r)}
@@ -311,7 +325,7 @@ function GkDetail() {
                               key={r.report_id}
                               to="/reports/$reportId"
                               params={{ reportId: r.report_id }}
-                              title={`Score ${r.scores[id]}/5`}
+                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5`)}
                               className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                             >
                               {reportRef(r)}
