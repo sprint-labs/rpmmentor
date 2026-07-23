@@ -975,7 +975,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                                 const now = new Date().toISOString();
                                 setVersions((prev) => [
                                   ...prev,
-                                  { at: now, text: v.text, source: "edit", label: `Reverted to ${v.label ?? v.source}` },
+                                  { at: now, text: v.text, source: "edit" as const, label: `Reverted to ${v.label ?? v.source}` },
                                 ].slice(-20));
                                 setTranscript(v.text);
                                 setTokens([]);
