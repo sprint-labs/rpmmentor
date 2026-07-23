@@ -439,6 +439,39 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       ? "text-amber-500 border-amber-500/40"
       : "text-destructive border-destructive/40";
 
+  // Approximate word/sentence timestamps by distributing across the recorded duration,
+  // weighted by character length. The transcription model doesn't return timestamps,
+  // so this gives a "close enough" jump point for playback navigation.
+  const totalDuration = durationRef.current || (audioRef.current?.duration ?? 0) || elapsed || 0;
+  type TimedSentence = { text: string; start: number; end: number };
+  const timedSentences: TimedSentence[] = (() => {
+    if (!transcript || totalDuration <= 0) return [];
+    // Split into sentences, keep terminal punctuation.
+    const parts = transcript.match(/[^.!?\n]+[.!?]?[\s]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [transcript];
+    const weights = parts.map((p) => Math.max(1, p.replace(/\s+/g, " ").length));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    return parts.map((text, i) => {
+      const start = (acc / total) * totalDuration;
+      acc += weights[i];
+      const end = (acc / total) * totalDuration;
+      return { text, start, end };
+    });
+  })();
+  const fmtTs = (s: number) => {
+    const m = Math.floor(s / 60);
+    const r = Math.floor(s % 60);
+    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  };
+  const seekTo = (s: number) => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.currentTime = Math.max(0, Math.min(s, el.duration || s));
+    void el.play().catch(() => {});
+  };
+
+
+
 
   return (
     <div className={`rounded-md border border-dashed border-border bg-accent/10 p-3 space-y-3 ${className ?? ""}`}>
