@@ -48,12 +48,21 @@ function GkDetail() {
   const gkMedia = media.filter((m) => m.gkId === gk.id);
   const [previewId, setPreviewId] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const listFn = useServerFn(listMatchReports);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["match-reports", "all"],
+    queryKey: ["match-reports"],
     queryFn: () => listFn(),
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    const h = () => {
+      void queryClient.invalidateQueries({ queryKey: ["match-reports"] });
+    };
+    window.addEventListener("rpm:report-submitted", h);
+    return () => window.removeEventListener("rpm:report-submitted", h);
+  }, [queryClient]);
 
   const gkReports = useMemo<MatchReportRow[]>(() => {
     const target = normaliseName(gk.name);
