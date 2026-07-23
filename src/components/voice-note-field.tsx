@@ -259,6 +259,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setTokens([]);
     setAvgConfidence(null);
     setReviewed(false);
+    setOriginal(null);
+    setVersions([]);
+    setShowHistory(false);
     setErrorMsg(null);
     setPhase("idle");
     setPhaseElapsed(0);
