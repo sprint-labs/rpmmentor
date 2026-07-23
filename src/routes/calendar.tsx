@@ -138,7 +138,7 @@ function CalendarPage() {
       <DataSourceBanner classification="mock" extra="Calendar events shown here are illustrative and are not synced to any live scheduling source." />
 
       {filteredGoalkeeper && (
-        <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-accent/30 px-3 py-2">
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-accent/30 px-3 py-2.5">
           <div className="text-sm">
             <span className="text-muted-foreground">Showing events for</span>{" "}
             <span className="font-medium text-foreground">{filteredGoalkeeper.name}</span>
@@ -146,9 +146,10 @@ function CalendarPage() {
           <Link
             to="/calendar"
             search={{ gkId: "" }}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`Clear goalkeeper filter for ${filteredGoalkeeper.name}`}
           >
-            <X className="size-3.5" /> Clear filter
+            <X className="size-3.5" /> Reset filter
           </Link>
         </div>
       )}
