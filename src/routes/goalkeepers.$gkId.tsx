@@ -260,18 +260,40 @@ function GkDetail() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
+                <div className="text-[10px] uppercase text-muted-foreground">
+                  Pool of last {last5.length} report{last5.length === 1 ? "" : "s"}:
+                  <span className="ml-1 normal-case text-muted-foreground/80 tracking-normal">
+                    {last5.map(reportRef).join(" · ")}
+                  </span>
+                </div>
                 {PILLAR_IDS.map((id) => {
                   const v = pillarAverages[id];
+                  const contributors = pillarContributors[id];
                   return (
                     <div key={id}>
                       <div className="flex justify-between text-[11px] mb-1">
                         <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
                         <span className="tabular-nums font-mono font-medium">
-                          {v != null ? `${v.toFixed(1)}/5` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
+                          {v != null ? `${v.toFixed(1)}/5 (${contributors.length}/${last5.length})` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
                         </span>
                       </div>
                       <ProgressBar value={v != null ? (v / 5) * 100 : 0} />
+                      {contributors.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {contributors.map((r) => (
+                            <Link
+                              key={r.report_id}
+                              to="/reports/$reportId"
+                              params={{ reportId: r.report_id }}
+                              title={`Score ${r.scores[id]}/5`}
+                              className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                            >
+                              {reportRef(r)}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
