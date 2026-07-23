@@ -1,12 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
+import { ReportPreviewModal } from "@/components/report-preview-modal";
 
 /** Inclusive 1–5 finite numeric guard for report scores/averages. */
 function isValidScore(v: unknown): v is number {
@@ -45,6 +46,7 @@ function GkDetail() {
   const { gk } = Route.useLoaderData();
   const gkInteractions = interactions.filter((i) => i.gkId === gk.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
   const gkMedia = media.filter((m) => m.gkId === gk.id);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const listFn = useServerFn(listMatchReports);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -169,15 +171,15 @@ function GkDetail() {
               </div>
               <div className="flex flex-wrap gap-1">
                 {ratingContributors.map((r) => (
-                  <Link
+                  <button
                     key={r.report_id}
-                    to="/reports/$reportId"
-                    params={{ reportId: r.report_id }}
-                    title={reportTooltip(r, `Overall: ${r.average!.toFixed(1)}/5`)}
+                    type="button"
+                    onClick={() => setPreviewId(r.report_id)}
+                    title={reportTooltip(r, `Overall: ${r.average!.toFixed(1)}/5\nClick to preview`)}
                     className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                   >
                     {reportRef(r)}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>
@@ -321,15 +323,15 @@ function GkDetail() {
                       {hasEnough && contributors.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {contributors.map((r) => (
-                            <Link
+                            <button
                               key={r.report_id}
-                              to="/reports/$reportId"
-                              params={{ reportId: r.report_id }}
-                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5`)}
+                              type="button"
+                              onClick={() => setPreviewId(r.report_id)}
+                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5\nClick to preview`)}
                               className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                             >
                               {reportRef(r)}
-                            </Link>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -361,6 +363,12 @@ function GkDetail() {
           </Card>
         </div>
       </div>
+
+      <ReportPreviewModal
+        reportId={previewId}
+        open={previewId !== null}
+        onOpenChange={(o) => { if (!o) setPreviewId(null); }}
+      />
     </div>
   );
 }
