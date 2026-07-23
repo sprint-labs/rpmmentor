@@ -201,7 +201,7 @@ function InteractionForm({ onDone }: { onDone: () => void }) {
  * Match Report form — writes to the RPM Match Reports Google Sheet via
  * a server function. Fields locked to the confirmed 14-column schema.
  */
-function ReportForm({ onDone }: { onDone: () => void }) {
+function ReportForm({ onDone, prefillGoalkeeper }: { onDone: () => void; prefillGoalkeeper?: string }) {
   const { user } = useAuth();
   const submitFn = useServerFn(submitMatchReport);
 
