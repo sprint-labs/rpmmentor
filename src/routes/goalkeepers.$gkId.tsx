@@ -325,7 +325,7 @@ function GkDetail() {
                               key={r.report_id}
                               to="/reports/$reportId"
                               params={{ reportId: r.report_id }}
-                              title={`Score ${r.scores[id]}/5`}
+                              title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5`)}
                               className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                             >
                               {reportRef(r)}
