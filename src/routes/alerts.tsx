@@ -60,7 +60,12 @@ function AlertsPage() {
       </div>
 
       <div className="space-y-5">
-        {visibleGroups.map((g) => {
+        {alerts.length === 0 ? (
+          <Card className="p-8 text-center">
+            <div className="text-sm font-medium mb-1">No alerts to review</div>
+            <div className="text-xs text-muted-foreground">Overdue observations, missing reports and upcoming-fixture warnings will appear here once they are generated from live data.</div>
+          </Card>
+        ) : visibleGroups.map((g) => {
           const list = alerts.filter((a) => a.kind === g);
           if (!list.length) return null;
           return (
@@ -86,6 +91,7 @@ function AlertsPage() {
           );
         })}
       </div>
+
     </div>
   );
 }

@@ -113,7 +113,11 @@ function Dashboard() {
             Alerts Requiring Attention
           </SectionTitle>
           <div className="space-y-2">
-            {alerts.slice(0, 6).map((a) => (
+            {alerts.length === 0 ? (
+              <div className="text-xs text-muted-foreground p-3 rounded-md border border-dashed border-border/60 text-center">
+                No alerts. New overdue observations, missing reports and duty-of-care warnings will appear here.
+              </div>
+            ) : alerts.slice(0, 6).map((a) => (
               <div key={a.id} className="flex items-start gap-2 p-2 rounded-md bg-accent/30 border border-border/50">
                 <AlertTriangle className={`size-3.5 mt-0.5 shrink-0 ${a.severity === "high" ? "text-destructive" : a.severity === "medium" ? "text-warning" : "text-info"}`} />
                 <div className="flex-1 min-w-0">
@@ -125,6 +129,7 @@ function Dashboard() {
               </div>
             ))}
           </div>
+
         </Card>
       </div>
 
@@ -132,7 +137,11 @@ function Dashboard() {
         <Card className="lg:col-span-2 p-4">
           <SectionTitle>Recent Activity</SectionTitle>
           <div className="space-y-2">
-            {activity.map((a) => (
+            {activity.length === 0 ? (
+              <div className="text-xs text-muted-foreground p-3 rounded-md border border-dashed border-border/60 text-center">
+                No recent activity yet. Report submissions, media uploads and role changes will appear here as they happen.
+              </div>
+            ) : activity.map((a) => (
               <div key={a.id} className="flex items-start gap-3 py-1.5">
                 <Avatar initials={a.actorInitials} size={26} />
                 <div className="flex-1 min-w-0 text-sm">
@@ -144,6 +153,7 @@ function Dashboard() {
               </div>
             ))}
           </div>
+
         </Card>
 
         <Card className="p-4">
