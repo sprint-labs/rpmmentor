@@ -68,20 +68,38 @@ function GkDetail() {
     return Math.round(mean * 10) / 10;
   }, [gkReports]);
 
+  const ratingContributors = useMemo(
+    () => gkReports.filter((r) => isValidScore(r.average)),
+    [gkReports],
+  );
+
+  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
+
   const pillarAverages = useMemo(() => {
-    const last5 = gkReports.slice(0, 5);
     const out: Record<PillarId, number | null> = {
       protect_goal: null, protect_space: null, protect_air: null,
       control_play: null, change_play: null, psych: null, physical: null,
     };
     for (const id of PILLAR_IDS) {
-      const vals = last5
-        .map((r) => r.scores[id])
-        .filter(isValidScore);
+      const vals = last5.map((r) => r.scores[id]).filter(isValidScore);
       out[id] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
     }
     return out;
-  }, [gkReports]);
+  }, [last5]);
+
+  const pillarContributors = useMemo(() => {
+    const out: Record<PillarId, MatchReportRow[]> = {
+      protect_goal: [], protect_space: [], protect_air: [],
+      control_play: [], change_play: [], psych: [], physical: [],
+    };
+    for (const id of PILLAR_IDS) {
+      out[id] = last5.filter((r) => isValidScore(r.scores[id]));
+    }
+    return out;
+  }, [last5]);
+
+  const reportRef = (r: MatchReportRow) =>
+    `${r.match_date ? formatDate(r.match_date) : "undated"} · ${r.opponent?.trim() || "opponent TBC"}`;
 
   return (
     <div className="space-y-5">
