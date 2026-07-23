@@ -160,11 +160,25 @@ export function Pill({ children, tone = "muted" }: { children: ReactNode; tone?:
   return <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border", t[tone])}>{children}</span>;
 }
 
-export function Avatar({ initials, size = 28 }: { initials: string; size?: number }) {
+export function Avatar({ initials, size = 28, imageUrl, alt }: { initials: string; size?: number; imageUrl?: string; alt?: string }) {
+  const [failed, setFailed] = (require("react") as typeof import("react")).useState(false);
+  if (imageUrl && !failed) {
+    return (
+      <img
+        src={imageUrl}
+        alt={alt ?? initials}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="rounded-full object-cover bg-accent shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   return (
     <div
       className="rounded-full bg-accent text-accent-foreground grid place-items-center font-semibold shrink-0"
       style={{ width: size, height: size, fontSize: size * 0.4 }}
+      aria-label={alt ?? initials}
     >
       {initials}
     </div>
