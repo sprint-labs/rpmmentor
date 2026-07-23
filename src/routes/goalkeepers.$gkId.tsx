@@ -361,6 +361,10 @@ function GkDetail() {
                             <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
                             Need <span className="font-medium text-foreground">{5 - contributors.length}</span> more with a valid {PILLAR_LABELS[id]} score (1–5).
                           </div>
+                          <ValidityHint>
+                            A valid scored report has a <span className="font-medium text-foreground">{PILLAR_LABELS[id]}</span> score between 1 and 5.
+                          </ValidityHint>
+
                           {contributors.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {contributors.map((r) => (
