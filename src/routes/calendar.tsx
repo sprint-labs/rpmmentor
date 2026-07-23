@@ -4,9 +4,77 @@ import { z } from "zod";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { calendarEvents, formatDate, goalkeepers } from "@/lib/mock-data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { withPermission } from "@/components/require-permission";
 import { X } from "lucide-react";
+import { subscribeMentorSession } from "@/lib/mentor-session-store";
+import {
+  computeMissingReportTypes,
+  shortLabel,
+  type TrackedReportType,
+} from "@/lib/calendar/missing-report-types";
+
+function MissingReports({
+  gkId,
+  gkName,
+  referenceDate,
+  variant,
+}: {
+  gkId: string;
+  gkName?: string;
+  referenceDate: Date;
+  variant: "compact" | "full";
+}) {
+  // Re-render when session interactions/reports change.
+  const [, setTick] = useState(0);
+  useEffect(() => subscribeMentorSession(() => setTick((n) => n + 1)), []);
+
+  const missing: TrackedReportType[] = computeMissingReportTypes(gkId, gkName, {
+    referenceDate,
+  });
+  if (missing.length === 0) return null;
+
+  if (variant === "compact") {
+    const shown = missing.slice(0, 3);
+    const overflow = missing.length - shown.length;
+    return (
+      <div
+        className="mt-0.5 flex flex-wrap items-center gap-0.5"
+        aria-label={`Missing report types: ${missing.join(", ")}`}
+      >
+        {shown.map((t) => (
+          <span
+            key={t}
+            title={`Missing: ${t} (last 30 days)`}
+            className="rounded-sm border border-warning/40 bg-warning/10 px-1 text-[9px] font-mono uppercase leading-tight text-warning"
+          >
+            {shortLabel(t)}
+          </span>
+        ))}
+        {overflow > 0 && (
+          <span className="text-[9px] text-muted-foreground">+{overflow}</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        Missing
+      </span>
+      {missing.map((t) => (
+        <span
+          key={t}
+          title={`No ${t} logged in last 30 days`}
+          className="rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning"
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const calendarSearchSchema = z.object({
   gkId: fallback(z.string(), "").default(""),
