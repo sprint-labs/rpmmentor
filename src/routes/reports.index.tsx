@@ -36,7 +36,7 @@ function compareMatchDatesNewestFirst(a: string | null, b: string | null): numbe
   return b.localeCompare(a);
 }
 
-export const Route = createFileRoute("/reports")({
+export const Route = createFileRoute("/reports/")({
   validateSearch: zodValidator(reportsSearchSchema),
   component: withPermission(ReportsPage, "reports.view"),
 });
