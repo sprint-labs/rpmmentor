@@ -328,23 +328,20 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       const blob = new Blob(chunksRef.current, { type });
       cleanupStream();
       setRecording(false);
-      if (blob.size < 2048) { toast.error("That recording was too short — please try again."); return; }
+      // Very small threshold: an instant tap-tap on mobile produces a header-only blob.
+      // Anything larger, keep — user can still tap Transcribe or Save.
+      if (blob.size < 512) {
+        toast.error("That recording was too short — please hold to record for at least a second.");
+        return;
+      }
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
       blobRef.current = blob;
       mimeRef.current = type;
       fileNameRef.current = deriveAudioFileName(type);
       durationRef.current = elapsed;
-      enterPhase("preparing");
-      try {
-        setAttempt(1);
-        await transcribe();
-      } catch (e) {
-        clearPhaseTimer();
-        setPhase("idle");
-        setErrorMsg(TRANSCRIPTION_FAILURE_MESSAGE);
-        logAttempt("error", TRANSCRIPTION_FAILURE_MESSAGE);
-      }
+      // Do NOT auto-transcribe. Show explicit Transcribe / Save without transcript
+      // buttons so mobile users always see an actionable next step.
     };
     rec.start();
     setRecording(true);
