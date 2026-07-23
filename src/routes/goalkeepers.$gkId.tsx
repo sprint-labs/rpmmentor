@@ -61,19 +61,19 @@ function GkDetail() {
       .sort((a, b) => compareMatchDatesNewestFirst(a.match_date, b.match_date));
   }, [data, gk.name]);
 
+  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
+
   const averageRating = useMemo(() => {
-    const vals = gkReports.map((r) => r.average).filter(isValidScore);
-    if (!vals.length) return null;
+    const vals = last5.map((r) => r.average).filter(isValidScore);
+    if (vals.length < 5) return null;
     const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
     return Math.round(mean * 10) / 10;
-  }, [gkReports]);
+  }, [last5]);
 
   const ratingContributors = useMemo(
-    () => gkReports.filter((r) => isValidScore(r.average)),
-    [gkReports],
+    () => last5.filter((r) => isValidScore(r.average)),
+    [last5],
   );
-
-  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
 
   const pillarAverages = useMemo(() => {
     const out: Record<PillarId, number | null> = {
@@ -141,14 +141,14 @@ function GkDetail() {
 
       <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
         <Card className="p-3">
-          <div className="text-[10px] uppercase text-muted-foreground">Rating (avg of Match Reports)</div>
+          <div className="text-[10px] uppercase text-muted-foreground">Rating (avg of last 5 Match Reports)</div>
           <div className="text-xl font-semibold tabular-nums font-mono mt-1">
             {isLoading ? <span className="text-muted-foreground text-sm font-sans font-normal">Loading…</span>
               : isError ? <span className="text-destructive text-sm font-sans font-normal">Unavailable</span>
               : averageRating != null ? `${averageRating.toFixed(1)}/5`
-              : <span className="text-muted-foreground text-sm font-sans font-normal">No valid rating</span>}
+              : <span className="text-muted-foreground text-sm font-sans font-normal">Not enough data</span>}
           </div>
-          {averageRating != null && ratingContributors.length > 0 && (
+          {averageRating != null && ratingContributors.length >= 5 && (
             <div className="mt-1.5">
               <div className="text-[10px] uppercase text-muted-foreground mb-1">
                 Included ({ratingContributors.length})
@@ -169,9 +169,14 @@ function GkDetail() {
             </div>
           )}
           {averageRating == null && !isLoading && !isError && (
-            <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
-              A rating appears once match reports with valid overall scores (1–5) are recorded.
-              <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="ml-1 text-primary hover:underline">Submit a Match Report for {gk.name}</Link>
+            <div className="mt-1.5 space-y-1.5">
+              <div className="text-[11px] text-muted-foreground leading-snug">
+                <span className="font-medium text-foreground">{ratingContributors.length} of 5</span> scored reports available.
+                A rating appears once at least 5 match reports with valid overall scores (1–5) are recorded.
+              </div>
+              <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                Submit a Match Report for {gk.name}
+              </Link>
             </div>
           )}
         </Card>
@@ -270,16 +275,25 @@ function GkDetail() {
                 {PILLAR_IDS.map((id) => {
                   const v = pillarAverages[id];
                   const contributors = pillarContributors[id];
+                  const hasEnough = contributors.length >= 5;
                   return (
                     <div key={id}>
                       <div className="flex justify-between text-[11px] mb-1">
                         <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
                         <span className="tabular-nums font-mono font-medium">
-                          {v != null ? `${v.toFixed(1)}/5 (${contributors.length}/${last5.length})` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
+                          {hasEnough && v != null
+                            ? `${v.toFixed(1)}/5 (${contributors.length}/5)`
+                            : <span className="text-muted-foreground italic" title="At least 5 valid 1–5 scores for this pillar in the last 5 reports are needed to show an average">not recorded ({contributors.length}/5)</span>}
                         </span>
                       </div>
-                      <ProgressBar value={v != null ? (v / 5) * 100 : 0} />
-                      {contributors.length > 0 && (
+                      {hasEnough && <ProgressBar value={v != null ? (v / 5) * 100 : 0} />}
+                      {!hasEnough && (
+                        <div className="text-[11px] text-muted-foreground leading-snug mt-1">
+                          <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
+                          A pillar average appears once 5 valid 1–5 scores are recorded.
+                        </div>
+                      )}
+                      {hasEnough && contributors.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {contributors.map((r) => (
                             <Link
@@ -297,6 +311,14 @@ function GkDetail() {
                     </div>
                   );
                 })}
+                {gkReports.length > 0 && gkReports.length < 5 && (
+                  <div className="text-[11px] text-muted-foreground leading-snug border-t border-border/40 pt-2">
+                    <span className="font-medium text-foreground">{gkReports.length} of 5</span> match reports available for this goalkeeper.
+                    <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="ml-1 text-primary hover:underline">
+                      Submit a Match Report for {gk.name}
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </Card>
