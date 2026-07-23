@@ -176,7 +176,8 @@ function GkDetail() {
                     type="button"
                     onClick={() => setPreviewId(r.report_id)}
                     title={reportTooltip(r, `Overall: ${r.average!.toFixed(1)}/5\nClick to preview`)}
-                    className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                    aria-label={`Preview match report for ${r.match_date ? formatDate(r.match_date) : "undated match"} versus ${r.opponent?.trim() || "opponent TBC"}, overall rating ${r.average!.toFixed(1)} of 5`}
+                    className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary"
                   >
                     {reportRef(r)}
                   </button>
@@ -328,7 +329,8 @@ function GkDetail() {
                               type="button"
                               onClick={() => setPreviewId(r.report_id)}
                               title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5\nClick to preview`)}
-                              className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                              aria-label={`Preview match report for ${r.match_date ? formatDate(r.match_date) : "undated match"} versus ${r.opponent?.trim() || "opponent TBC"}, ${PILLAR_LABELS[id]} score ${r.scores[id]} of 5`}
+                              className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary"
                             >
                               {reportRef(r)}
                             </button>
