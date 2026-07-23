@@ -1,11 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
-import { calendarEvents, formatDate } from "@/lib/mock-data";
+import { calendarEvents, formatDate, goalkeepers } from "@/lib/mock-data";
 import { useState } from "react";
 import { withPermission } from "@/components/require-permission";
+import { X } from "lucide-react";
 
-export const Route = createFileRoute("/calendar")({ component: withPermission(CalendarPage, "calendar.view") });
+const calendarSearchSchema = z.object({
+  gkId: fallback(z.string(), "").default(""),
+});
+
+export const Route = createFileRoute("/calendar")({
+  validateSearch: zodValidator(calendarSearchSchema),
+  component: withPermission(CalendarPage, "calendar.view"),
+});
+
 
 const TONE: Record<string, "info" | "warning" | "success" | "muted" | "destructive"> = {
   "Match": "info",
@@ -16,6 +27,10 @@ const TONE: Record<string, "info" | "warning" | "success" | "muted" | "destructi
 };
 
 function CalendarPage() {
+  const { gkId } = Route.useSearch();
+  const filteredGoalkeeper = gkId ? goalkeepers.find((g) => g.id === gkId) : null;
+  const filteredEvents = gkId ? calendarEvents.filter((e) => e.gkId === gkId) : calendarEvents;
+
   const [view, setView] = useState<"month" | "week">("month");
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -27,11 +42,12 @@ function CalendarPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const eventsByDay = new Map<string, typeof calendarEvents>();
-  calendarEvents.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const k = new Date(e.date).toDateString();
     if (!eventsByDay.has(k)) eventsByDay.set(k, []);
     eventsByDay.get(k)!.push(e);
   });
+
 
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(today);
@@ -53,8 +69,24 @@ function CalendarPage() {
       />
       <DataSourceBanner classification="mock" extra="Calendar events shown here are illustrative and are not synced to any live scheduling source." />
 
+      {filteredGoalkeeper && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-accent/30 px-3 py-2">
+          <div className="text-sm">
+            <span className="text-muted-foreground">Showing events for</span>{" "}
+            <span className="font-medium text-foreground">{filteredGoalkeeper.name}</span>
+          </div>
+          <Link
+            to="/calendar"
+            search={{ gkId: "" }}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3.5" /> Clear filter
+          </Link>
+        </div>
+      )}
 
       {view === "month" ? (
+
         <Card className="p-3">
           <div className="grid grid-cols-7 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="px-2 py-1">{d}</div>)}
@@ -111,7 +143,7 @@ function CalendarPage() {
       <Card className="p-4">
         <div className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Upcoming Events</div>
         <div className="divide-y divide-border">
-          {calendarEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => (
+          {filteredEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => (
             <div key={e.id} className="flex items-center gap-3 py-2 text-sm">
               <div className="w-24 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
               <Pill tone={TONE[e.type]}>{e.type}</Pill>

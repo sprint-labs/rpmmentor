@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
-import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon, Calendar as CalendarIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
 import { ReportPreviewModal } from "@/components/report-preview-modal";
@@ -231,12 +231,18 @@ function GkDetail() {
                   </div>
                 </div>
               )}
-              <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
-                Submit a Match Report for {gk.name}
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                  Submit a Match Report for {gk.name}
+                </Link>
+                <Link to="/calendar" search={{ gkId: gk.id }} className="text-[11px] text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                  <CalendarIcon className="size-3.5" /> See upcoming matches
+                </Link>
+              </div>
             </div>
           )}
         </Card>
+
         <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Contract</div><div className="text-sm font-medium mt-1">{gk.contractUntil}</div></Card>
       </div>
 
@@ -390,13 +396,19 @@ function GkDetail() {
                               ))}
                             </div>
                           )}
-                          <Link
-                            to="/reports"
-                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
-                            className="text-primary hover:underline inline-flex items-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                          >
-                            Submit a Match Report for {gk.name}
-                          </Link>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <Link
+                              to="/reports"
+                              search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
+                              className="text-primary hover:underline inline-flex items-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                            >
+                              Submit a Match Report for {gk.name}
+                            </Link>
+                            <Link to="/calendar" search={{ gkId: gk.id }} className="text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                              <CalendarIcon className="size-3.5" /> See upcoming matches
+                            </Link>
+                          </div>
+
                         </div>
                       )}
                       {hasEnough && contributors.length > 0 && (
@@ -424,8 +436,12 @@ function GkDetail() {
                     <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="ml-1 text-primary hover:underline">
                       Submit a Match Report for {gk.name}
                     </Link>
+                    <Link to="/calendar" search={{ gkId: gk.id }} className="ml-2 text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                      <CalendarIcon className="size-3.5" /> See upcoming matches
+                    </Link>
                   </div>
                 )}
+
               </div>
             )}
           </Card>
