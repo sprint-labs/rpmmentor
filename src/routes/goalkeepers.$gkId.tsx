@@ -117,6 +117,14 @@ function GkDetail() {
     ].filter(Boolean).join("\n");
   };
 
+  const ValidityHint = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-snug">
+      <Info className="size-3.5 mt-0.5 shrink-0" />
+      <span>{children}</span>
+    </div>
+  );
+
+
   return (
     <div className="space-y-5">
       <Link to="/goalkeepers" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Goalkeepers</Link>
@@ -191,6 +199,10 @@ function GkDetail() {
                 <span className="font-medium text-foreground">{ratingContributors.length} of 5</span> scored reports available.
                 Need <span className="font-medium text-foreground">{5 - ratingContributors.length}</span> more with a valid overall score (1–5) to calculate a rating.
               </div>
+              <ValidityHint>
+                A valid scored report has an overall <span className="font-medium text-foreground">Match Rating</span> between 1 and 5.
+              </ValidityHint>
+
               {ratingContributors.length > 0 && (
                 <div>
                   <div className="text-[10px] uppercase text-muted-foreground mb-1">Available so far</div>
@@ -349,6 +361,10 @@ function GkDetail() {
                             <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
                             Need <span className="font-medium text-foreground">{5 - contributors.length}</span> more with a valid {PILLAR_LABELS[id]} score (1–5).
                           </div>
+                          <ValidityHint>
+                            A valid scored report has a <span className="font-medium text-foreground">{PILLAR_LABELS[id]}</span> score between 1 and 5.
+                          </ValidityHint>
+
                           {contributors.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {contributors.map((r) => (
