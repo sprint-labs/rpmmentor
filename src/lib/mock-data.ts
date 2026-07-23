@@ -1,7 +1,9 @@
-// GKHQ by RPM — illustrative preview dataset (Mock).
-// Seeded from the February 2026 client list for interface work only.
-// Not real operational records; every consumer surface is labelled Mock via
+// Mentor Hub by RPM — roster dataset.
+// The goalkeeper roster in SEED below is the live RPM client list.
+// Interactions, reports, media and calendar events remain illustrative until
+// wired to their live stores; consumer surfaces are labelled via
 // src/lib/data-classification.tsx.
+
 
 export type Status = "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4" | "Academy" | "Free Agent";
 // Legacy alias — many components still import Tier.
