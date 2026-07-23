@@ -126,6 +126,35 @@ function GkDetail() {
     ].filter(Boolean).join("\n");
   };
 
+  type TimelineItem =
+    | { kind: "interaction"; id: string; date: string; type: string; notes: string; outcome: string; followUp: string }
+    | { kind: "report"; id: string; date: string | null; report: MatchReportRow };
+
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const items: TimelineItem[] = [
+      ...gkInteractions.map((i) => ({
+        kind: "interaction" as const,
+        id: i.id,
+        date: i.date,
+        type: i.type,
+        notes: i.notes,
+        outcome: i.outcome,
+        followUp: i.followUp,
+      })),
+      ...gkReports.map((r) => ({
+        kind: "report" as const,
+        id: r.report_id,
+        date: r.match_date,
+        report: r,
+      })),
+    ];
+    return items.sort((a, b) => {
+      const da = a.date ? +new Date(a.date) : 0;
+      const db = b.date ? +new Date(b.date) : 0;
+      return db - da;
+    });
+  }, [gkInteractions, gkReports]);
+
   const ValidityHint = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-snug">
       <Info className="size-3.5 mt-0.5 shrink-0" />
