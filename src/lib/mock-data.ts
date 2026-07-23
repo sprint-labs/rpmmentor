@@ -312,87 +312,57 @@ const OUTCOMES = ["On track", "Above expectation", "Below expectation", "Needs f
 const FOLLOWUPS = ["Schedule video review", "Send technical drill pack", "Set up call with coach", "Plan club visit", "No action required"];
 const ITYPES: InteractionType[] = ["Live Match Observation", "Training Ground Visit", "Coffee Catch Up", "Phone Call"];
 
-export const interactions: Interaction[] = goalkeepers.flatMap((gk) => {
-  const count = gk.name === "James Beadle" || gk.name === "Corey Addai" ? between(10, 14) : between(3, 7);
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `int-${gk.id}-${i}`,
-    gkId: gk.id,
-    mentorId: gk.mentorId,
-    type: pick(ITYPES),
-    date: daysFromNow(-between(1, 110)),
-    notes: pick(NOTES),
-    outcome: pick(OUTCOMES),
-    followUp: pick(FOLLOWUPS),
-  }));
-});
+// One illustrative interaction per demo goalkeeper. Real interactions
+// arrive through the interactions store; do not seed more here.
+export const interactions: Interaction[] = goalkeepers.map((gk, i) => ({
+  id: `int-${gk.id}-demo`,
+  gkId: gk.id,
+  mentorId: gk.mentorId,
+  type: ITYPES[i % ITYPES.length],
+  date: daysFromNow(-14 - i * 7),
+  notes: NOTES[i % NOTES.length],
+  outcome: OUTCOMES[i % OUTCOMES.length],
+  followUp: FOLLOWUPS[i % FOLLOWUPS.length],
+}));
 
 // ---------- Reports ----------
 const REPORT_TYPES: ReportType[] = ["Goalkeeper Development", "Match Report", "Training Report", "Opposition GK", "Recruitment"];
-const baseReports: Report[] = Array.from({ length: 200 }).map((_, i) => {
-  const gk = goalkeepers[i % goalkeepers.length];
-  return {
-    id: `r${i + 1}`,
-    type: REPORT_TYPES[i % REPORT_TYPES.length],
-    gkId: gk.id,
-    authorId: gk.mentorId,
-    date: daysFromNow(-between(0, 120)),
-    rating: between(55, 95),
-    summary: pick(NOTES),
-    scores: {
-      handling: between(5, 10), distribution: between(5, 10), aerial: between(5, 10),
-      oneVone: between(5, 10), communication: between(5, 10),
-    },
-  };
-});
-// Extra hero reports
-const heroReports: Report[] = [];
-for (const heroName of ["James Beadle", "Corey Addai"]) {
-  const gk = goalkeepers.find((g) => g.name === heroName)!;
-  REPORT_TYPES.forEach((rt, k) => {
-    heroReports.push({
-      id: `r-hero-${gk.id}-${k}`,
-      type: rt, gkId: gk.id, authorId: gk.mentorId,
-      date: daysFromNow(-between(5, 60)),
-      rating: between(78, 92),
-      summary: gk.bio?.split(".")[0] ?? pick(NOTES),
-      scores: { handling: between(7, 10), distribution: between(7, 10), aerial: between(7, 10), oneVone: between(7, 10), communication: between(8, 10) },
-    });
-  });
-}
-export const reports: Report[] = [...heroReports, ...baseReports];
+// One illustrative report per demo goalkeeper. Real reports come from the
+// Match Reports store; empty states are shown when none exist.
+export const reports: Report[] = goalkeepers.map((gk, i) => ({
+  id: `r-demo-${gk.id}`,
+  type: REPORT_TYPES[i % REPORT_TYPES.length],
+  gkId: gk.id,
+  authorId: gk.mentorId,
+  date: daysFromNow(-10 - i * 5),
+  rating: 82 - i * 3,
+  summary: gk.bio?.split(".")[0] ?? NOTES[i % NOTES.length],
+  scores: { handling: 8, distribution: 8, aerial: 8, oneVone: 8, communication: 9 },
+}));
 
 // ---------- Media ----------
-export const media: MediaItem[] = goalkeepers.flatMap((gk) => {
-  const count = gk.name === "James Beadle" || gk.name === "Corey Addai" ? between(5, 7) : between(1, 3);
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `med-${gk.id}-${i}`,
-    gkId: gk.id,
-    kind: pick(["video", "pdf", "image", "audio"] as const),
-    title: pick(["Match clip vs derby", "Training set — handling", "Scout pack", "Voice note debrief", "Save compilation", "Match highlights", "Set-piece review", "1v1 reel"]),
-    uploadedBy: mentors.find((m) => m.id === gk.mentorId)?.name ?? "RPM",
-    date: daysFromNow(-between(1, 60)),
-    size: `${between(1, 240)}MB`,
-  }));
-});
+// One illustrative media item per demo goalkeeper.
+export const media: MediaItem[] = goalkeepers.map((gk, i) => ({
+  id: `med-${gk.id}-demo`,
+  gkId: gk.id,
+  kind: (i === 0 ? "video" : "pdf") as MediaItem["kind"],
+  title: i === 0 ? "Match highlights (demo)" : "Scout pack (demo)",
+  uploadedBy: mentors.find((m) => m.id === gk.mentorId)?.name ?? "RPM",
+  date: daysFromNow(-5 - i * 4),
+  size: `${12 + i * 30}MB`,
+}));
 
 // ---------- Calendar ----------
-export const calendarEvents: CalendarEvent[] = Array.from({ length: 42 }).map((_, i) => {
-  const gk = goalkeepers[i % goalkeepers.length];
-  return {
-    id: `cal${i + 1}`,
-    date: daysFromNow(between(-3, 28)),
-    title: pick([
-      `${gk.club} fixture`,
-      `Observation: ${gk.name}`,
-      `Mentor visit — ${gk.club}`,
-      `Quarterly review`,
-      `Follow-up call: ${gk.name}`,
-    ]),
-    type: pick(["Match", "Observation", "Mentor Visit", "Meeting", "Follow Up"] as const),
-    gkId: gk.id,
-    mentorId: gk.mentorId,
-  };
-});
+// Two illustrative events — one upcoming, one recent. Real events sync
+// externally; the calendar renders an empty state until then.
+export const calendarEvents: CalendarEvent[] = goalkeepers.slice(0, 2).map((gk, i) => ({
+  id: `cal-demo-${i + 1}`,
+  date: daysFromNow(i === 0 ? 3 : -2),
+  title: i === 0 ? `Observation: ${gk.name}` : `Mentor visit — ${gk.club}`,
+  type: i === 0 ? "Observation" : "Mentor Visit",
+  gkId: gk.id,
+  mentorId: gk.mentorId,
+}));
 
 // ---------- Alerts ----------
 export interface Alert {
@@ -403,38 +373,24 @@ export interface Alert {
   gkId?: string;
   date: string;
 }
-export const alerts: Alert[] = (() => {
-  const out: Alert[] = [];
-  goalkeepers.forEach((gk, i) => {
-    const last = (Date.now() - new Date(gk.lastInteraction).getTime()) / 86400000;
-    if (last > 30) out.push({ id: `a-o-${gk.id}`, severity: "high", kind: "Overdue observation", message: `${gk.name} — ${Math.floor(last)} days since last observation`, gkId: gk.id, date: gk.lastInteraction });
-    if (last > 21 && last <= 30) out.push({ id: `a-c-${gk.id}`, severity: "medium", kind: "Overdue contact", message: `${gk.name} — mentor contact overdue`, gkId: gk.id, date: gk.lastInteraction });
-    if (i % 9 === 0) out.push({ id: `a-m-${gk.id}`, severity: "medium", kind: "Missing report", message: `Match report missing for ${gk.club} fixture`, gkId: gk.id, date: daysFromNow(-between(1, 6)) });
-    if (i % 7 === 0) out.push({ id: `a-u-${gk.id}`, severity: "low", kind: "Upcoming match", message: `${gk.club} fixture in ${between(1, 7)} days`, gkId: gk.id, date: daysFromNow(between(1, 7)) });
-  });
-  return out.slice(0, 22);
-})();
+// Alerts are surfaced from live operational data. No mock alerts are seeded
+// here — the Alerts page shows an empty state when nothing is outstanding.
+export const alerts: Alert[] = [];
 
 // ---------- Activity feed ----------
-export const activity = Array.from({ length: 16 }).map((_, i) => {
-  const m = mentors[(i % (mentors.length - 3)) + 3]; // skip 3 directors mostly
-  const gk = goalkeepers[(i * 5) % goalkeepers.length];
-  return {
-    id: `act${i}`,
-    actor: m.name,
-    actorInitials: m.initials,
-    action: pick([
-      `submitted a ${pick(REPORT_TYPES)} report on`,
-      `logged a ${pick(ITYPES)} for`,
-      `uploaded media for`,
-      `updated the profile of`,
-      `scheduled a follow-up with`,
-    ]),
-    target: gk.name,
-    gkId: gk.id,
-    date: daysFromNow(-i / 2),
-  };
-});
+// Activity is driven by real events (report submissions, media uploads,
+// role changes). No mock entries are seeded here.
+export const activity: {
+  id: string;
+  actor: string;
+  actorInitials: string;
+  action: string;
+  target: string;
+  gkId: string;
+  date: string;
+}[] = [];
+
+
 
 // ---------- helpers ----------
 export const getMentor = (id: string) => mentors.find((m) => m.id === id);
