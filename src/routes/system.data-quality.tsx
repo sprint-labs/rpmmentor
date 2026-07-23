@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, AlertCircle, Info, CheckCircle2, Search, Download } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, CheckCircle2, Search, Download, Wrench } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
 import { goalkeepers } from "@/lib/mock-data";
 import {
   auditRoster,
   summarise,
   ISSUE_LABEL,
+  ISSUE_REMEDIATION,
   type IssueSeverity,
   type IssueCode,
   type GoalkeeperQualityReport,
