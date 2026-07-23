@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MentorsRouteImport } from './routes/mentors'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -23,6 +22,7 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportsIndexRouteImport } from './routes/reports.index'
 import { Route as SystemUsersRouteImport } from './routes/system.users'
 import { Route as SystemPermissionsRouteImport } from './routes/system.permissions'
 import { Route as SystemIntegrationsRouteImport } from './routes/system.integrations'
@@ -36,11 +36,6 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentorsRoute = MentorsRouteImport.update({
@@ -103,6 +98,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsIndexRoute = ReportsIndexRouteImport.update({
+  id: '/reports/',
+  path: '/reports/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SystemUsersRoute = SystemUsersRouteImport.update({
   id: '/system/users',
   path: '/system/users',
@@ -119,9 +119,9 @@ const SystemIntegrationsRoute = SystemIntegrationsRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsReportIdRoute = ReportsReportIdRouteImport.update({
-  id: '/$reportId',
-  path: '/$reportId',
-  getParentRoute: () => ReportsRoute,
+  id: '/reports/$reportId',
+  path: '/reports/$reportId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GoalkeepersGkIdRoute = GoalkeepersGkIdRouteImport.update({
   id: '/$gkId',
@@ -165,7 +165,6 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -174,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
+  '/reports/': typeof ReportsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -190,7 +190,6 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -199,6 +198,7 @@ export interface FileRoutesByTo {
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
+  '/reports': typeof ReportsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -216,7 +216,6 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/media': typeof MediaRoute
   '/mentors': typeof MentorsRoute
-  '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -225,6 +224,7 @@ export interface FileRoutesById {
   '/system/integrations': typeof SystemIntegrationsRoute
   '/system/permissions': typeof SystemPermissionsRoute
   '/system/users': typeof SystemUsersRoute
+  '/reports/': typeof ReportsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -243,7 +243,6 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/media'
     | '/mentors'
-    | '/reports'
     | '/reset-password'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -252,6 +251,7 @@ export interface FileRouteTypes {
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
+    | '/reports/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
   fileRoutesByTo: FileRoutesByTo
@@ -268,7 +268,6 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/media'
     | '/mentors'
-    | '/reports'
     | '/reset-password'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -277,6 +276,7 @@ export interface FileRouteTypes {
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
+    | '/reports'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
   id:
@@ -293,7 +293,6 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/media'
     | '/mentors'
-    | '/reports'
     | '/reset-password'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -302,6 +301,7 @@ export interface FileRouteTypes {
     | '/system/integrations'
     | '/system/permissions'
     | '/system/users'
+    | '/reports/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
   fileRoutesById: FileRoutesById
@@ -319,13 +319,14 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   MediaRoute: typeof MediaRoute
   MentorsRoute: typeof MentorsRoute
-  ReportsRoute: typeof ReportsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ReportsReportIdRoute: typeof ReportsReportIdRoute
   SystemIntegrationsRoute: typeof SystemIntegrationsRoute
   SystemPermissionsRoute: typeof SystemPermissionsRoute
   SystemUsersRoute: typeof SystemUsersRoute
+  ReportsIndexRoute: typeof ReportsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -337,13 +338,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentors': {
@@ -430,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports/': {
+      id: '/reports/'
+      path: '/reports'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof ReportsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/system/users': {
       id: '/system/users'
       path: '/system/users'
@@ -453,10 +454,10 @@ declare module '@tanstack/react-router' {
     }
     '/reports/$reportId': {
       id: '/reports/$reportId'
-      path: '/$reportId'
+      path: '/reports/$reportId'
       fullPath: '/reports/$reportId'
       preLoaderRoute: typeof ReportsReportIdRouteImport
-      parentRoute: typeof ReportsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/goalkeepers/$gkId': {
       id: '/goalkeepers/$gkId'
@@ -508,17 +509,6 @@ const GoalkeepersRouteWithChildren = GoalkeepersRoute._addFileChildren(
   GoalkeepersRouteChildren,
 )
 
-interface ReportsRouteChildren {
-  ReportsReportIdRoute: typeof ReportsReportIdRoute
-}
-
-const ReportsRouteChildren: ReportsRouteChildren = {
-  ReportsReportIdRoute: ReportsReportIdRoute,
-}
-
-const ReportsRouteWithChildren =
-  ReportsRoute._addFileChildren(ReportsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -532,14 +522,15 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   MediaRoute: MediaRoute,
   MentorsRoute: MentorsRoute,
-  ReportsRoute: ReportsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ReportsReportIdRoute: ReportsReportIdRoute,
   SystemIntegrationsRoute: SystemIntegrationsRoute,
   SystemPermissionsRoute: SystemPermissionsRoute,
   SystemUsersRoute: SystemUsersRoute,
+  ReportsIndexRoute: ReportsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
