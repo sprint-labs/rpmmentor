@@ -217,8 +217,8 @@ function GkDetail() {
                 <div className="text-[11px] text-muted-foreground leading-snug">
                   Pillar means are calculated from valid 1–5 scores across the last 5 match reports.
                 </div>
-                <Link to="/reports" className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
-                  Submit a Match Report
+                <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                  Submit a Match Report for {gk.name}
                 </Link>
               </div>
             ) : (
