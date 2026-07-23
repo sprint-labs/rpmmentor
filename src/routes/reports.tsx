@@ -96,6 +96,25 @@ function ReportsPage() {
     return ["All", ...Array.from(s).sort()];
   }, [reports]);
 
+  const goalkeepers = useMemo(() => {
+    const s = new Set<string>();
+    reports.forEach((r) => r.goalkeeper && s.add(r.goalkeeper));
+    return Array.from(s).sort();
+  }, [reports]);
+
+  // The set of report IDs that are actually included in the last-5 averages for
+  // the selected goalkeeper — matches the logic on the goalkeeper profile.
+  const last5Ids = useMemo(() => {
+    if (!last5Gk) return null;
+    const target = normaliseName(last5Gk);
+    const ids = reports
+      .filter((r) => normaliseName(r.goalkeeper) === target)
+      .sort((a, b) => compareMatchDatesNewestFirst(a.match_date, b.match_date))
+      .slice(0, 5)
+      .map((r) => r.report_id);
+    return new Set(ids);
+  }, [reports, last5Gk]);
+
   const filtered = useMemo(() => {
     let list = coachFilter === "All" ? reports : reports.filter((r) => r.coach === coachFilter);
     if (from && to) {
@@ -107,11 +126,12 @@ function ReportsPage() {
         return t >= start && t <= end;
       });
     }
+    if (last5Ids) list = list.filter((r) => last5Ids.has(r.report_id));
     return list;
-  }, [reports, coachFilter, from, to]);
+  }, [reports, coachFilter, from, to, last5Ids]);
 
-  const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "" };
+  const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to)) || Boolean(last5Gk);
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "", last5Gk: "" };
 
   return (
     <div className="space-y-5">
