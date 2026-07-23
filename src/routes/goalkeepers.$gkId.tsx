@@ -133,6 +133,7 @@ function GkDetail() {
           {averageRating == null && !isLoading && !isError && (
             <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
               A rating appears once match reports with valid overall scores (1–5) are recorded.
+              <Link to="/reports" className="ml-1 text-primary hover:underline">Submit a Match Report</Link>
             </div>
           )}
         </Card>
@@ -211,11 +212,14 @@ function GkDetail() {
             ) : isError ? (
               <div className="text-xs text-destructive py-2">Couldn't load skill scores.</div>
             ) : gkReports.length === 0 ? (
-              <div className="space-y-1 py-2">
+              <div className="space-y-1.5 py-2">
                 <div className="text-xs text-muted-foreground italic">No skill scores available</div>
                 <div className="text-[11px] text-muted-foreground leading-snug">
                   Pillar means are calculated from valid 1–5 scores across the last 5 match reports.
                 </div>
+                <Link to="/reports" className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                  Submit a Match Report
+                </Link>
               </div>
             ) : (
               <div className="space-y-2.5">
