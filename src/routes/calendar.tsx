@@ -181,15 +181,36 @@ function CalendarPage() {
                         // Title format: "GK vs Opponent" — extract opponent.
                         const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
                         return (
-                          <Link
-                            key={e.id}
-                            to="/reports"
-                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
-                            className={cls + " hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
-                            title={`Submit match report for ${e.title} on ${iso}`}
-                          >
-                            {e.title}
-                          </Link>
+                          <div key={e.id}>
+                            <Link
+                              to="/reports"
+                              search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
+                              className={cls + " hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+                              title={`Submit match report for ${e.title} on ${iso}`}
+                            >
+                              {e.title}
+                            </Link>
+                            <MissingReports
+                              gkId={e.gkId}
+                              gkName={gkForEvent?.name}
+                              referenceDate={new Date(e.date)}
+                              variant="compact"
+                            />
+                          </div>
+                        );
+                      }
+                      if (e.gkId) {
+                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
+                        return (
+                          <div key={e.id}>
+                            <div className={cls}>{e.title}</div>
+                            <MissingReports
+                              gkId={e.gkId}
+                              gkName={gkForEvent?.name}
+                              referenceDate={new Date(e.date)}
+                              variant="compact"
+                            />
+                          </div>
                         );
                       }
                       return <div key={e.id} className={cls}>{e.title}</div>;
