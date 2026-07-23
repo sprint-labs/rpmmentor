@@ -791,8 +791,39 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                       {editing ? "Hide confidence view" : "Show confidence view"}
                     </button>
                   )}
+                  {audioUrl && timedSentences.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTimestamps((v) => !v)}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                      aria-pressed={showTimestamps}
+                    >
+                      {showTimestamps ? "Hide timestamps" : "Show timestamps"}
+                    </button>
+                  )}
                 </div>
               </div>
+              {showTimestamps && audioUrl && timedSentences.length > 0 && (
+                <div className="bg-muted/40 border border-border rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                  <div className="text-[10px] text-muted-foreground mb-1">Approximate timings — click a sentence to jump the audio to that point.</div>
+                  {timedSentences.map((s, i) => {
+                    const active = currentTime >= s.start && currentTime < s.end;
+                    return (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => seekTo(s.start)}
+                        className={`w-full text-left flex gap-2 items-start text-xs rounded-sm px-1.5 py-1 hover:bg-accent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary ${active ? "bg-primary/10 border-l-2 border-primary" : ""}`}
+                        aria-label={`Jump to ${fmtTs(s.start)}: ${s.text}`}
+                      >
+                        <span className="font-mono tabular-nums text-[10px] text-primary shrink-0 mt-0.5">{fmtTs(s.start)}</span>
+                        <span className="text-foreground leading-relaxed">{s.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {editing && tokens.length > 0 && (
                 <div className="text-xs whitespace-pre-wrap bg-muted/40 border border-border rounded-md p-2 max-h-32 overflow-y-auto leading-relaxed">
                   {tokens.map((t, i) => {
