@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon, Calendar as CalendarIcon } from "lucide-react";
