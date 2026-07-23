@@ -267,10 +267,14 @@ function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOppone
       setDraftSavedAt(d.savedAt);
       setDraftRestoredFrom(d.savedAt);
       setSaveStatus("saved");
-      // Prefill overrides an empty goalkeeper on the restored draft.
+      // Prefill overrides empty fields on the restored draft.
       if (prefillGoalkeeper && !d.goalkeeper) setGoalkeeper(prefillGoalkeeper);
+      if (prefillMatchDate && !d.matchDate) setMatchDate(prefillMatchDate);
+      if (prefillOpponent && !d.opponent) setOpponent(prefillOpponent);
     } else {
       if (prefillGoalkeeper) setGoalkeeper(prefillGoalkeeper);
+      if (prefillMatchDate) setMatchDate(prefillMatchDate);
+      if (prefillOpponent) setOpponent(prefillOpponent);
       setSaveStatus("idle");
     }
     setDraftLoaded(true);
