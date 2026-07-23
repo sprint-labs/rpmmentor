@@ -406,13 +406,27 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
 
 
 
-  const handleApply = (mode: "append" | "replace") => {
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [pendingApply, setPendingApply] = useState<null | "append" | "replace">(null);
+
+  const requestApply = (mode: "append" | "replace") => {
     if (!reviewed) {
       toast.error("Review the transcript first — tick 'I've reviewed this' below.");
       return;
     }
-    onTranscribed(transcript ?? "", mode);
+    if (isEditingText) {
+      toast.error("Finish editing the transcript first — click outside the editor to continue.");
+      return;
+    }
+    if (!transcript.trim()) return;
+    setPendingApply(mode);
+  };
+
+  const confirmApply = () => {
+    if (!pendingApply) return;
+    onTranscribed(transcript ?? "", pendingApply);
     void attachAudio();
+    setPendingApply(null);
   };
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
