@@ -258,7 +258,7 @@ function ReportsPage() {
       </Card>
 
       <SectionTitle>Showing {Math.min(100, filtered.length)} of {filtered.length}</SectionTitle>
-      <WorkflowDialog kind={workflow} onClose={() => setWorkflow(null)} />
+      <WorkflowDialog kind={workflow} onClose={() => { setWorkflow(null); setPrefillGoalkeeper(""); }} prefillGoalkeeper={prefillGoalkeeper} />
     </div>
   );
 }
