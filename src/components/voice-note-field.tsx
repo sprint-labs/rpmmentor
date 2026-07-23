@@ -105,7 +105,11 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showTimestamps, setShowTimestamps] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+
 
   const run = useServerFn(transcribeVoiceNote);
   const busy = phase !== "idle";
