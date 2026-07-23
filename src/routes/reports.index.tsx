@@ -23,6 +23,8 @@ const reportsSearchSchema = z.object({
   gk: fallback(z.string(), "").default(""),
   openSubmit: fallback(z.string(), "").default(""),
   last5Gk: fallback(z.string(), "").default(""),
+  matchDate: fallback(z.string(), "").default(""),
+  opponent: fallback(z.string(), "").default(""),
 });
 
 function normaliseName(s: string): string {
