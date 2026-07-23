@@ -514,7 +514,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       {(audioUrl || transcript) && (
         <div className="flex flex-col gap-2">
           {audioUrl ? (
-            <audio src={audioUrl} controls className="w-full h-8" />
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              controls
+              className="w-full h-8"
+              onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
+            />
+
           ) : restoredFromDraft ? (
             <div className="text-[11px] text-muted-foreground italic border border-dashed border-border rounded-md p-2">
               Transcript restored from your saved draft. The original audio isn't kept in the draft — re-record to update it.
