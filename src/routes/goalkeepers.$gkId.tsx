@@ -316,9 +316,18 @@ function GkDetail() {
                       </div>
                       {hasEnough && <ProgressBar value={v != null ? (v / 5) * 100 : 0} />}
                       {!hasEnough && (
-                        <div className="text-[11px] text-muted-foreground leading-snug mt-1">
-                          <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
-                          A pillar average appears once 5 valid 1–5 scores are recorded.
+                        <div className="text-[11px] text-muted-foreground leading-snug mt-1 space-y-1">
+                          <div>
+                            <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
+                            A pillar average appears once 5 valid 1–5 scores are recorded.
+                          </div>
+                          <Link
+                            to="/reports"
+                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
+                            className="text-primary hover:underline inline-flex items-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          >
+                            Submit a Match Report for {gk.name}
+                          </Link>
                         </div>
                       )}
                       {hasEnough && contributors.length > 0 && (
