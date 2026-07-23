@@ -133,6 +133,7 @@ function GkDetail() {
           {averageRating == null && !isLoading && !isError && (
             <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
               A rating appears once match reports with valid overall scores (1–5) are recorded.
+              <Link to="/reports" className="ml-1 text-primary hover:underline">Submit a Match Report</Link>
             </div>
           )}
         </Card>
