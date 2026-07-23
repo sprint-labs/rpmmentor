@@ -294,20 +294,44 @@ function GkDetail() {
         <Card className="lg:col-span-2 p-4">
           <SectionTitle>Activity Timeline</SectionTitle>
           <div className="relative pl-5 space-y-3 before:absolute before:left-1.5 before:top-1 before:bottom-1 before:w-px before:bg-border">
-            {gkInteractions.map((i) => {
-              const Icon = TYPE_ICON[i.type] ?? FileText;
-              return (
-                <div key={i.id} className="relative">
-                  <div className="absolute -left-[15px] top-1 size-3 rounded-full bg-primary ring-4 ring-background" />
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5 text-sm font-medium"><Icon className="size-3.5 text-muted-foreground" />{i.type}</div>
-                    <div className="text-[11px] text-muted-foreground tabular-nums font-mono">{formatDate(i.date)} · {formatRelative(i.date)}</div>
+            {timelineItems.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic py-2">No activity recorded yet.</div>
+            ) : (
+              timelineItems.map((item) => {
+                if (item.kind === "report") {
+                  const r = item.report;
+                  return (
+                    <div key={item.id} className="relative">
+                      <div className="absolute -left-[15px] top-1 size-3 rounded-full bg-success ring-4 ring-background" />
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-sm font-medium"><FileText className="size-3.5 text-muted-foreground" />Match Report</div>
+                        <div className="text-[11px] text-muted-foreground tabular-nums font-mono">{r.match_date ? formatDate(r.match_date) : "undated"} · {r.match_date ? formatRelative(r.match_date) : formatRelative(new Date().toISOString())}</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-0.5">
+                        {r.opponent ? `Match report vs ${r.opponent}` : "Match report submitted"}
+                        {r.competition ? ` · ${r.competition}` : ""}
+                      </div>
+                      <div className="flex gap-1.5 mt-1.5">
+                        {r.average != null && <Pill tone="success">Avg {r.average.toFixed(1)}/5</Pill>}
+                        {r.coach && <Pill tone="info">{r.coach}</Pill>}
+                      </div>
+                    </div>
+                  );
+                }
+                const Icon = TYPE_ICON[item.type] ?? FileText;
+                return (
+                  <div key={item.id} className="relative">
+                    <div className="absolute -left-[15px] top-1 size-3 rounded-full bg-primary ring-4 ring-background" />
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-sm font-medium"><Icon className="size-3.5 text-muted-foreground" />{item.type}</div>
+                      <div className="text-[11px] text-muted-foreground tabular-nums font-mono">{formatDate(item.date)} · {formatRelative(item.date)}</div>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{item.notes}</div>
+                    <div className="flex gap-1.5 mt-1.5"><Pill>{item.outcome}</Pill><Pill tone="info">↳ {item.followUp}</Pill></div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-0.5">{i.notes}</div>
-                  <div className="flex gap-1.5 mt-1.5"><Pill>{i.outcome}</Pill><Pill tone="info">↳ {i.followUp}</Pill></div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </Card>
 
