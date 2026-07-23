@@ -396,13 +396,19 @@ function GkDetail() {
                               ))}
                             </div>
                           )}
-                          <Link
-                            to="/reports"
-                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
-                            className="text-primary hover:underline inline-flex items-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                          >
-                            Submit a Match Report for {gk.name}
-                          </Link>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <Link
+                              to="/reports"
+                              search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
+                              className="text-primary hover:underline inline-flex items-center gap-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                            >
+                              Submit a Match Report for {gk.name}
+                            </Link>
+                            <Link to="/calendar" search={{ gkId: gk.id }} className="text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                              <CalendarIcon className="size-3.5" /> See upcoming matches
+                            </Link>
+                          </div>
+
                         </div>
                       )}
                       {hasEnough && contributors.length > 0 && (
