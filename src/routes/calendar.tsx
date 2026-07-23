@@ -27,6 +27,10 @@ const TONE: Record<string, "info" | "warning" | "success" | "muted" | "destructi
 };
 
 function CalendarPage() {
+  const { gkId } = Route.useSearch();
+  const filteredGoalkeeper = gkId ? goalkeepers.find((g) => g.id === gkId) : null;
+  const filteredEvents = gkId ? calendarEvents.filter((e) => e.gkId === gkId) : calendarEvents;
+
   const [view, setView] = useState<"month" | "week">("month");
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -38,11 +42,12 @@ function CalendarPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const eventsByDay = new Map<string, typeof calendarEvents>();
-  calendarEvents.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const k = new Date(e.date).toDateString();
     if (!eventsByDay.has(k)) eventsByDay.set(k, []);
     eventsByDay.get(k)!.push(e);
   });
+
 
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(today);
