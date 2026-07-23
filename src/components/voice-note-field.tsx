@@ -929,8 +929,74 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                       {showTimestamps ? "Hide timestamps" : "Show timestamps"}
                     </button>
                   )}
+                  {(original || versions.length > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowHistory((v) => !v)}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                      aria-pressed={showHistory}
+                    >
+                      {showHistory ? "Hide history" : `History (${1 + versions.length})`}
+                    </button>
+                  )}
                 </div>
               </div>
+              {showHistory && (original || versions.length > 0) && (
+                <div className="bg-muted/40 border border-border rounded-md p-2 max-h-56 overflow-y-auto space-y-1.5" aria-label="Transcript version history">
+                  <div className="text-[10px] text-muted-foreground">
+                    The AI original is preserved. Each auto-saved edit and save is timestamped. Reverting replaces the current text and records a new version.
+                  </div>
+                  {[...(original ? [original] : []), ...versions].map((v, i, arr) => {
+                    const isCurrent = i === arr.length - 1 && transcript === v.text;
+                    const badgeClass =
+                      v.source === "ai"
+                        ? "bg-primary/15 text-primary border-primary/30"
+                        : v.source === "saved"
+                        ? "bg-success/15 text-success border-success/30"
+                        : "bg-amber-500/15 text-foreground border-amber-500/30";
+                    return (
+                      <div key={`${v.at}-${i}`} className="rounded-sm border border-border bg-background p-1.5 space-y-1">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center h-4 px-1 rounded-sm border text-[9px] font-mono uppercase tracking-wider ${badgeClass}`}>
+                              {v.label ?? v.source}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
+                              {new Date(v.at).toLocaleString()}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">current</span>
+                            )}
+                          </div>
+                          {!isCurrent && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const now = new Date().toISOString();
+                                setVersions((prev) => [
+                                  ...prev,
+                                  { at: now, text: v.text, source: "edit", label: `Reverted to ${v.label ?? v.source}` },
+                                ].slice(-20));
+                                setTranscript(v.text);
+                                setTokens([]);
+                                setAvgConfidence(null);
+                                setReviewed(false);
+                                toast.success("Reverted to earlier version");
+                              }}
+                              className="inline-flex items-center h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                            >
+                              Revert
+                            </button>
+                          )}
+                        </div>
+                        <div className="text-[11px] font-mono leading-relaxed whitespace-pre-wrap text-foreground/90">
+                          {v.text.length > 200 ? `${v.text.slice(0, 200)}…` : v.text}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               {showTimestamps && audioUrl && timedSentences.length > 0 && (
                 <div className="bg-muted/40 border border-border rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
                   <div className="text-[10px] text-muted-foreground mb-1">Approximate timings — click a sentence to jump the audio to that point.</div>
