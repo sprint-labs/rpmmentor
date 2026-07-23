@@ -144,12 +144,35 @@ function CalendarPage() {
                   <div className="text-[10px] uppercase text-muted-foreground">{d.toLocaleDateString("en", { weekday: "short" })}</div>
                   <div className={`text-lg font-semibold tabular-nums font-mono ${isToday ? "text-primary" : ""}`}>{d.getDate()}</div>
                   <div className="space-y-1.5 mt-2">
-                    {events.map((e) => (
-                      <div key={e.id} className="text-[11px] p-1.5 rounded bg-accent/40 border border-border/60">
-                        <div className="font-medium leading-tight line-clamp-2">{e.title}</div>
-                        <div className="mt-1"><Pill tone={TONE[e.type]}>{e.type}</Pill></div>
-                      </div>
-                    ))}
+                    {events.map((e) => {
+                      const inner = (
+                        <>
+                          <div className="font-medium leading-tight line-clamp-2">{e.title}</div>
+                          <div className="mt-1"><Pill tone={TONE[e.type]}>{e.type}</Pill></div>
+                        </>
+                      );
+                      if (e.type === "Match" && e.gkId) {
+                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
+                        const iso = new Date(e.date).toISOString().slice(0, 10);
+                        const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
+                        return (
+                          <Link
+                            key={e.id}
+                            to="/reports"
+                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
+                            className="block text-[11px] p-1.5 rounded bg-accent/40 border border-border/60 hover:bg-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            title={`Submit match report for ${e.title} on ${iso}`}
+                          >
+                            {inner}
+                          </Link>
+                        );
+                      }
+                      return (
+                        <div key={e.id} className="text-[11px] p-1.5 rounded bg-accent/40 border border-border/60">
+                          {inner}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
