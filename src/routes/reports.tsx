@@ -83,7 +83,7 @@ function ReportsPage() {
       // Strip the one-shot params so a refresh doesn't reopen the dialog.
       router.navigate({
         to: "/reports",
-        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "" },
+        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk },
         replace: true,
       });
     }
