@@ -47,11 +47,20 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
+interface TranscriptVersion {
+  at: string;
+  text: string;
+  source: "ai" | "edit" | "saved";
+  label?: string;
+}
+
 interface VoiceDraft {
   transcript: string;
   tokens: Array<{ token: string; confidence: number }>;
   avgConfidence: number | null;
   reviewed: boolean;
+  original?: TranscriptVersion | null;
+  versions?: TranscriptVersion[];
 }
 
 interface AttemptLogEntry {
@@ -79,6 +88,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>(draft?.tokens ?? []);
   const [avgConfidence, setAvgConfidence] = useState<number | null>(draft?.avgConfidence ?? null);
   const [reviewed, setReviewed] = useState<boolean>(draft?.reviewed ?? false);
+  const [original, setOriginal] = useState<TranscriptVersion | null>(draft?.original ?? null);
+  const [versions, setVersions] = useState<TranscriptVersion[]>(draft?.versions ?? []);
+  const [showHistory, setShowHistory] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -187,9 +199,33 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   useEffect(() => {
     if (!onDraftChange) return;
     if (transcript == null) onDraftChange(null);
-    else onDraftChange({ transcript, tokens, avgConfidence, reviewed });
+    else onDraftChange({ transcript, tokens, avgConfidence, reviewed, original, versions });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcript, tokens, avgConfidence, reviewed]);
+  }, [transcript, tokens, avgConfidence, reviewed, original, versions]);
+
+  // Debounced edit versioning: 3s after the last edit, snapshot the current transcript
+  // as a new version if it differs from the most recent recorded version and from the original.
+  useEffect(() => {
+    if (transcript == null || !original) return;
+    const latest = versions.length > 0 ? versions[versions.length - 1].text : original.text;
+    if (transcript === latest) return;
+    const t = setTimeout(() => {
+      setVersions((prev) => {
+        const lastText = prev.length > 0 ? prev[prev.length - 1].text : original.text;
+        if (transcript === lastText) return prev;
+        const next: TranscriptVersion = {
+          at: new Date().toISOString(),
+          text: transcript,
+          source: "edit",
+          label: "Auto-saved edit",
+        };
+        // Cap at 20 to keep localStorage payload sensible.
+        return [...prev, next].slice(-20);
+      });
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [transcript, original, versions]);
+
 
   // Tick every 500ms while a retry cooldown is active so the countdown updates.
   useEffect(() => {
@@ -223,6 +259,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
     setTokens([]);
     setAvgConfidence(null);
     setReviewed(false);
+    setOriginal(null);
+    setVersions([]);
+    setShowHistory(false);
     setErrorMsg(null);
     setPhase("idle");
     setPhaseElapsed(0);
@@ -292,6 +331,13 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
         setTranscript(result.text);
         setTokens(result.tokens ?? []);
         setAvgConfidence(result.avgConfidence ?? null);
+        setOriginal({
+          at: new Date().toISOString(),
+          text: result.text,
+          source: "ai",
+          label: "AI original",
+        });
+        setVersions([]);
         logAttempt("success");
         toast.success("Voice note transcribed — review before applying");
       }
@@ -476,7 +522,23 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
 
   const confirmApply = () => {
     if (!pendingApply) return;
-    onTranscribed(transcript ?? "", pendingApply);
+    const text = transcript ?? "";
+    // Snapshot the exact text at save-time as an immutable "saved" version.
+    setVersions((prev) => {
+      const lastText = prev.length > 0 ? prev[prev.length - 1].text : original?.text ?? "";
+      const entry: TranscriptVersion = {
+        at: new Date().toISOString(),
+        text,
+        source: "saved",
+        label: pendingApply === "append" ? "Saved (append)" : "Saved (replace)",
+      };
+      if (text === lastText) {
+        // Same text — still record the save event so history reflects the action.
+        return [...prev, entry].slice(-20);
+      }
+      return [...prev, entry].slice(-20);
+    });
+    onTranscribed(text, pendingApply);
     void attachAudio();
     setPendingApply(null);
   };
@@ -867,8 +929,74 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                       {showTimestamps ? "Hide timestamps" : "Show timestamps"}
                     </button>
                   )}
+                  {(original || versions.length > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowHistory((v) => !v)}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                      aria-pressed={showHistory}
+                    >
+                      {showHistory ? "Hide history" : `History (${1 + versions.length})`}
+                    </button>
+                  )}
                 </div>
               </div>
+              {showHistory && (original || versions.length > 0) && (
+                <div className="bg-muted/40 border border-border rounded-md p-2 max-h-56 overflow-y-auto space-y-1.5" aria-label="Transcript version history">
+                  <div className="text-[10px] text-muted-foreground">
+                    The AI original is preserved. Each auto-saved edit and save is timestamped. Reverting replaces the current text and records a new version.
+                  </div>
+                  {[...(original ? [original] : []), ...versions].map((v, i, arr) => {
+                    const isCurrent = i === arr.length - 1 && transcript === v.text;
+                    const badgeClass =
+                      v.source === "ai"
+                        ? "bg-primary/15 text-primary border-primary/30"
+                        : v.source === "saved"
+                        ? "bg-success/15 text-success border-success/30"
+                        : "bg-amber-500/15 text-foreground border-amber-500/30";
+                    return (
+                      <div key={`${v.at}-${i}`} className="rounded-sm border border-border bg-background p-1.5 space-y-1">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center h-4 px-1 rounded-sm border text-[9px] font-mono uppercase tracking-wider ${badgeClass}`}>
+                              {v.label ?? v.source}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-mono tabular-nums">
+                              {new Date(v.at).toLocaleString()}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">current</span>
+                            )}
+                          </div>
+                          {!isCurrent && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const now = new Date().toISOString();
+                                setVersions((prev) => [
+                                  ...prev,
+                                  { at: now, text: v.text, source: "edit" as const, label: `Reverted to ${v.label ?? v.source}` },
+                                ].slice(-20));
+                                setTranscript(v.text);
+                                setTokens([]);
+                                setAvgConfidence(null);
+                                setReviewed(false);
+                                toast.success("Reverted to earlier version");
+                              }}
+                              className="inline-flex items-center h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                            >
+                              Revert
+                            </button>
+                          )}
+                        </div>
+                        <div className="text-[11px] font-mono leading-relaxed whitespace-pre-wrap text-foreground/90">
+                          {v.text.length > 200 ? `${v.text.slice(0, 200)}…` : v.text}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               {showTimestamps && audioUrl && timedSentences.length > 0 && (
                 <div className="bg-muted/40 border border-border rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
                   <div className="text-[10px] text-muted-foreground mb-1">Approximate timings — click a sentence to jump the audio to that point.</div>
