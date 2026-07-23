@@ -46,6 +46,7 @@ function GkDetail() {
   const { gk } = Route.useLoaderData();
   const gkInteractions = interactions.filter((i) => i.gkId === gk.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
   const gkMedia = media.filter((m) => m.gkId === gk.id);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const listFn = useServerFn(listMatchReports);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
