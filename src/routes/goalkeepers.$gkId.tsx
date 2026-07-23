@@ -68,20 +68,38 @@ function GkDetail() {
     return Math.round(mean * 10) / 10;
   }, [gkReports]);
 
+  const ratingContributors = useMemo(
+    () => gkReports.filter((r) => isValidScore(r.average)),
+    [gkReports],
+  );
+
+  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
+
   const pillarAverages = useMemo(() => {
-    const last5 = gkReports.slice(0, 5);
     const out: Record<PillarId, number | null> = {
       protect_goal: null, protect_space: null, protect_air: null,
       control_play: null, change_play: null, psych: null, physical: null,
     };
     for (const id of PILLAR_IDS) {
-      const vals = last5
-        .map((r) => r.scores[id])
-        .filter(isValidScore);
+      const vals = last5.map((r) => r.scores[id]).filter(isValidScore);
       out[id] = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null;
     }
     return out;
-  }, [gkReports]);
+  }, [last5]);
+
+  const pillarContributors = useMemo(() => {
+    const out: Record<PillarId, MatchReportRow[]> = {
+      protect_goal: [], protect_space: [], protect_air: [],
+      control_play: [], change_play: [], psych: [], physical: [],
+    };
+    for (const id of PILLAR_IDS) {
+      out[id] = last5.filter((r) => isValidScore(r.scores[id]));
+    }
+    return out;
+  }, [last5]);
+
+  const reportRef = (r: MatchReportRow) =>
+    `${r.match_date ? formatDate(r.match_date) : "undated"} · ${r.opponent?.trim() || "opponent TBC"}`;
 
   return (
     <div className="space-y-5">
@@ -130,6 +148,26 @@ function GkDetail() {
               : averageRating != null ? `${averageRating.toFixed(1)}/5`
               : <span className="text-muted-foreground text-sm font-sans font-normal">No valid rating</span>}
           </div>
+          {averageRating != null && ratingContributors.length > 0 && (
+            <div className="mt-1.5">
+              <div className="text-[10px] uppercase text-muted-foreground mb-1">
+                Included ({ratingContributors.length})
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {ratingContributors.map((r) => (
+                  <Link
+                    key={r.report_id}
+                    to="/reports/$reportId"
+                    params={{ reportId: r.report_id }}
+                    title={`Overall ${r.average!.toFixed(1)}/5`}
+                    className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                  >
+                    {reportRef(r)}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
           {averageRating == null && !isLoading && !isError && (
             <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
               A rating appears once match reports with valid overall scores (1–5) are recorded.
@@ -222,18 +260,40 @@ function GkDetail() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
+                <div className="text-[10px] uppercase text-muted-foreground">
+                  Pool of last {last5.length} report{last5.length === 1 ? "" : "s"}:
+                  <span className="ml-1 normal-case text-muted-foreground/80 tracking-normal">
+                    {last5.map(reportRef).join(" · ")}
+                  </span>
+                </div>
                 {PILLAR_IDS.map((id) => {
                   const v = pillarAverages[id];
+                  const contributors = pillarContributors[id];
                   return (
                     <div key={id}>
                       <div className="flex justify-between text-[11px] mb-1">
                         <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
                         <span className="tabular-nums font-mono font-medium">
-                          {v != null ? `${v.toFixed(1)}/5` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
+                          {v != null ? `${v.toFixed(1)}/5 (${contributors.length}/${last5.length})` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
                         </span>
                       </div>
                       <ProgressBar value={v != null ? (v / 5) * 100 : 0} />
+                      {contributors.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {contributors.map((r) => (
+                            <Link
+                              key={r.report_id}
+                              to="/reports/$reportId"
+                              params={{ reportId: r.report_id }}
+                              title={`Score ${r.scores[id]}/5`}
+                              className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
+                            >
+                              {reportRef(r)}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
