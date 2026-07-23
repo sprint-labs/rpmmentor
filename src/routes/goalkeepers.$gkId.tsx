@@ -101,6 +101,20 @@ function GkDetail() {
   const reportRef = (r: MatchReportRow) =>
     `${r.match_date ? formatDate(r.match_date) : "undated"} · ${r.opponent?.trim() || "opponent TBC"}`;
 
+  /** Multi-line tooltip: date, opponent, and which pillars have valid 1–5 scores. */
+  const reportTooltip = (r: MatchReportRow, extra?: string) => {
+    const validPillars = PILLAR_IDS.filter((id) => isValidScore(r.scores[id]));
+    const pillarLine = validPillars.length
+      ? `Valid pillars (${validPillars.length}/${PILLAR_IDS.length}): ${validPillars.map((id) => `${PILLAR_LABELS[id]} ${r.scores[id]}/5`).join(", ")}`
+      : "No valid pillar scores (1–5) on this report";
+    return [
+      `Date: ${r.match_date ? formatDate(r.match_date) : "not recorded"}`,
+      `Opponent: ${r.opponent?.trim() || "not recorded"}`,
+      pillarLine,
+      extra ?? "",
+    ].filter(Boolean).join("\n");
+  };
+
   return (
     <div className="space-y-5">
       <Link to="/goalkeepers" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Goalkeepers</Link>
