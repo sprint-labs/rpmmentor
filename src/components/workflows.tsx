@@ -85,7 +85,7 @@ const TITLES: Record<WorkflowKind, string> = {
   goalkeeper: "Add Goalkeeper",
 };
 
-export function WorkflowDialog({ kind, onClose, prefillGoalkeeper }: { kind: WorkflowKind | null; onClose: () => void; prefillGoalkeeper?: string }) {
+export function WorkflowDialog({ kind, onClose, prefillGoalkeeper, prefillMatchDate, prefillOpponent }: { kind: WorkflowKind | null; onClose: () => void; prefillGoalkeeper?: string; prefillMatchDate?: string; prefillOpponent?: string }) {
   if (!kind) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm p-4" onClick={onClose}>
