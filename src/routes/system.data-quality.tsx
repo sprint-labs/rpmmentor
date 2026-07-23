@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, AlertCircle, Info, CheckCircle2, Search, Download } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, CheckCircle2, Search, Download, Wrench } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
 import { goalkeepers } from "@/lib/mock-data";
 import {
   auditRoster,
   summarise,
   ISSUE_LABEL,
+  ISSUE_REMEDIATION,
   type IssueSeverity,
   type IssueCode,
   type GoalkeeperQualityReport,
@@ -290,20 +291,46 @@ function ReportCard({ report }: { report: GoalkeeperQualityReport }) {
         </div>
       </div>
 
-      <ul className="mt-3 space-y-1.5">
+      <ul className="mt-3 space-y-2.5">
         {report.issues.map((issue, idx) => {
           const st = SEVERITY_STYLE[issue.severity];
           const Icon = st.icon;
+          const fix = ISSUE_REMEDIATION[issue.code];
           return (
-            <li key={idx} className="flex items-start gap-2 text-sm">
-              <span className={cn("inline-flex items-center gap-1 h-5 px-1.5 rounded border text-[10px] uppercase tracking-wide", st.badge)}>
-                <Icon className="size-3" /> {st.label}
-              </span>
-              <span className="text-muted-foreground">
-                <span className="text-foreground font-medium">{ISSUE_LABEL[issue.code]}</span>
-                {" — "}
-                {issue.message}
-              </span>
+            <li key={idx} className="rounded-md border border-border bg-background/40 p-2.5">
+              <div className="flex items-start gap-2 text-sm">
+                <span className={cn("inline-flex items-center gap-1 h-5 px-1.5 rounded border text-[10px] uppercase tracking-wide shrink-0", st.badge)}>
+                  <Icon className="size-3" /> {st.label}
+                </span>
+                <span className="text-muted-foreground">
+                  <span className="text-foreground font-medium">{ISSUE_LABEL[issue.code]}</span>
+                  {" — "}
+                  {issue.message}
+                </span>
+              </div>
+              {fix && (
+                <div className="mt-2 ml-1 flex items-start gap-2 text-xs">
+                  <Wrench className="size-3.5 mt-0.5 text-primary shrink-0" />
+                  <div className="space-y-1">
+                    <div>
+                      <span className="font-medium text-foreground">Suggested fix: </span>
+                      <span className="text-muted-foreground">{fix.action}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className="text-muted-foreground">Update:</span>
+                      {fix.fields.map((f) => (
+                        <code
+                          key={f}
+                          className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[10px]"
+                        >
+                          {f}
+                        </code>
+                      ))}
+                    </div>
+                    {fix.hint && <p className="text-muted-foreground italic">{fix.hint}</p>}
+                  </div>
+                </div>
+              )}
             </li>
           );
         })}
