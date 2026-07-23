@@ -406,13 +406,27 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
 
 
 
-  const handleApply = (mode: "append" | "replace") => {
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [pendingApply, setPendingApply] = useState<null | "append" | "replace">(null);
+
+  const requestApply = (mode: "append" | "replace") => {
     if (!reviewed) {
       toast.error("Review the transcript first — tick 'I've reviewed this' below.");
       return;
     }
-    onTranscribed(transcript ?? "", mode);
+    if (isEditingText) {
+      toast.error("Finish editing the transcript first — click outside the editor to continue.");
+      return;
+    }
+    if (!transcript || !transcript.trim()) return;
+    setPendingApply(mode);
+  };
+
+  const confirmApply = () => {
+    if (!pendingApply) return;
+    onTranscribed(transcript ?? "", pendingApply);
     void attachAudio();
+    setPendingApply(null);
   };
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
@@ -850,7 +864,10 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                     setAvgConfidence(null);
                   }
                   setReviewed(false);
+                  if (pendingApply) setPendingApply(null);
                 }}
+                onFocus={() => setIsEditingText(true)}
+                onBlur={() => setIsEditingText(false)}
                 rows={6}
                 className="w-full text-xs bg-background border border-border rounded-md p-2 font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary"
                 placeholder="Edit the transcript before saving…"
@@ -867,25 +884,53 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                 <input
                   type="checkbox"
                   checked={reviewed}
+                  disabled={isEditingText}
                   onChange={(e) => setReviewed(e.target.checked)}
                   className="size-3.5 accent-primary"
                 />
                 I've reviewed the transcript
               </label>
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" disabled={!reviewed || !transcript.trim()} onClick={() => handleApply("append")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">
-                  Append to comments
-                </button>
-                <button type="button" disabled={!reviewed || !transcript.trim()} onClick={() => handleApply("replace")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">
-                  Replace comments
-                </button>
-                <button type="button" onClick={() => { navigator.clipboard?.writeText(transcript); toast.success("Copied"); }} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
-                  Copy
-                </button>
-                <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
-                  <RotateCcw className="size-3" />Retry
-                </button>
-              </div>
+              {isEditingText && (
+                <div className="text-[11px] text-amber-500" role="status">
+                  You're editing the transcript — click outside the editor to enable saving.
+                </div>
+              )}
+              {pendingApply ? (
+                <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-2" role="alertdialog" aria-label="Confirm save transcript">
+                  <div className="text-[11px] font-medium text-foreground">
+                    Save transcript ({pendingApply === "append" ? "append to comments" : "replace comments"})?
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {transcript.trim().length} characters · {transcript.trim().split(/\s+/).filter(Boolean).length} words. This cannot be undone from here.
+                  </div>
+                  <div className="text-[11px] bg-background border border-border rounded-sm p-1.5 max-h-20 overflow-y-auto whitespace-pre-wrap font-mono leading-relaxed">
+                    {transcript.length > 240 ? `${transcript.slice(0, 240)}…` : transcript}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button type="button" onClick={confirmApply} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                      Confirm save
+                    </button>
+                    <button type="button" onClick={() => setPendingApply(null)} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                      Keep editing
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  <button type="button" disabled={!reviewed || !transcript.trim() || isEditingText} onClick={() => requestApply("append")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">
+                    Append to comments
+                  </button>
+                  <button type="button" disabled={!reviewed || !transcript.trim() || isEditingText} onClick={() => requestApply("replace")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed">
+                    Replace comments
+                  </button>
+                  <button type="button" onClick={() => { navigator.clipboard?.writeText(transcript); toast.success("Copied"); }} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                    Copy
+                  </button>
+                  <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                    <RotateCcw className="size-3" />Retry
+                  </button>
+                </div>
+              )}
 
 
               {onAudioAttach && blobRef.current && (
