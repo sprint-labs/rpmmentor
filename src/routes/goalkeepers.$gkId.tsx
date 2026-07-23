@@ -347,8 +347,33 @@ function GkDetail() {
                         <div className="text-[11px] text-muted-foreground leading-snug mt-1 space-y-1">
                           <div>
                             <span className="font-medium text-foreground">{contributors.length} of 5</span> scored reports available for this pillar.
-                            A pillar average appears once 5 valid 1–5 scores are recorded.
+                            Need <span className="font-medium text-foreground">{5 - contributors.length}</span> more with a valid {PILLAR_LABELS[id]} score (1–5).
                           </div>
+                          {contributors.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {contributors.map((r) => (
+                                <button
+                                  key={r.report_id}
+                                  type="button"
+                                  onClick={() => setPreviewId(r.report_id)}
+                                  title={reportTooltip(r, `${PILLAR_LABELS[id]}: ${r.scores[id]}/5\nClick to preview`)}
+                                  aria-label={`Preview match report for ${r.match_date ? formatDate(r.match_date) : "undated match"} versus ${r.opponent?.trim() || "opponent TBC"}, ${PILLAR_LABELS[id]} score ${r.scores[id]} of 5`}
+                                  className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  {reportRef(r)}
+                                </button>
+                              ))}
+                              {Array.from({ length: 5 - contributors.length }).map((_, i) => (
+                                <span
+                                  key={`missing-${id}-${i}`}
+                                  className="px-1.5 py-0.5 rounded border border-dashed border-border/60 text-[10px] text-muted-foreground/70 italic"
+                                  title={`Missing report with a valid ${PILLAR_LABELS[id]} score`}
+                                >
+                                  missing report
+                                </span>
+                              ))}
+                            </div>
+                          )}
                           <Link
                             to="/reports"
                             search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }}
