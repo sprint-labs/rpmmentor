@@ -522,7 +522,23 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
 
   const confirmApply = () => {
     if (!pendingApply) return;
-    onTranscribed(transcript ?? "", pendingApply);
+    const text = transcript ?? "";
+    // Snapshot the exact text at save-time as an immutable "saved" version.
+    setVersions((prev) => {
+      const lastText = prev.length > 0 ? prev[prev.length - 1].text : original?.text ?? "";
+      const entry: TranscriptVersion = {
+        at: new Date().toISOString(),
+        text,
+        source: "saved",
+        label: pendingApply === "append" ? "Saved (append)" : "Saved (replace)",
+      };
+      if (text === lastText) {
+        // Same text — still record the save event so history reflects the action.
+        return [...prev, entry].slice(-20);
+      }
+      return [...prev, entry].slice(-20);
+    });
+    onTranscribed(text, pendingApply);
     void attachAudio();
     setPendingApply(null);
   };
