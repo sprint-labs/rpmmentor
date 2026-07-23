@@ -62,15 +62,15 @@ function GkDetail() {
   }, [data, gk.name]);
 
   const averageRating = useMemo(() => {
-    const vals = gkReports.map((r) => r.average).filter(isValidScore);
-    if (!vals.length) return null;
+    const vals = last5.map((r) => r.average).filter(isValidScore);
+    if (vals.length < 5) return null;
     const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
     return Math.round(mean * 10) / 10;
-  }, [gkReports]);
+  }, [last5]);
 
   const ratingContributors = useMemo(
-    () => gkReports.filter((r) => isValidScore(r.average)),
-    [gkReports],
+    () => last5.filter((r) => isValidScore(r.average)),
+    [last5],
   );
 
   const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
