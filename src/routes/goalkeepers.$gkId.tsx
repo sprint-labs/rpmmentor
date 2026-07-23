@@ -173,7 +173,7 @@ function GkDetail() {
                     key={r.report_id}
                     to="/reports/$reportId"
                     params={{ reportId: r.report_id }}
-                    title={`Overall ${r.average!.toFixed(1)}/5`}
+                    title={reportTooltip(r, `Overall: ${r.average!.toFixed(1)}/5`)}
                     className="px-1.5 py-0.5 rounded border border-border/60 bg-accent/20 text-[10px] text-muted-foreground hover:text-foreground hover:border-primary/40 tabular-nums"
                   >
                     {reportRef(r)}
