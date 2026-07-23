@@ -436,8 +436,12 @@ function GkDetail() {
                     <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="ml-1 text-primary hover:underline">
                       Submit a Match Report for {gk.name}
                     </Link>
+                    <Link to="/calendar" search={{ gkId: gk.id }} className="ml-2 text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                      <CalendarIcon className="size-3.5" /> See upcoming matches
+                    </Link>
                   </div>
                 )}
+
               </div>
             )}
           </Card>
