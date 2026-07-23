@@ -204,6 +204,12 @@ function GkDetail() {
       <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
         <Card className="p-3">
           <div className="text-[10px] uppercase text-muted-foreground">Rating (avg of last 5 Match Reports)</div>
+          {!isLoading && !isError && (
+            <div className="flex gap-1.5 mt-1.5" aria-label={`Rating status: ${ratingContributors.length} of 5 reports submitted`}>
+              <Pill tone="success">{ratingContributors.length} submitted</Pill>
+              <Pill tone={5 - ratingContributors.length > 0 ? "warning" : "muted"}>{5 - ratingContributors.length} missing</Pill>
+            </div>
+          )}
           <div className="text-xl font-semibold tabular-nums font-mono mt-1">
             {isLoading ? <span className="text-muted-foreground text-sm font-sans font-normal">Loading…</span>
               : isError ? <span className="text-destructive text-sm font-sans font-normal">Unavailable</span>
