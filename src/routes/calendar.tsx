@@ -99,15 +99,33 @@ function CalendarPage() {
                 <div key={i} className={`min-h-24 rounded-md border p-1.5 ${d ? "bg-card border-border" : "border-transparent"} ${isToday ? "ring-1 ring-primary" : ""}`}>
                   {d && <div className={`text-[11px] tabular-nums font-mono font-medium mb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}>{d.getDate()}</div>}
                   <div className="space-y-1">
-                    {events.slice(0, 3).map((e) => (
-                      <div key={e.id} className={`text-[10px] truncate px-1.5 py-0.5 rounded border ${
+                    {events.slice(0, 3).map((e) => {
+                      const cls = `w-full text-left text-[10px] truncate px-1.5 py-0.5 rounded border ${
                         e.type === "Match" ? "bg-info/15 text-info border-info/30" :
                         e.type === "Observation" ? "bg-success/15 text-success border-success/30" :
                         e.type === "Mentor Visit" ? "bg-warning/15 text-warning border-warning/30" :
                         e.type === "Follow Up" ? "bg-destructive/15 text-destructive border-destructive/30" :
                         "bg-muted text-muted-foreground border-border"
-                      }`}>{e.title}</div>
-                    ))}
+                      }`;
+                      if (e.type === "Match" && e.gkId) {
+                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
+                        const iso = new Date(e.date).toISOString().slice(0, 10);
+                        // Title format: "GK vs Opponent" — extract opponent.
+                        const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
+                        return (
+                          <Link
+                            key={e.id}
+                            to="/reports"
+                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
+                            className={cls + " hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+                            title={`Submit match report for ${e.title} on ${iso}`}
+                          >
+                            {e.title}
+                          </Link>
+                        );
+                      }
+                      return <div key={e.id} className={cls}>{e.title}</div>;
+                    })}
                     {events.length > 3 && <div className="text-[10px] text-muted-foreground">+{events.length - 3}</div>}
                   </div>
                 </div>
