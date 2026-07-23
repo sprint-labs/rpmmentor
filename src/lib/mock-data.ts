@@ -420,14 +420,17 @@ beadle.developmentPlan = [
 ];
 beadle.videoLinks.push("https://video.rpmgk.com/beadle/saves-2025-26", "https://video.rpmgk.com/beadle/distribution-block");
 
-const corey = goalkeepers.find((g) => g.name === "Corey Addai")!;
-corey.bio = "Experienced League Two number one. RPM development focus on shot-stopping consistency and progressing back into a Championship environment.";
-corey.developmentPlan = [
-  "Sustain set-piece dominance — review weekly with Chris Day.",
-  "Add ball-playing range to attract higher-tier recruitment interest.",
-  "Maintain availability — load monitoring with club S&C.",
-  "Build profile pack with recruitment analyst for January window.",
-];
+const corey = goalkeepers.find((g) => g.name === "Corey Addai");
+if (corey) {
+  corey.bio = "Experienced League Two number one. RPM development focus on shot-stopping consistency and progressing back into a Championship environment.";
+  corey.developmentPlan = [
+    "Sustain set-piece dominance — review weekly with Chris Day.",
+    "Add ball-playing range to attract higher-tier recruitment interest.",
+    "Maintain availability — load monitoring with club S&C.",
+    "Build profile pack with recruitment analyst for January window.",
+  ];
+}
+
 
 // ---------- Interactions ----------
 const NOTES = [
