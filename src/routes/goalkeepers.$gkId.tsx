@@ -61,6 +61,8 @@ function GkDetail() {
       .sort((a, b) => compareMatchDatesNewestFirst(a.match_date, b.match_date));
   }, [data, gk.name]);
 
+  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
+
   const averageRating = useMemo(() => {
     const vals = last5.map((r) => r.average).filter(isValidScore);
     if (vals.length < 5) return null;
@@ -72,8 +74,6 @@ function GkDetail() {
     () => last5.filter((r) => isValidScore(r.average)),
     [last5],
   );
-
-  const last5 = useMemo(() => gkReports.slice(0, 5), [gkReports]);
 
   const pillarAverages = useMemo(() => {
     const out: Record<PillarId, number | null> = {
