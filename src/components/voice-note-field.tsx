@@ -88,6 +88,9 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [tokens, setTokens] = useState<Array<{ token: string; confidence: number }>>(draft?.tokens ?? []);
   const [avgConfidence, setAvgConfidence] = useState<number | null>(draft?.avgConfidence ?? null);
   const [reviewed, setReviewed] = useState<boolean>(draft?.reviewed ?? false);
+  const [original, setOriginal] = useState<TranscriptVersion | null>(draft?.original ?? null);
+  const [versions, setVersions] = useState<TranscriptVersion[]>(draft?.versions ?? []);
+  const [showHistory, setShowHistory] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
