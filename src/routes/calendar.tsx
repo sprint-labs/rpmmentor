@@ -283,15 +283,25 @@ function CalendarPage() {
         <div className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Upcoming Events</div>
         <div className="divide-y divide-border">
           {filteredEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => {
+            const gkForEvent = e.gkId ? goalkeepers.find((g) => g.id === e.gkId) : null;
             const row = (
               <>
-                <div className="w-24 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
+                <div className="w-24 shrink-0 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
                 <Pill tone={TONE[e.type]}>{e.type}</Pill>
-                <div className="flex-1 truncate">{e.title}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate">{e.title}</div>
+                  {e.gkId && (
+                    <MissingReports
+                      gkId={e.gkId}
+                      gkName={gkForEvent?.name}
+                      referenceDate={new Date(e.date)}
+                      variant="full"
+                    />
+                  )}
+                </div>
               </>
             );
             if (e.type === "Match" && e.gkId) {
-              const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
               const iso = new Date(e.date).toISOString().slice(0, 10);
               const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
               return (
@@ -299,7 +309,7 @@ function CalendarPage() {
                   key={e.id}
                   to="/reports"
                   search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
-                  className="flex items-center gap-3 py-2 text-sm hover:bg-accent/40 rounded -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-start gap-3 py-2 text-sm hover:bg-accent/40 rounded -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   title={`Submit match report for ${e.title}`}
                 >
                   {row}
@@ -307,7 +317,7 @@ function CalendarPage() {
               );
             }
             return (
-              <div key={e.id} className="flex items-center gap-3 py-2 text-sm">
+              <div key={e.id} className="flex items-start gap-3 py-2 text-sm">
                 {row}
               </div>
             );
