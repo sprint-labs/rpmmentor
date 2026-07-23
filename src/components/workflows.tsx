@@ -190,7 +190,10 @@ function InteractionForm({ onDone }: { onDone: () => void }) {
         context={gk ? `Session notes about ${gk.name} (${gk.club})` : undefined}
         onTranscribed={(text, mode) => setNotes((prev) => mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`)}
       />
-      <Field label="Notes"><textarea rows={5} className={taCls} placeholder="What did you observe? Or use the camera above to transcribe handwritten notes." required value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+      <VoiceNoteField
+        onTranscribed={(text, mode) => setNotes((prev) => mode === "replace" || !prev.trim() ? text : `${prev.trim()}\n\n${text}`)}
+      />
+      <Field label="Notes"><textarea rows={5} className={taCls} placeholder="What did you observe? Or use the camera/mic above to transcribe notes." required value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
       <Field label="Follow-up Action"><input className={inputCls} placeholder="e.g. Schedule video review next week" /></Field>
       <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onDone} className="h-9 px-3 rounded-md border border-border text-sm">Cancel</button><button type="submit" className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">Save Interaction</button></div>
     </form>
