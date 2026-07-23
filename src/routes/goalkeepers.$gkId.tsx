@@ -208,7 +208,12 @@ function GkDetail() {
             ) : isError ? (
               <div className="text-xs text-destructive py-2">Couldn't load skill scores.</div>
             ) : gkReports.length === 0 ? (
-              <div className="text-xs text-muted-foreground italic py-2">No skill scores available — no Match Reports for this goalkeeper.</div>
+              <div className="space-y-1 py-2">
+                <div className="text-xs text-muted-foreground italic">No skill scores available</div>
+                <div className="text-[11px] text-muted-foreground leading-snug">
+                  Pillar means are calculated from valid 1–5 scores across the last 5 match reports.
+                </div>
+              </div>
             ) : (
               <div className="space-y-2.5">
                 {PILLAR_IDS.map((id) => {
@@ -218,7 +223,7 @@ function GkDetail() {
                       <div className="flex justify-between text-[11px] mb-1">
                         <span className="text-muted-foreground">{PILLAR_LABELS[id]}</span>
                         <span className="tabular-nums font-mono font-medium">
-                          {v != null ? `${v.toFixed(1)}/5` : <span className="text-muted-foreground italic">not recorded</span>}
+                          {v != null ? `${v.toFixed(1)}/5` : <span className="text-muted-foreground italic" title="No valid 1–5 score for this pillar in the last 5 reports">not recorded</span>}
                         </span>
                       </div>
                       <ProgressBar value={v != null ? (v / 5) * 100 : 0} />
