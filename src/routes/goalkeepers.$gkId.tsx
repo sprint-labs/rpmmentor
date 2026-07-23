@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
-import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon, Calendar as CalendarIcon } from "lucide-react";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import { PILLAR_IDS, PILLAR_LABELS, type MatchReportRow, type PillarId } from "@/lib/match-reports/schema";
 import { ReportPreviewModal } from "@/components/report-preview-modal";
