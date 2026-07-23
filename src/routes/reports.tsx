@@ -22,7 +22,19 @@ const reportsSearchSchema = z.object({
   source: fallback(z.string(), "").default(""),
   gk: fallback(z.string(), "").default(""),
   openSubmit: fallback(z.string(), "").default(""),
+  last5Gk: fallback(z.string(), "").default(""),
 });
+
+function normaliseName(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function compareMatchDatesNewestFirst(a: string | null, b: string | null): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return b.localeCompare(a);
+}
 
 export const Route = createFileRoute("/reports")({
   validateSearch: zodValidator(reportsSearchSchema),
