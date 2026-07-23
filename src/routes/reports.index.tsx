@@ -330,7 +330,7 @@ function ReportsPage() {
       </Card>
 
       <SectionTitle>Showing {Math.min(100, filtered.length)} of {filtered.length}</SectionTitle>
-      <WorkflowDialog kind={workflow} onClose={() => { setWorkflow(null); setPrefillGoalkeeper(""); }} prefillGoalkeeper={prefillGoalkeeper} />
+      <WorkflowDialog kind={workflow} onClose={() => { setWorkflow(null); setPrefillGoalkeeper(""); setPrefillMatchDate(""); setPrefillOpponent(""); }} prefillGoalkeeper={prefillGoalkeeper} prefillMatchDate={prefillMatchDate} prefillOpponent={prefillOpponent} />
     </div>
   );
 }
