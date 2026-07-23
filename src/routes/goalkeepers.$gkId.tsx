@@ -117,6 +117,14 @@ function GkDetail() {
     ].filter(Boolean).join("\n");
   };
 
+  const ValidityHint = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-snug">
+      <Info className="size-3.5 mt-0.5 shrink-0" />
+      <span>{children}</span>
+    </div>
+  );
+
+
   return (
     <div className="space-y-5">
       <Link to="/goalkeepers" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" /> Goalkeepers</Link>
