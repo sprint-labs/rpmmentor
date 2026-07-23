@@ -192,11 +192,44 @@ function ReportsPage() {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <label className="text-muted-foreground uppercase tracking-wider" htmlFor="last5-gk">
+          Last-5 averages for
+        </label>
+        <select
+          id="last5-gk"
+          value={last5Gk}
+          onChange={(e) =>
+            router.navigate({
+              to: "/reports",
+              search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk: e.target.value },
+              replace: true,
+            })
+          }
+          className="h-8 px-2 rounded-md border border-border bg-background text-xs"
+        >
+          <option value="">All reports</option>
+          {goalkeepers.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+        {last5Gk && (
+          <Link
+            to="/reports"
+            search={{ from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk: "" }}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3" /> Clear
+          </Link>
+        )}
+      </div>
+
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-muted-foreground uppercase tracking-wider">Scoped to:</span>
           {coach && <Pill tone="muted">{coach}</Pill>}
           {from && to && <Pill tone="muted">{new Date(from).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – {new Date(to).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</Pill>}
+          {last5Gk && <Pill tone="muted">Last 5 · {last5Gk}</Pill>}
           <Link to="/reports" search={clearSearch} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground ml-2">
             <X className="size-3" /> Clear
           </Link>
