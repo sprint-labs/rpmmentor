@@ -234,14 +234,23 @@ function CalendarPage() {
                   <div className={`text-lg font-semibold tabular-nums font-mono ${isToday ? "text-primary" : ""}`}>{d.getDate()}</div>
                   <div className="space-y-1.5 mt-2">
                     {events.map((e) => {
+                      const gkForEvent = e.gkId ? goalkeepers.find((g) => g.id === e.gkId) : null;
+                      const missingSlot = e.gkId ? (
+                        <MissingReports
+                          gkId={e.gkId}
+                          gkName={gkForEvent?.name}
+                          referenceDate={new Date(e.date)}
+                          variant="full"
+                        />
+                      ) : null;
                       const inner = (
                         <>
                           <div className="font-medium leading-tight line-clamp-2">{e.title}</div>
                           <div className="mt-1"><Pill tone={TONE[e.type]}>{e.type}</Pill></div>
+                          {missingSlot}
                         </>
                       );
                       if (e.type === "Match" && e.gkId) {
-                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
                         const iso = new Date(e.date).toISOString().slice(0, 10);
                         const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
                         return (
