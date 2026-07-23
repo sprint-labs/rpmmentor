@@ -33,6 +33,14 @@ function normaliseName(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+/** Sort match-report dates newest-first; undated reports sink to the bottom. */
+function compareMatchDatesNewestFirst(a: string | null, b: string | null): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return b.localeCompare(a);
+}
+
 function GkDetail() {
   const { gk } = Route.useLoaderData();
   const gkInteractions = interactions.filter((i) => i.gkId === gk.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
@@ -50,12 +58,7 @@ function GkDetail() {
     const all = data?.reports ?? [];
     return all
       .filter((r) => normaliseName(r.goalkeeper) === target)
-      .sort((a, b) => {
-        if (!a.match_date && !b.match_date) return 0;
-        if (!a.match_date) return 1;
-        if (!b.match_date) return -1;
-        return a.match_date < b.match_date ? 1 : a.match_date > b.match_date ? -1 : 0;
-      });
+      .sort((a, b) => compareMatchDatesNewestFirst(a.match_date, b.match_date));
   }, [data, gk.name]);
 
   const averageRating = useMemo(() => {
