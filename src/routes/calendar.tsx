@@ -4,9 +4,77 @@ import { z } from "zod";
 import { PageHeader, Card, Pill } from "@/components/primitives";
 import { DataSourceBanner } from "@/lib/data-classification";
 import { calendarEvents, formatDate, goalkeepers } from "@/lib/mock-data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { withPermission } from "@/components/require-permission";
 import { X } from "lucide-react";
+import { subscribeMentorSession } from "@/lib/mentor-session-store";
+import {
+  computeMissingReportTypes,
+  shortLabel,
+  type TrackedReportType,
+} from "@/lib/calendar/missing-report-types";
+
+function MissingReports({
+  gkId,
+  gkName,
+  referenceDate,
+  variant,
+}: {
+  gkId: string;
+  gkName?: string;
+  referenceDate: Date;
+  variant: "compact" | "full";
+}) {
+  // Re-render when session interactions/reports change.
+  const [, setTick] = useState(0);
+  useEffect(() => subscribeMentorSession(() => setTick((n) => n + 1)), []);
+
+  const missing: TrackedReportType[] = computeMissingReportTypes(gkId, gkName, {
+    referenceDate,
+  });
+  if (missing.length === 0) return null;
+
+  if (variant === "compact") {
+    const shown = missing.slice(0, 3);
+    const overflow = missing.length - shown.length;
+    return (
+      <div
+        className="mt-0.5 flex flex-wrap items-center gap-0.5"
+        aria-label={`Missing report types: ${missing.join(", ")}`}
+      >
+        {shown.map((t) => (
+          <span
+            key={t}
+            title={`Missing: ${t} (last 30 days)`}
+            className="rounded-sm border border-warning/40 bg-warning/10 px-1 text-[9px] font-mono uppercase leading-tight text-warning"
+          >
+            {shortLabel(t)}
+          </span>
+        ))}
+        {overflow > 0 && (
+          <span className="text-[9px] text-muted-foreground">+{overflow}</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        Missing
+      </span>
+      {missing.map((t) => (
+        <span
+          key={t}
+          title={`No ${t} logged in last 30 days`}
+          className="rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning"
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const calendarSearchSchema = z.object({
   gkId: fallback(z.string(), "").default(""),
@@ -113,15 +181,36 @@ function CalendarPage() {
                         // Title format: "GK vs Opponent" — extract opponent.
                         const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
                         return (
-                          <Link
-                            key={e.id}
-                            to="/reports"
-                            search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
-                            className={cls + " hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
-                            title={`Submit match report for ${e.title} on ${iso}`}
-                          >
-                            {e.title}
-                          </Link>
+                          <div key={e.id}>
+                            <Link
+                              to="/reports"
+                              search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
+                              className={cls + " hover:brightness-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+                              title={`Submit match report for ${e.title} on ${iso}`}
+                            >
+                              {e.title}
+                            </Link>
+                            <MissingReports
+                              gkId={e.gkId}
+                              gkName={gkForEvent?.name}
+                              referenceDate={new Date(e.date)}
+                              variant="compact"
+                            />
+                          </div>
+                        );
+                      }
+                      if (e.gkId) {
+                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
+                        return (
+                          <div key={e.id}>
+                            <div className={cls}>{e.title}</div>
+                            <MissingReports
+                              gkId={e.gkId}
+                              gkName={gkForEvent?.name}
+                              referenceDate={new Date(e.date)}
+                              variant="compact"
+                            />
+                          </div>
                         );
                       }
                       return <div key={e.id} className={cls}>{e.title}</div>;
@@ -145,14 +234,23 @@ function CalendarPage() {
                   <div className={`text-lg font-semibold tabular-nums font-mono ${isToday ? "text-primary" : ""}`}>{d.getDate()}</div>
                   <div className="space-y-1.5 mt-2">
                     {events.map((e) => {
+                      const gkForEvent = e.gkId ? goalkeepers.find((g) => g.id === e.gkId) : null;
+                      const missingSlot = e.gkId ? (
+                        <MissingReports
+                          gkId={e.gkId}
+                          gkName={gkForEvent?.name}
+                          referenceDate={new Date(e.date)}
+                          variant="full"
+                        />
+                      ) : null;
                       const inner = (
                         <>
                           <div className="font-medium leading-tight line-clamp-2">{e.title}</div>
                           <div className="mt-1"><Pill tone={TONE[e.type]}>{e.type}</Pill></div>
+                          {missingSlot}
                         </>
                       );
                       if (e.type === "Match" && e.gkId) {
-                        const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
                         const iso = new Date(e.date).toISOString().slice(0, 10);
                         const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
                         return (
@@ -185,15 +283,25 @@ function CalendarPage() {
         <div className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Upcoming Events</div>
         <div className="divide-y divide-border">
           {filteredEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => {
+            const gkForEvent = e.gkId ? goalkeepers.find((g) => g.id === e.gkId) : null;
             const row = (
               <>
-                <div className="w-24 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
+                <div className="w-24 shrink-0 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
                 <Pill tone={TONE[e.type]}>{e.type}</Pill>
-                <div className="flex-1 truncate">{e.title}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate">{e.title}</div>
+                  {e.gkId && (
+                    <MissingReports
+                      gkId={e.gkId}
+                      gkName={gkForEvent?.name}
+                      referenceDate={new Date(e.date)}
+                      variant="full"
+                    />
+                  )}
+                </div>
               </>
             );
             if (e.type === "Match" && e.gkId) {
-              const gkForEvent = goalkeepers.find((g) => g.id === e.gkId);
               const iso = new Date(e.date).toISOString().slice(0, 10);
               const opponent = e.title.includes(" vs ") ? e.title.split(" vs ").pop()!.trim() : "";
               return (
@@ -201,7 +309,7 @@ function CalendarPage() {
                   key={e.id}
                   to="/reports"
                   search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gkForEvent?.name ?? "", openSubmit: "1", last5Gk: "", matchDate: iso, opponent }}
-                  className="flex items-center gap-3 py-2 text-sm hover:bg-accent/40 rounded -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-start gap-3 py-2 text-sm hover:bg-accent/40 rounded -mx-1 px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   title={`Submit match report for ${e.title}`}
                 >
                   {row}
@@ -209,7 +317,7 @@ function CalendarPage() {
               );
             }
             return (
-              <div key={e.id} className="flex items-center gap-3 py-2 text-sm">
+              <div key={e.id} className="flex items-start gap-3 py-2 text-sm">
                 {row}
               </div>
             );
