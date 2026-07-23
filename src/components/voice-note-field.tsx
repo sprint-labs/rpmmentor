@@ -418,7 +418,7 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       toast.error("Finish editing the transcript first — click outside the editor to continue.");
       return;
     }
-    if (!transcript.trim()) return;
+    if (!transcript || !transcript.trim()) return;
     setPendingApply(mode);
   };
 
