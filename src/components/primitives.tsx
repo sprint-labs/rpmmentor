@@ -161,7 +161,7 @@ export function Pill({ children, tone = "muted" }: { children: ReactNode; tone?:
 }
 
 export function Avatar({ initials, size = 28, imageUrl, alt }: { initials: string; size?: number; imageUrl?: string; alt?: string }) {
-  const [failed, setFailed] = (require("react") as typeof import("react")).useState(false);
+  const [failed, setFailed] = useState(false);
   if (imageUrl && !failed) {
     return (
       <img
