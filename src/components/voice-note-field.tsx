@@ -331,6 +331,13 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
         setTranscript(result.text);
         setTokens(result.tokens ?? []);
         setAvgConfidence(result.avgConfidence ?? null);
+        setOriginal({
+          at: new Date().toISOString(),
+          text: result.text,
+          source: "ai",
+          label: "AI original",
+        });
+        setVersions([]);
         logAttempt("success");
         toast.success("Voice note transcribed — review before applying");
       }
