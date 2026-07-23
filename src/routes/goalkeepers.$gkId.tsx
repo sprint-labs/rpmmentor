@@ -169,10 +169,32 @@ function GkDetail() {
 
       <div className="flex flex-wrap items-start gap-4 justify-between">
         <div className="flex items-center gap-4">
-          <Avatar initials={gk.initials} size={56} />
+          <Avatar initials={gk.initials} size={56} imageUrl={gk.profileImage} alt={`${gk.name} portrait`} />
           <div>
-            <div className="flex items-center gap-2.5"><h1 className="text-2xl font-semibold tracking-tight">{gk.name}</h1><TierBadge tier={gk.tier} /></div>
-            <div className="text-sm text-muted-foreground mt-1">{gk.club} · {gk.league} · {gk.nationality} · {gk.age} yrs · {gk.height} · {gk.foot} foot</div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-2xl font-semibold tracking-tight">{gk.name}</h1>
+              <TierBadge tier={gk.tier} />
+              {gk.onLoan && <Pill tone="info">On loan{gk.parentClub ? ` from ${gk.parentClub}` : ""}</Pill>}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              {gk.club || "Free Agent"}
+              {gk.league ? ` · ${gk.league}` : ""}
+              {" · "}{gk.nationality || "Nationality not recorded"}
+              {" · "}{gk.age} yrs · {gk.height} · {gk.foot} foot
+            </div>
+            {gk.instagram && (
+              <div className="mt-1 text-xs">
+                <a
+                  href={gk.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                  aria-label={`${gk.name} on Instagram (opens in new tab)`}
+                >
+                  @{gk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "") || "instagram"}
+                </a>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
