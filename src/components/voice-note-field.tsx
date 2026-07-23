@@ -105,7 +105,11 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
   const [attached, setAttached] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showTimestamps, setShowTimestamps] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+
 
   const run = useServerFn(transcribeVoiceNote);
   const busy = phase !== "idle";
@@ -435,6 +439,39 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       ? "text-amber-500 border-amber-500/40"
       : "text-destructive border-destructive/40";
 
+  // Approximate word/sentence timestamps by distributing across the recorded duration,
+  // weighted by character length. The transcription model doesn't return timestamps,
+  // so this gives a "close enough" jump point for playback navigation.
+  const totalDuration = durationRef.current || (audioRef.current?.duration ?? 0) || elapsed || 0;
+  type TimedSentence = { text: string; start: number; end: number };
+  const timedSentences: TimedSentence[] = (() => {
+    if (!transcript || totalDuration <= 0) return [];
+    // Split into sentences, keep terminal punctuation.
+    const parts = transcript.match(/[^.!?\n]+[.!?]?[\s]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [transcript];
+    const weights = parts.map((p) => Math.max(1, p.replace(/\s+/g, " ").length));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    return parts.map((text, i) => {
+      const start = (acc / total) * totalDuration;
+      acc += weights[i];
+      const end = (acc / total) * totalDuration;
+      return { text, start, end };
+    });
+  })();
+  const fmtTs = (s: number) => {
+    const m = Math.floor(s / 60);
+    const r = Math.floor(s % 60);
+    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  };
+  const seekTo = (s: number) => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.currentTime = Math.max(0, Math.min(s, el.duration || s));
+    void el.play().catch(() => {});
+  };
+
+
+
 
   return (
     <div className={`rounded-md border border-dashed border-border bg-accent/10 p-3 space-y-3 ${className ?? ""}`}>
@@ -477,7 +514,14 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
       {(audioUrl || transcript) && (
         <div className="flex flex-col gap-2">
           {audioUrl ? (
-            <audio src={audioUrl} controls className="w-full h-8" />
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              controls
+              className="w-full h-8"
+              onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
+            />
+
           ) : restoredFromDraft ? (
             <div className="text-[11px] text-muted-foreground italic border border-dashed border-border rounded-md p-2">
               Transcript restored from your saved draft. The original audio isn't kept in the draft — re-record to update it.
@@ -747,8 +791,39 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                       {editing ? "Hide confidence view" : "Show confidence view"}
                     </button>
                   )}
+                  {audioUrl && timedSentences.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTimestamps((v) => !v)}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                      aria-pressed={showTimestamps}
+                    >
+                      {showTimestamps ? "Hide timestamps" : "Show timestamps"}
+                    </button>
+                  )}
                 </div>
               </div>
+              {showTimestamps && audioUrl && timedSentences.length > 0 && (
+                <div className="bg-muted/40 border border-border rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                  <div className="text-[10px] text-muted-foreground mb-1">Approximate timings — click a sentence to jump the audio to that point.</div>
+                  {timedSentences.map((s, i) => {
+                    const active = currentTime >= s.start && currentTime < s.end;
+                    return (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => seekTo(s.start)}
+                        className={`w-full text-left flex gap-2 items-start text-xs rounded-sm px-1.5 py-1 hover:bg-accent focus:outline-none focus-visible:ring-1 focus-visible:ring-primary ${active ? "bg-primary/10 border-l-2 border-primary" : ""}`}
+                        aria-label={`Jump to ${fmtTs(s.start)}: ${s.text}`}
+                      >
+                        <span className="font-mono tabular-nums text-[10px] text-primary shrink-0 mt-0.5">{fmtTs(s.start)}</span>
+                        <span className="text-foreground leading-relaxed">{s.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {editing && tokens.length > 0 && (
                 <div className="text-xs whitespace-pre-wrap bg-muted/40 border border-border rounded-md p-2 max-h-32 overflow-y-auto leading-relaxed">
                   {tokens.map((t, i) => {
