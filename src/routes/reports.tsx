@@ -63,6 +63,21 @@ function ReportsPage() {
     if (coach) setCoachFilter(coach);
   }, [coach]);
 
+  // Auto-open the Submit Match Report dialog when navigated from a goalkeeper CTA.
+  useEffect(() => {
+    if (openSubmit === "1" && can("reports.submit")) {
+      setPrefillGoalkeeper(gk || "");
+      setWorkflow("report");
+      // Strip the one-shot params so a refresh doesn't reopen the dialog.
+      router.navigate({
+        to: "/reports",
+        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "" },
+        replace: true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSubmit, gk]);
+
   const coaches = useMemo(() => {
     const s = new Set<string>();
     reports.forEach((r) => r.coach && s.add(r.coach));
