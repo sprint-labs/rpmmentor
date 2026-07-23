@@ -267,7 +267,10 @@ function ReportForm({ onDone, prefillGoalkeeper }: { onDone: () => void; prefill
       setDraftSavedAt(d.savedAt);
       setDraftRestoredFrom(d.savedAt);
       setSaveStatus("saved");
+      // Prefill overrides an empty goalkeeper on the restored draft.
+      if (prefillGoalkeeper && !d.goalkeeper) setGoalkeeper(prefillGoalkeeper);
     } else {
+      if (prefillGoalkeeper) setGoalkeeper(prefillGoalkeeper);
       setSaveStatus("idle");
     }
     setDraftLoaded(true);
