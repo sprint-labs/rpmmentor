@@ -231,12 +231,18 @@ function GkDetail() {
                   </div>
                 </div>
               )}
-              <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
-                Submit a Match Report for {gk.name}
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1", last5Gk: "" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                  Submit a Match Report for {gk.name}
+                </Link>
+                <Link to="/calendar" search={{ gkId: gk.id }} className="text-[11px] text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-0.5">
+                  <CalendarIcon className="size-3.5" /> See upcoming matches
+                </Link>
+              </div>
             </div>
           )}
         </Card>
+
         <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Contract</div><div className="text-sm font-medium mt-1">{gk.contractUntil}</div></Card>
       </div>
 
