@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Mic, Square, Loader2, X, RotateCcw, Sparkles, CheckCircle2, AlertTriangle, History, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { transcribeVoiceNote } from "@/lib/api/transcribe.functions";
+import { summarizeTranscript, type StructuredSummary } from "@/lib/api/summarize.functions";
 
 
 const MAX_SECONDS = 180;
