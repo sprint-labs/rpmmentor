@@ -85,7 +85,7 @@ const TITLES: Record<WorkflowKind, string> = {
   goalkeeper: "Add Goalkeeper",
 };
 
-export function WorkflowDialog({ kind, onClose }: { kind: WorkflowKind | null; onClose: () => void }) {
+export function WorkflowDialog({ kind, onClose, prefillGoalkeeper }: { kind: WorkflowKind | null; onClose: () => void; prefillGoalkeeper?: string }) {
   if (!kind) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm p-4" onClick={onClose}>
@@ -105,7 +105,7 @@ export function WorkflowDialog({ kind, onClose }: { kind: WorkflowKind | null; o
         </div>
         <div className="p-5 overflow-y-auto">
           {kind === "interaction" && <InteractionForm onDone={onClose} />}
-          {kind === "report" && <ReportForm onDone={onClose} />}
+          {kind === "report" && <ReportForm onDone={onClose} prefillGoalkeeper={prefillGoalkeeper} />}
           {kind === "media" && <MediaForm onDone={onClose} />}
           {kind === "goalkeeper" && <GoalkeeperForm onDone={onClose} />}
         </div>
@@ -201,7 +201,7 @@ function InteractionForm({ onDone }: { onDone: () => void }) {
  * Match Report form — writes to the RPM Match Reports Google Sheet via
  * a server function. Fields locked to the confirmed 14-column schema.
  */
-function ReportForm({ onDone }: { onDone: () => void }) {
+function ReportForm({ onDone, prefillGoalkeeper }: { onDone: () => void; prefillGoalkeeper?: string }) {
   const { user } = useAuth();
   const submitFn = useServerFn(submitMatchReport);
 
@@ -267,7 +267,10 @@ function ReportForm({ onDone }: { onDone: () => void }) {
       setDraftSavedAt(d.savedAt);
       setDraftRestoredFrom(d.savedAt);
       setSaveStatus("saved");
+      // Prefill overrides an empty goalkeeper on the restored draft.
+      if (prefillGoalkeeper && !d.goalkeeper) setGoalkeeper(prefillGoalkeeper);
     } else {
+      if (prefillGoalkeeper) setGoalkeeper(prefillGoalkeeper);
       setSaveStatus("idle");
     }
     setDraftLoaded(true);

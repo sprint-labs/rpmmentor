@@ -133,7 +133,7 @@ function GkDetail() {
           {averageRating == null && !isLoading && !isError && (
             <div className="text-[11px] text-muted-foreground mt-1.5 leading-snug">
               A rating appears once match reports with valid overall scores (1–5) are recorded.
-              <Link to="/reports" className="ml-1 text-primary hover:underline">Submit a Match Report</Link>
+              <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="ml-1 text-primary hover:underline">Submit a Match Report for {gk.name}</Link>
             </div>
           )}
         </Card>
@@ -217,8 +217,8 @@ function GkDetail() {
                 <div className="text-[11px] text-muted-foreground leading-snug">
                   Pillar means are calculated from valid 1–5 scores across the last 5 match reports.
                 </div>
-                <Link to="/reports" className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
-                  Submit a Match Report
+                <Link to="/reports" search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: gk.name, openSubmit: "1" }} className="text-[11px] text-primary hover:underline inline-flex items-center gap-0.5">
+                  Submit a Match Report for {gk.name}
                 </Link>
               </div>
             ) : (

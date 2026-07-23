@@ -20,6 +20,8 @@ const reportsSearchSchema = z.object({
   coach: fallback(z.string(), "").default(""),
   mentorProfileId: fallback(z.string(), "").default(""),
   source: fallback(z.string(), "").default(""),
+  gk: fallback(z.string(), "").default(""),
+  openSubmit: fallback(z.string(), "").default(""),
 });
 
 export const Route = createFileRoute("/reports")({
@@ -35,9 +37,10 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
-  const { from, to, coach, source } = Route.useSearch();
+  const { from, to, coach, source, gk, openSubmit } = Route.useSearch();
   const navSource = getNavSource(source);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
+  const [prefillGoalkeeper, setPrefillGoalkeeper] = useState<string>("");
   const [coachFilter, setCoachFilter] = useState<string>(coach || "All");
   const router = useRouter();
   const listFn = useServerFn(listMatchReports);
@@ -60,6 +63,21 @@ function ReportsPage() {
     if (coach) setCoachFilter(coach);
   }, [coach]);
 
+  // Auto-open the Submit Match Report dialog when navigated from a goalkeeper CTA.
+  useEffect(() => {
+    if (openSubmit === "1" && can("reports.submit")) {
+      setPrefillGoalkeeper(gk || "");
+      setWorkflow("report");
+      // Strip the one-shot params so a refresh doesn't reopen the dialog.
+      router.navigate({
+        to: "/reports",
+        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "" },
+        replace: true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSubmit, gk]);
+
   const coaches = useMemo(() => {
     const s = new Set<string>();
     reports.forEach((r) => r.coach && s.add(r.coach));
@@ -81,7 +99,7 @@ function ReportsPage() {
   }, [reports, coachFilter, from, to]);
 
   const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "" };
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "" };
 
   return (
     <div className="space-y-5">
@@ -240,7 +258,7 @@ function ReportsPage() {
       </Card>
 
       <SectionTitle>Showing {Math.min(100, filtered.length)} of {filtered.length}</SectionTitle>
-      <WorkflowDialog kind={workflow} onClose={() => setWorkflow(null)} />
+      <WorkflowDialog kind={workflow} onClose={() => { setWorkflow(null); setPrefillGoalkeeper(""); }} prefillGoalkeeper={prefillGoalkeeper} />
     </div>
   );
 }
