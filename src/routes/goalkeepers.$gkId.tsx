@@ -180,15 +180,15 @@ function GkDetail() {
                     <FileText className="size-3.5 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium truncate">
-                        Match Report{r.opponent ? ` · vs ${r.opponent}` : ""}
+                        Match Report{r.opponent ? ` · Opponent: ${r.opponent}` : ""}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        {r.match_date ? formatDate(r.match_date) : "Date not recorded"}
-                        {r.competition ? ` · ${r.competition}` : ""}
+                        Date: {r.match_date ? formatDate(r.match_date) : "not recorded"}
+                        {r.competition ? ` · Competition: ${r.competition}` : ""}
                       </div>
                     </div>
                     <span className="text-xs font-semibold tabular-nums font-mono">
-                      {r.average != null ? `${r.average.toFixed(1)}/5` : "—"}
+                      {r.average != null ? `Avg: ${r.average.toFixed(1)}/5` : "—"}
                     </span>
                   </Link>
                 ))}
