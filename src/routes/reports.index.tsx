@@ -59,6 +59,7 @@ function ReportsPage() {
   const [prefillOpponent, setPrefillOpponent] = useState<string>("");
   const [coachFilter, setCoachFilter] = useState<string>(coach || "All");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const listFn = useServerFn(listMatchReports);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
@@ -70,10 +71,13 @@ function ReportsPage() {
   const reports: MatchReportRow[] = data?.reports ?? [];
 
   useEffect(() => {
-    const h = () => { void refetch(); router.invalidate(); };
+    const h = () => {
+      void queryClient.invalidateQueries({ queryKey: ["match-reports"] });
+      router.invalidate();
+    };
     window.addEventListener("rpm:report-submitted", h);
     return () => window.removeEventListener("rpm:report-submitted", h);
-  }, [refetch, router]);
+  }, [queryClient, router]);
 
   useEffect(() => {
     if (coach) setCoachFilter(coach);
