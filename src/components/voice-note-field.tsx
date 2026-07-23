@@ -981,6 +981,78 @@ export function VoiceNoteField({ onTranscribed, onAudioAttach, draft, onDraftCha
                   <button type="button" onClick={retry} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
                     <RotateCcw className="size-3" />Retry
                   </button>
+                  <button
+                    type="button"
+                    disabled={summarizing || !transcript || transcript.trim().length < 20}
+                    onClick={requestSummary}
+                    className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-primary/40 text-primary text-[11px] font-medium hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Use AI to draft a structured summary from this transcript"
+                  >
+                    {summarizing ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
+                    {summary ? "Regenerate summary" : "Suggest summary"}
+                  </button>
+                </div>
+              )}
+
+              {summaryError && !summary && (
+                <div className="text-[11px] text-destructive" role="alert">{summaryError}</div>
+              )}
+
+              {summary && (
+                <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-2" aria-label="AI-suggested structured summary">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-primary inline-flex items-center gap-1">
+                      <Sparkles className="size-3" /> AI suggestion — review before inserting
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSummary(null)}
+                      className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md border border-border text-[10px] font-medium hover:bg-accent"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] uppercase tracking-wider text-muted-foreground">Headline</label>
+                    <input
+                      type="text"
+                      value={summary.headline}
+                      onChange={(e) => updateSummaryField("headline", e.target.value)}
+                      className="w-full text-xs bg-background border border-border rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="One-sentence headline"
+                    />
+                  </div>
+                  {(["strengths", "improvements", "keyMoments"] as const).map((key) => {
+                    const label = key === "strengths" ? "Strengths" : key === "improvements" ? "Areas to develop" : "Key moments";
+                    const value = summary[key].join("\n");
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="block text-[10px] uppercase tracking-wider text-muted-foreground">{label} <span className="opacity-60">· one per line</span></label>
+                        <textarea
+                          value={value}
+                          onChange={(e) => updateSummaryLines(key, e.target.value)}
+                          rows={Math.max(2, Math.min(5, summary[key].length + 1))}
+                          className="w-full text-xs bg-background border border-border rounded-md p-1.5 leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary"
+                          placeholder={`Add ${label.toLowerCase()}…`}
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <button type="button" onClick={() => insertSummary("append")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:opacity-90">
+                      Append to comments
+                    </button>
+                    <button type="button" onClick={() => insertSummary("replace")} className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent">
+                      Replace comments
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard?.writeText(formatSummary(summary)); toast.success("Summary copied"); }}
+                      className="inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-[11px] font-medium hover:bg-accent"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
               )}
 
