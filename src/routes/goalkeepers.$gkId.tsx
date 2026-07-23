@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { Card, TierBadge, Avatar, Pill, SectionTitle, ProgressBar } from "@/components/primitives";
 import { goalkeepers, interactions, media, formatDate, formatRelative } from "@/lib/mock-data";
 import { ArrowLeft, Info, Video, FileText, Phone, Eye, Users as UsersIcon, Calendar as CalendarIcon } from "lucide-react";
@@ -48,12 +48,21 @@ function GkDetail() {
   const gkMedia = media.filter((m) => m.gkId === gk.id);
   const [previewId, setPreviewId] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const listFn = useServerFn(listMatchReports);
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["match-reports", "all"],
+    queryKey: ["match-reports"],
     queryFn: () => listFn(),
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    const h = () => {
+      void queryClient.invalidateQueries({ queryKey: ["match-reports"] });
+    };
+    window.addEventListener("rpm:report-submitted", h);
+    return () => window.removeEventListener("rpm:report-submitted", h);
+  }, [queryClient]);
 
   const gkReports = useMemo<MatchReportRow[]>(() => {
     const target = normaliseName(gk.name);
@@ -116,6 +125,35 @@ function GkDetail() {
       extra ?? "",
     ].filter(Boolean).join("\n");
   };
+
+  type TimelineItem =
+    | { kind: "interaction"; id: string; date: string; type: string; notes: string; outcome: string; followUp: string }
+    | { kind: "report"; id: string; date: string | null; report: MatchReportRow };
+
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const items: TimelineItem[] = [
+      ...gkInteractions.map((i) => ({
+        kind: "interaction" as const,
+        id: i.id,
+        date: i.date,
+        type: i.type,
+        notes: i.notes,
+        outcome: i.outcome,
+        followUp: i.followUp,
+      })),
+      ...gkReports.map((r) => ({
+        kind: "report" as const,
+        id: r.report_id,
+        date: r.match_date,
+        report: r,
+      })),
+    ];
+    return items.sort((a, b) => {
+      const da = a.date ? +new Date(a.date) : 0;
+      const db = b.date ? +new Date(b.date) : 0;
+      return db - da;
+    });
+  }, [gkInteractions, gkReports]);
 
   const ValidityHint = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-snug">
