@@ -206,11 +206,22 @@ function GkDetail() {
 
         <div className="space-y-4">
           <Card className="p-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 gap-2">
               <SectionTitle>Match Reports ({isLoading ? "…" : gkReports.length})</SectionTitle>
-              {isError && (
-                <button onClick={() => refetch()} className="text-[11px] text-primary hover:underline">Retry</button>
-              )}
+              <div className="flex items-center gap-2">
+                {gkReports.length > 0 && (
+                  <Link
+                    to="/reports"
+                    search={{ from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "", last5Gk: gk.name }}
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    View last 5 in Reports →
+                  </Link>
+                )}
+                {isError && (
+                  <button onClick={() => refetch()} className="text-[11px] text-primary hover:underline">Retry</button>
+                )}
+              </div>
             </div>
             {isLoading ? (
               <div className="text-xs text-muted-foreground italic py-2">Loading real Match Reports…</div>

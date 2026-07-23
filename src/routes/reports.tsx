@@ -22,7 +22,19 @@ const reportsSearchSchema = z.object({
   source: fallback(z.string(), "").default(""),
   gk: fallback(z.string(), "").default(""),
   openSubmit: fallback(z.string(), "").default(""),
+  last5Gk: fallback(z.string(), "").default(""),
 });
+
+function normaliseName(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function compareMatchDatesNewestFirst(a: string | null, b: string | null): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return b.localeCompare(a);
+}
 
 export const Route = createFileRoute("/reports")({
   validateSearch: zodValidator(reportsSearchSchema),
@@ -37,7 +49,7 @@ function formatDate(iso: string | null) {
 
 function ReportsPage() {
   const { can } = useAuth();
-  const { from, to, coach, source, gk, openSubmit } = Route.useSearch();
+  const { from, to, coach, source, gk, openSubmit, last5Gk } = Route.useSearch();
   const navSource = getNavSource(source);
   const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
   const [prefillGoalkeeper, setPrefillGoalkeeper] = useState<string>("");
@@ -71,7 +83,7 @@ function ReportsPage() {
       // Strip the one-shot params so a refresh doesn't reopen the dialog.
       router.navigate({
         to: "/reports",
-        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "" },
+        search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk },
         replace: true,
       });
     }
@@ -84,6 +96,25 @@ function ReportsPage() {
     return ["All", ...Array.from(s).sort()];
   }, [reports]);
 
+  const goalkeepers = useMemo(() => {
+    const s = new Set<string>();
+    reports.forEach((r) => r.goalkeeper && s.add(r.goalkeeper));
+    return Array.from(s).sort();
+  }, [reports]);
+
+  // The set of report IDs that are actually included in the last-5 averages for
+  // the selected goalkeeper — matches the logic on the goalkeeper profile.
+  const last5Ids = useMemo(() => {
+    if (!last5Gk) return null;
+    const target = normaliseName(last5Gk);
+    const ids = reports
+      .filter((r) => normaliseName(r.goalkeeper) === target)
+      .sort((a, b) => compareMatchDatesNewestFirst(a.match_date, b.match_date))
+      .slice(0, 5)
+      .map((r) => r.report_id);
+    return new Set(ids);
+  }, [reports, last5Gk]);
+
   const filtered = useMemo(() => {
     let list = coachFilter === "All" ? reports : reports.filter((r) => r.coach === coachFilter);
     if (from && to) {
@@ -95,11 +126,12 @@ function ReportsPage() {
         return t >= start && t <= end;
       });
     }
+    if (last5Ids) list = list.filter((r) => last5Ids.has(r.report_id));
     return list;
-  }, [reports, coachFilter, from, to]);
+  }, [reports, coachFilter, from, to, last5Ids]);
 
-  const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to));
-  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "" };
+  const hasFilters = Boolean(coach) || (Boolean(from) && Boolean(to)) || Boolean(last5Gk);
+  const clearSearch = { from: "", to: "", coach: "", mentorProfileId: "", source: "", gk: "", openSubmit: "", last5Gk: "" };
 
   return (
     <div className="space-y-5">
@@ -160,11 +192,44 @@ function ReportsPage() {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <label className="text-muted-foreground uppercase tracking-wider" htmlFor="last5-gk">
+          Last-5 averages for
+        </label>
+        <select
+          id="last5-gk"
+          value={last5Gk}
+          onChange={(e) =>
+            router.navigate({
+              to: "/reports",
+              search: { from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk: e.target.value },
+              replace: true,
+            })
+          }
+          className="h-8 px-2 rounded-md border border-border bg-background text-xs"
+        >
+          <option value="">All reports</option>
+          {goalkeepers.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+        {last5Gk && (
+          <Link
+            to="/reports"
+            search={{ from, to, coach, mentorProfileId: "", source, gk: "", openSubmit: "", last5Gk: "" }}
+            className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3" /> Clear
+          </Link>
+        )}
+      </div>
+
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-muted-foreground uppercase tracking-wider">Scoped to:</span>
           {coach && <Pill tone="muted">{coach}</Pill>}
           {from && to && <Pill tone="muted">{new Date(from).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – {new Date(to).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</Pill>}
+          {last5Gk && <Pill tone="muted">Last 5 · {last5Gk}</Pill>}
           <Link to="/reports" search={clearSearch} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground ml-2">
             <X className="size-3" /> Clear
           </Link>
