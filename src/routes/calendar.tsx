@@ -143,7 +143,7 @@ function CalendarPage() {
       <Card className="p-4">
         <div className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">Upcoming Events</div>
         <div className="divide-y divide-border">
-          {calendarEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => (
+          {filteredEvents.filter((e) => new Date(e.date).getTime() >= Date.now() - 86400000).sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 10).map((e) => (
             <div key={e.id} className="flex items-center gap-3 py-2 text-sm">
               <div className="w-24 text-xs text-muted-foreground tabular-nums font-mono">{formatDate(e.date)}</div>
               <Pill tone={TONE[e.type]}>{e.type}</Pill>
