@@ -9,6 +9,7 @@ import { useNotifications } from "@/lib/notifications";
 import { formatRelative } from "@/lib/mock-data";
 import { DataSourceBadge } from "@/lib/data-classification";
 import { BrandMark } from "@/components/brand-mark";
+import { OfflineBanner } from "@/components/offline-banner";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm: Permission };
 const NAV: NavItem[] = [
@@ -187,6 +188,7 @@ export function AppShell() {
           </button>
         </header>
         <main className="flex-1 min-w-0 p-4 md:p-6">
+          <OfflineBanner />
           <Outlet />
         </main>
       </div>

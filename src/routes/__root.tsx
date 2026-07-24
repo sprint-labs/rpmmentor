@@ -8,6 +8,8 @@ import { AuthProvider } from "@/lib/auth";
 import { NotificationsProvider } from "@/lib/notifications";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { Toaster } from "@/components/ui/sonner";
+import { registerSw } from "@/lib/pwa/register-sw";
+import { toast } from "sonner";
 
 
 function NotFoundComponent() {
@@ -106,6 +108,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    registerSw((reload) => {
+      toast("Update available", {
+        description: "A new version of Mentor Hub is ready.",
+        action: { label: "Reload", onClick: () => reload() },
+        duration: Infinity,
+      });
+    });
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
