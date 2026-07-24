@@ -244,7 +244,21 @@ export function InstallPrompt() {
   }, []);
 
 
+  // Fire "shown" once per surface as it appears.
+  useEffect(() => { if (deferred) track("shown", "native"); }, [deferred]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (showIos) track("shown", "ios"); }, [showIos]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (failure) track("shown", "failure", { reason: failure.reason }); }, [failure]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function snooze(reason: Outcome) {
+    // Attribute the close event to whichever card was on screen.
+    const surface: InstallSurface = failure ? "failure" : (deferred ? "native" : "ios");
+    const eventName: InstallEventName = reason === "failed"
+      ? "failed"
+      : reason === "manual-close"
+        ? "manual_close"
+        : "dismissed";
+    track(eventName, surface);
+
     const prev = readState();
     const next: InstallState = {
       ...prev,
@@ -267,26 +281,29 @@ export function InstallPrompt() {
       await deferred.prompt();
       const { outcome } = await deferred.userChoice;
       if (outcome === "accepted") {
+        track("accepted", "native");
         setDeferred(null);
-        // appinstalled handler will clear state.
+        // appinstalled handler will clear state and log "installed".
       } else {
         // User picked "not now" — re-prompt sooner than a hard dismiss.
         snooze("dismissed");
       }
     } catch (err) {
-      // Prompt threw (already used, user-gesture missing, browser refused).
-      // Show a fallback card with retry + manual guide.
+      const reason = err instanceof Error ? err.message : "The browser refused the install prompt.";
+      track("failed", "native", { reason });
       setDeferred(null);
-      setFailure({ reason: err instanceof Error ? err.message : "The browser refused the install prompt." });
+      setFailure({ reason });
     }
   }
 
   function retryFromFailure() {
+    track("retry", "failure");
     setFailure(null);
     // The captured event is single-use; nudge the browser to fire a fresh one.
     // Most browsers refire on the next user gesture / navigation.
     window.dispatchEvent(new Event("pointerdown"));
   }
+
 
   if (snoozed) return null;
 
