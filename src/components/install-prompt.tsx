@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Download, Share, Plus, X, AlertTriangle, RefreshCw } from "lucide-react";
+import { logInstallEvent } from "@/lib/install-analytics.functions";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
