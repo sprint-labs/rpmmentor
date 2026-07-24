@@ -123,12 +123,15 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Never prompt inside an iframe (Lovable preview, embeds, OAuth popups).
+    if (window.top !== window.self) return;
     if (isStandalone()) return;
+
+    let cancelled = false;
 
     const state = readState();
     if (state.snoozedUntil && Date.now() < state.snoozedUntil) {
       setSnoozed(true);
-      // Schedule an auto-un-snooze so returning long-lived tabs re-prompt.
       const t = window.setTimeout(() => setSnoozed(false), Math.min(state.snoozedUntil - Date.now(), 2_147_483_000));
       return () => window.clearTimeout(t);
     }
@@ -148,17 +151,46 @@ export function InstallPrompt() {
     };
     window.addEventListener("appinstalled", onInstalled);
 
+    // Live-track display-mode: user may launch the installed app while this
+    // tab is open, or resize into a WCO window. Hide immediately when that
+    // happens so we never double-prompt.
+    const mqls = STANDALONE_QUERIES.map((q) => {
+      try { return window.matchMedia(q); } catch { return null; }
+    }).filter((m): m is MediaQueryList => m !== null);
+    const onModeChange = () => {
+      if (matchesStandaloneMedia()) {
+        setDeferred(null);
+        setShowIos(false);
+        setFailure(null);
+      }
+    };
+    mqls.forEach((m) => m.addEventListener?.("change", onModeChange));
+
+    // Chromium: if the site is already installed as a related app, don't prompt.
+    void hasRelatedInstalledApp().then((installed) => {
+      if (installed && !cancelled) {
+        setDeferred(null);
+        setShowIos(false);
+      }
+    });
+
     let t: ReturnType<typeof setTimeout> | undefined;
+    // iOS Safari never fires beforeinstallprompt. Only show the manual card
+    // in real Safari (not Chrome iOS / in-app webviews) and never when the
+    // page is already home-screen-launched.
     if (isIos() && isSafari()) {
-      t = setTimeout(() => setShowIos(true), 4000);
+      t = setTimeout(() => { if (!isStandalone()) setShowIos(true); }, 4000);
     }
 
     return () => {
+      cancelled = true;
       window.removeEventListener("beforeinstallprompt", onBip);
       window.removeEventListener("appinstalled", onInstalled);
+      mqls.forEach((m) => m.removeEventListener?.("change", onModeChange));
       if (t) clearTimeout(t);
     };
   }, []);
+
 
   function snooze(reason: Outcome) {
     const prev = readState();
