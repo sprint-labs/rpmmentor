@@ -147,6 +147,7 @@ export async function drainQueue(handlers: Record<string, SyncHandler>): Promise
     }
   }
 
+  if (processed > 0) setLastSyncedAt(Date.now());
   return { processed, failed, dropped };
 }
 
