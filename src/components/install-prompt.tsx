@@ -52,10 +52,47 @@ function writeState(next: InstallState) {
   try { localStorage.setItem(STATE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
 }
 
+// Display-mode media queries that indicate the app is running as an installed
+// PWA rather than a normal browser tab. Covers Chrome/Edge desktop windowing
+// modes too (`window-controls-overlay`, `minimal-ui`) and Samsung Internet's
+// Fullscreen shortcut launches.
+const STANDALONE_QUERIES = [
+  "(display-mode: standalone)",
+  "(display-mode: fullscreen)",
+  "(display-mode: minimal-ui)",
+  "(display-mode: window-controls-overlay)",
+];
+
+function matchesStandaloneMedia(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return STANDALONE_QUERIES.some((q) => {
+    try { return window.matchMedia(q).matches; } catch { return false; }
+  });
+}
+
 function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
-  if (window.matchMedia?.("(display-mode: standalone)").matches) return true;
-  return (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+  // iOS Safari legacy flag — set true only when launched from Home Screen.
+  if ((window.navigator as unknown as { standalone?: boolean }).standalone === true) return true;
+  if (matchesStandaloneMedia()) return true;
+  // Android TWA / WebAPK launches document with this referrer.
+  if (typeof document !== "undefined" && document.referrer.startsWith("android-app://")) return true;
+  return false;
+}
+
+// Async signal: on Android Chrome/Edge, a related PWA already installed for
+// this origin can be discovered without waiting for beforeinstallprompt.
+async function hasRelatedInstalledApp(): Promise<boolean> {
+  const nav = navigator as unknown as {
+    getInstalledRelatedApps?: () => Promise<Array<{ platform?: string; id?: string; url?: string }>>;
+  };
+  if (typeof nav.getInstalledRelatedApps !== "function") return false;
+  try {
+    const apps = await nav.getInstalledRelatedApps();
+    return Array.isArray(apps) && apps.some((a) => a.platform === "webapp" || a.platform === "play");
+  } catch {
+    return false;
+  }
 }
 
 function isIos(): boolean {
@@ -68,8 +105,15 @@ function isIos(): boolean {
 
 function isSafari(): boolean {
   const ua = navigator.userAgent;
-  return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  // Exclude every in-app browser variant that reports as Safari but can't
+  // Add to Home Screen (Chrome iOS, Firefox iOS, Edge iOS, Opera iOS, plus
+  // the common social webviews which we don't want prompting either).
+  return (
+    /Safari/.test(ua) &&
+    !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\/|YaBrowser|DuckDuckGo|FBAN|FBAV|Instagram|Line\/|Twitter|LinkedInApp|Snapchat/.test(ua)
+  );
 }
+
 
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
@@ -79,12 +123,15 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Never prompt inside an iframe (Lovable preview, embeds, OAuth popups).
+    if (window.top !== window.self) return;
     if (isStandalone()) return;
+
+    let cancelled = false;
 
     const state = readState();
     if (state.snoozedUntil && Date.now() < state.snoozedUntil) {
       setSnoozed(true);
-      // Schedule an auto-un-snooze so returning long-lived tabs re-prompt.
       const t = window.setTimeout(() => setSnoozed(false), Math.min(state.snoozedUntil - Date.now(), 2_147_483_000));
       return () => window.clearTimeout(t);
     }
@@ -104,17 +151,46 @@ export function InstallPrompt() {
     };
     window.addEventListener("appinstalled", onInstalled);
 
+    // Live-track display-mode: user may launch the installed app while this
+    // tab is open, or resize into a WCO window. Hide immediately when that
+    // happens so we never double-prompt.
+    const mqls = STANDALONE_QUERIES.map((q) => {
+      try { return window.matchMedia(q); } catch { return null; }
+    }).filter((m): m is MediaQueryList => m !== null);
+    const onModeChange = () => {
+      if (matchesStandaloneMedia()) {
+        setDeferred(null);
+        setShowIos(false);
+        setFailure(null);
+      }
+    };
+    mqls.forEach((m) => m.addEventListener?.("change", onModeChange));
+
+    // Chromium: if the site is already installed as a related app, don't prompt.
+    void hasRelatedInstalledApp().then((installed) => {
+      if (installed && !cancelled) {
+        setDeferred(null);
+        setShowIos(false);
+      }
+    });
+
     let t: ReturnType<typeof setTimeout> | undefined;
+    // iOS Safari never fires beforeinstallprompt. Only show the manual card
+    // in real Safari (not Chrome iOS / in-app webviews) and never when the
+    // page is already home-screen-launched.
     if (isIos() && isSafari()) {
-      t = setTimeout(() => setShowIos(true), 4000);
+      t = setTimeout(() => { if (!isStandalone()) setShowIos(true); }, 4000);
     }
 
     return () => {
+      cancelled = true;
       window.removeEventListener("beforeinstallprompt", onBip);
       window.removeEventListener("appinstalled", onInstalled);
+      mqls.forEach((m) => m.removeEventListener?.("change", onModeChange));
       if (t) clearTimeout(t);
     };
   }, []);
+
 
   function snooze(reason: Outcome) {
     const prev = readState();
