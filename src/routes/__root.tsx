@@ -56,7 +56,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image:alt", content: "Mentor Hub by RPM — Goalkeeper Ops, Comms & Scouting" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
-      { name: "theme-color", content: "#0a0a0a" },
+      { name: "theme-color", content: "#0A0A0A" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
