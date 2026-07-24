@@ -562,9 +562,12 @@ function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOppone
   const liveAverage = useMemo(() => averageOfScores(scores), [scores]);
 
   if (done) {
+    const queued = (done as unknown as { queued?: boolean }).queued;
     return (
       <Submitted
-        message={`Match report submitted to the RPM Match Reports Google Sheet · Average ${done.average.toFixed(1)}.`}
+        message={queued
+          ? "You're offline — this match report is queued and will upload automatically as soon as you're back online."
+          : `Match report submitted to the RPM Match Reports Google Sheet · Average ${done.average.toFixed(1)}.`}
         onDone={onDone}
       />
     );
