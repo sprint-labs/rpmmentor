@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Download, Share, Plus, X, AlertTriangle, RefreshCw } from "lucide-react";
+import { logInstallEvent } from "@/lib/install-analytics.functions";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -115,11 +117,60 @@ function isSafari(): boolean {
 }
 
 
+type InstallSurface = "native" | "ios" | "failure";
+type InstallEventName = "shown" | "accepted" | "dismissed" | "failed" | "installed" | "manual_close" | "retry";
+
+function detectPlatform(): string {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (isIos()) return "ios";
+  if (/Android/.test(ua)) return "android";
+  if (/Windows/.test(ua)) return "windows";
+  if (/Mac OS X/.test(ua)) return "macos";
+  if (/Linux/.test(ua)) return "linux";
+  return "unknown";
+}
+
+function detectBrowser(): string {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/EdgiOS|Edg\//.test(ua)) return "edge";
+  if (/CriOS|Chrome\//.test(ua)) return "chrome";
+  if (/FxiOS|Firefox\//.test(ua)) return "firefox";
+  if (/OPiOS|OPR\//.test(ua)) return "opera";
+  if (/Samsung/.test(ua)) return "samsung";
+  if (/Safari/.test(ua)) return "safari";
+  return "unknown";
+}
+
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIos, setShowIos] = useState(false);
   const [snoozed, setSnoozed] = useState(false);
   const [failure, setFailure] = useState<null | { reason: string }>(null);
+  const logEvent = useServerFn(logInstallEvent);
+  const seenShowRef = useRef<Set<string>>(new Set());
+
+  function track(event: InstallEventName, surface: InstallSurface, metadata?: Record<string, unknown>) {
+    // De-dupe "shown" per surface within the tab lifetime so refreshing state
+    // doesn't inflate the funnel numerator.
+    if (event === "shown") {
+      const key = `${surface}:shown`;
+      if (seenShowRef.current.has(key)) return;
+      seenShowRef.current.add(key);
+    }
+    const st = readState();
+    void logEvent({
+      data: {
+        event,
+        surface,
+        platform: detectPlatform(),
+        browser: detectBrowser(),
+        userAgent: typeof navigator === "undefined" ? undefined : navigator.userAgent.slice(0, 512),
+        declines: st.declines,
+        failures: st.failures,
+        metadata,
+      },
+    }).catch(() => { /* analytics is best-effort */ });
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -144,6 +195,7 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBip);
 
     const onInstalled = () => {
+      track("installed", deferred ? "native" : (showIos ? "ios" : "native"));
       setDeferred(null);
       setShowIos(false);
       setFailure(null);
@@ -192,7 +244,21 @@ export function InstallPrompt() {
   }, []);
 
 
+  // Fire "shown" once per surface as it appears.
+  useEffect(() => { if (deferred) track("shown", "native"); }, [deferred]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (showIos) track("shown", "ios"); }, [showIos]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (failure) track("shown", "failure", { reason: failure.reason }); }, [failure]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function snooze(reason: Outcome) {
+    // Attribute the close event to whichever card was on screen.
+    const surface: InstallSurface = failure ? "failure" : (deferred ? "native" : "ios");
+    const eventName: InstallEventName = reason === "failed"
+      ? "failed"
+      : reason === "manual-close"
+        ? "manual_close"
+        : "dismissed";
+    track(eventName, surface);
+
     const prev = readState();
     const next: InstallState = {
       ...prev,
@@ -215,26 +281,29 @@ export function InstallPrompt() {
       await deferred.prompt();
       const { outcome } = await deferred.userChoice;
       if (outcome === "accepted") {
+        track("accepted", "native");
         setDeferred(null);
-        // appinstalled handler will clear state.
+        // appinstalled handler will clear state and log "installed".
       } else {
         // User picked "not now" — re-prompt sooner than a hard dismiss.
         snooze("dismissed");
       }
     } catch (err) {
-      // Prompt threw (already used, user-gesture missing, browser refused).
-      // Show a fallback card with retry + manual guide.
+      const reason = err instanceof Error ? err.message : "The browser refused the install prompt.";
+      track("failed", "native", { reason });
       setDeferred(null);
-      setFailure({ reason: err instanceof Error ? err.message : "The browser refused the install prompt." });
+      setFailure({ reason });
     }
   }
 
   function retryFromFailure() {
+    track("retry", "failure");
     setFailure(null);
     // The captured event is single-use; nudge the browser to fire a fresh one.
     // Most browsers refire on the next user gesture / navigation.
     window.dispatchEvent(new Event("pointerdown"));
   }
+
 
   if (snoozed) return null;
 
