@@ -15,6 +15,7 @@ import { Route as MediaRouteImport } from './routes/media'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InteractionsRouteImport } from './routes/interactions'
+import { Route as InstallRouteImport } from './routes/install'
 import { Route as GoalkeepersRouteImport } from './routes/goalkeepers'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -62,6 +63,11 @@ const LoginRoute = LoginRouteImport.update({
 const InteractionsRoute = InteractionsRouteImport.update({
   id: '/interactions',
   path: '/interactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallRoute = InstallRouteImport.update({
+  id: '/install',
+  path: '/install',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GoalkeepersRoute = GoalkeepersRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
+  '/install': typeof InstallRoute
   '/interactions': typeof InteractionsRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
+  '/install': typeof InstallRoute
   '/interactions': typeof InteractionsRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/executive': typeof ExecutiveRoute
   '/goalkeepers': typeof GoalkeepersRouteWithChildren
+  '/install': typeof InstallRoute
   '/interactions': typeof InteractionsRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
+    | '/install'
     | '/interactions'
     | '/login'
     | '/mcp'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
+    | '/install'
     | '/interactions'
     | '/login'
     | '/mcp'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/executive'
     | '/goalkeepers'
+    | '/install'
     | '/interactions'
     | '/login'
     | '/mcp'
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ExecutiveRoute: typeof ExecutiveRoute
   GoalkeepersRoute: typeof GoalkeepersRouteWithChildren
+  InstallRoute: typeof InstallRoute
   InteractionsRoute: typeof InteractionsRoute
   LoginRoute: typeof LoginRoute
   McpRoute: typeof McpRoute
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/interactions'
       fullPath: '/interactions'
       preLoaderRoute: typeof InteractionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/install': {
+      id: '/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof InstallRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/goalkeepers': {
@@ -537,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ExecutiveRoute: ExecutiveRoute,
   GoalkeepersRoute: GoalkeepersRouteWithChildren,
+  InstallRoute: InstallRoute,
   InteractionsRoute: InteractionsRoute,
   LoginRoute: LoginRoute,
   McpRoute: McpRoute,
