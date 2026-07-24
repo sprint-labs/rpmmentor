@@ -13,6 +13,7 @@ import { withPermission } from "@/components/require-permission";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import type { MatchReportRow } from "@/lib/match-reports/schema";
 import { getNavSource } from "@/lib/nav-source";
+import { SyncStatusChip } from "@/components/sync-status-chip";
 
 const reportsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
@@ -163,6 +164,7 @@ function ReportsPage() {
         }
         action={
           <div className="flex items-center gap-2">
+            <SyncStatusChip />
             <button onClick={() => refetch()} disabled={isFetching}
               className="h-9 px-3 rounded-md border border-border text-sm inline-flex items-center gap-1.5 disabled:opacity-60">
               <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
