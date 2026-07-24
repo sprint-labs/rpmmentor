@@ -35,7 +35,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={greeting} description={`${ROLE_LABEL[user.role]} view · overview of goalkeeper coverage and outstanding actions.`} />
+      <PageHeader title={greeting} description={`${ROLE_LABEL[user.role]} view · overview of goalkeeper coverage and outstanding actions.`} action={<SyncStatusChip />} />
       <DataSourceBanner classification="mock" />
 
 
