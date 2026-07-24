@@ -59,6 +59,48 @@ export type Database = {
         }
         Relationships: []
       }
+      install_prompt_events: {
+        Row: {
+          browser: string | null
+          created_at: string
+          declines: number
+          event: string
+          failures: number
+          id: string
+          metadata: Json
+          platform: string | null
+          surface: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          declines?: number
+          event: string
+          failures?: number
+          id?: string
+          metadata?: Json
+          platform?: string | null
+          surface: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          declines?: number
+          event?: string
+          failures?: number
+          id?: string
+          metadata?: Json
+          platform?: string | null
+          surface?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       match_reports_cache: {
         Row: {
           average: number | null
