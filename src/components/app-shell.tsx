@@ -42,7 +42,7 @@ export function AppShell() {
   const notif = useNotifications();
 
   // Public routes that don't require auth
-  const isPublic = path === "/login";
+  const isPublic = path === "/login" || path === "/install";
 
   useEffect(() => {
     if (!user && !isPublic) {
