@@ -26,8 +26,25 @@ export type SyncJob = {
 };
 
 const KEY = "rpm.sync-queue.v1";
+const LAST_SYNC_KEY = "rpm.sync-queue.last-synced";
 const MAX_ATTEMPTS = 8;
 const BASE_BACKOFF_MS = 5_000;
+
+export function getLastSyncedAt(): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LAST_SYNC_KEY);
+    return raw ? Number(raw) || null : null;
+  } catch { return null; }
+}
+
+function setLastSyncedAt(ts: number) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_SYNC_KEY, String(ts));
+    window.dispatchEvent(new CustomEvent("rpm:sync-queue-changed"));
+  } catch { /* ignore */ }
+}
 
 function read(): SyncJob[] {
   if (typeof window === "undefined") return [];
