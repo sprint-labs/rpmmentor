@@ -117,11 +117,60 @@ function isSafari(): boolean {
 }
 
 
+type InstallSurface = "native" | "ios" | "failure";
+type InstallEventName = "shown" | "accepted" | "dismissed" | "failed" | "installed" | "manual_close" | "retry";
+
+function detectPlatform(): string {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (isIos()) return "ios";
+  if (/Android/.test(ua)) return "android";
+  if (/Windows/.test(ua)) return "windows";
+  if (/Mac OS X/.test(ua)) return "macos";
+  if (/Linux/.test(ua)) return "linux";
+  return "unknown";
+}
+
+function detectBrowser(): string {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/EdgiOS|Edg\//.test(ua)) return "edge";
+  if (/CriOS|Chrome\//.test(ua)) return "chrome";
+  if (/FxiOS|Firefox\//.test(ua)) return "firefox";
+  if (/OPiOS|OPR\//.test(ua)) return "opera";
+  if (/Samsung/.test(ua)) return "samsung";
+  if (/Safari/.test(ua)) return "safari";
+  return "unknown";
+}
+
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIos, setShowIos] = useState(false);
   const [snoozed, setSnoozed] = useState(false);
   const [failure, setFailure] = useState<null | { reason: string }>(null);
+  const logEvent = useServerFn(logInstallEvent);
+  const seenShowRef = useRef<Set<string>>(new Set());
+
+  function track(event: InstallEventName, surface: InstallSurface, metadata?: Record<string, unknown>) {
+    // De-dupe "shown" per surface within the tab lifetime so refreshing state
+    // doesn't inflate the funnel numerator.
+    if (event === "shown") {
+      const key = `${surface}:shown`;
+      if (seenShowRef.current.has(key)) return;
+      seenShowRef.current.add(key);
+    }
+    const st = readState();
+    void logEvent({
+      data: {
+        event,
+        surface,
+        platform: detectPlatform(),
+        browser: detectBrowser(),
+        userAgent: typeof navigator === "undefined" ? undefined : navigator.userAgent.slice(0, 512),
+        declines: st.declines,
+        failures: st.failures,
+        metadata,
+      },
+    }).catch(() => { /* analytics is best-effort */ });
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
