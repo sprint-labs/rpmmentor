@@ -562,9 +562,12 @@ function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOppone
   const liveAverage = useMemo(() => averageOfScores(scores), [scores]);
 
   if (done) {
+    const queued = (done as unknown as { queued?: boolean }).queued;
     return (
       <Submitted
-        message={`Match report submitted to the RPM Match Reports Google Sheet · Average ${done.average.toFixed(1)}.`}
+        message={queued
+          ? "You're offline — this match report is queued and will upload automatically as soon as you're back online."
+          : `Match report submitted to the RPM Match Reports Google Sheet · Average ${done.average.toFixed(1)}.`}
         onDone={onDone}
       />
     );
@@ -579,27 +582,24 @@ function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOppone
     setError(null);
     setFieldErrors({});
     setSubmitting(true);
+    const payload = {
+      goalkeeper: goalkeeper.trim(),
+      coach: coach.trim(),
+      competition: competition.trim(),
+      team: team.trim(),
+      opponent: opponent.trim(),
+      match_date: matchDate,
+      protect_goal: scores.protect_goal,
+      protect_space: scores.protect_space,
+      protect_air: scores.protect_air,
+      control_play: scores.control_play,
+      change_play: scores.change_play,
+      psych: scores.psych,
+      physical: scores.physical,
+      comments,
+    };
     try {
-      const res = await submitFn({
-        data: {
-          payload: {
-            goalkeeper: goalkeeper.trim(),
-            coach: coach.trim(),
-            competition: competition.trim(),
-            team: team.trim(),
-            opponent: opponent.trim(),
-            match_date: matchDate,
-            protect_goal: scores.protect_goal,
-            protect_space: scores.protect_space,
-            protect_air: scores.protect_air,
-            control_play: scores.control_play,
-            change_play: scores.change_play,
-            psych: scores.psych,
-            physical: scores.physical,
-            comments,
-          },
-        },
-      });
+      const res = await submitFn({ data: { payload } });
       if (selectedMedia.length > 0) {
         try {
           await attachMediaToReport(res.report_id, selectedMedia, user);
@@ -612,7 +612,26 @@ function ReportForm({ onDone, prefillGoalkeeper, prefillMatchDate, prefillOppone
       try { window.dispatchEvent(new CustomEvent("rpm:report-submitted", { detail: res })); } catch { /* ignore */ }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Submission failed. Please try again.";
-      setError(msg);
+      const offline = typeof navigator !== "undefined" && !navigator.onLine;
+      const transient = offline || /network|failed to fetch|load failed|timeout|fetch/i.test(msg);
+      if (transient) {
+        try {
+          const { enqueueJob } = await import("@/lib/sync/queue");
+          enqueueJob({
+            type: "submitMatchReport",
+            payload: { payload },
+            userId: user?.id,
+            label: `Match report — ${payload.goalkeeper || "Unknown"} vs ${payload.opponent || "Unknown"}`,
+          });
+          if (user) clearDraft(user.id);
+          setDone({ report_id: "queued", average: 0, queued: true } as unknown as { report_id: string; average: number });
+          try { window.dispatchEvent(new CustomEvent("rpm:report-queued")); } catch { /* ignore */ }
+        } catch {
+          setError(msg);
+        }
+      } else {
+        setError(msg);
+      }
     } finally {
       setSubmitting(false);
     }

@@ -10,6 +10,7 @@ import { formatRelative } from "@/lib/mock-data";
 import { DataSourceBadge } from "@/lib/data-classification";
 import { BrandMark } from "@/components/brand-mark";
 import { OfflineBanner } from "@/components/offline-banner";
+import { SyncManager } from "@/components/sync-manager";
 import { InstallPrompt } from "@/components/install-prompt";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm: Permission };
@@ -190,6 +191,7 @@ export function AppShell() {
         </header>
         <main className="flex-1 min-w-0 p-4 md:p-6">
           <OfflineBanner />
+          <SyncManager />
           <Outlet />
         </main>
         <InstallPrompt />
