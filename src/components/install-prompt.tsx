@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Download, Share, Plus, X } from "lucide-react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -111,7 +112,10 @@ export function InstallPrompt() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-foreground">Install Mentor Hub</p>
-            <p className="text-[11px] text-muted-foreground">Add to your home screen for a fullscreen app experience.</p>
+            <p className="text-[11px] text-muted-foreground">
+              Add to your home screen for a fullscreen app experience.{" "}
+              <Link to="/install" className="text-primary hover:underline">Learn how</Link>
+            </p>
           </div>
           <button
             type="button"
@@ -143,6 +147,9 @@ export function InstallPrompt() {
                 <Plus className="size-3" /> Add to Home Screen
               </span>
             </p>
+            <Link to="/install" className="mt-1 inline-block text-[11px] text-primary hover:underline">
+              Step-by-step guide
+            </Link>
           </div>
         </div>
       </Card>
