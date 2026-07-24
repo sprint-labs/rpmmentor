@@ -13,6 +13,7 @@ import { withPermission } from "@/components/require-permission";
 import { listMatchReports } from "@/lib/match-reports/reports.functions";
 import type { MatchReportRow } from "@/lib/match-reports/schema";
 import { getNavSource } from "@/lib/nav-source";
+import { SyncStatusChip } from "@/components/sync-status-chip";
 
 const reportsSearchSchema = z.object({
   from: fallback(z.string(), "").default(""),
