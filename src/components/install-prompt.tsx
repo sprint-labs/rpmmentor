@@ -195,6 +195,7 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBip);
 
     const onInstalled = () => {
+      track("installed", deferred ? "native" : (showIos ? "ios" : "native"));
       setDeferred(null);
       setShowIos(false);
       setFailure(null);
