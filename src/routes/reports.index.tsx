@@ -164,6 +164,7 @@ function ReportsPage() {
         }
         action={
           <div className="flex items-center gap-2">
+            <SyncStatusChip />
             <button onClick={() => refetch()} disabled={isFetching}
               className="h-9 px-3 rounded-md border border-border text-sm inline-flex items-center gap-1.5 disabled:opacity-60">
               <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
