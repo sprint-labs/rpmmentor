@@ -1,19 +1,60 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download, Share, Plus, X } from "lucide-react";
+import { Download, Share, Plus, X, AlertTriangle, RefreshCw } from "lucide-react";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "rpm.pwaInstallDismissedAt";
-const DISMISS_DAYS = 14;
+const STATE_KEY = "rpm.pwaInstallState.v1";
+
+type Outcome = "dismissed" | "failed" | "manual-close";
+
+type InstallState = {
+  snoozedUntil: number; // epoch ms
+  declines: number; // count of user "not now" / dismissed outcomes
+  failures: number; // count of prompt() errors
+  lastOutcome?: Outcome;
+};
+
+// Graduated backoff so we re-prompt sooner after early declines and back off
+// after repeated ones. Failures always come back fast — they usually mean the
+// browser wasn't ready, not that the user said no.
+function backoffMs(state: InstallState, reason: Outcome): number {
+  if (reason === "failed") {
+    // 5m, 30m, 2h, then 1d
+    const steps = [5 * 60_000, 30 * 60_000, 2 * 60 * 60_000, 24 * 60 * 60_000];
+    return steps[Math.min(state.failures, steps.length - 1)];
+  }
+  // dismissed / manual-close: 1d, 3d, 7d, 14d
+  const days = [1, 3, 7, 14];
+  return days[Math.min(state.declines, days.length - 1)] * 24 * 60 * 60_000;
+}
+
+function readState(): InstallState {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return { snoozedUntil: 0, declines: 0, failures: 0 };
+    const parsed = JSON.parse(raw) as Partial<InstallState>;
+    return {
+      snoozedUntil: Number(parsed.snoozedUntil) || 0,
+      declines: Number(parsed.declines) || 0,
+      failures: Number(parsed.failures) || 0,
+      lastOutcome: parsed.lastOutcome,
+    };
+  } catch {
+    return { snoozedUntil: 0, declines: 0, failures: 0 };
+  }
+}
+
+function writeState(next: InstallState) {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+}
 
 function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
   if (window.matchMedia?.("(display-mode: standalone)").matches) return true;
-  // iOS Safari
   return (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 }
 
@@ -21,7 +62,6 @@ function isIos(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
   const iOS = /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
-  // iPadOS 13+ reports as Mac; detect touch
   const iPadOS = navigator.platform === "MacIntel" && (navigator.maxTouchPoints ?? 0) > 1;
   return iOS || iPadOS;
 }
@@ -31,41 +71,39 @@ function isSafari(): boolean {
   return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
 }
 
-function recentlyDismissed(): boolean {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY);
-    if (!raw) return false;
-    const then = Number(raw);
-    if (!Number.isFinite(then)) return false;
-    return Date.now() - then < DISMISS_DAYS * 24 * 60 * 60 * 1000;
-  } catch {
-    return false;
-  }
-}
-
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIos, setShowIos] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [snoozed, setSnoozed] = useState(false);
+  const [failure, setFailure] = useState<null | { reason: string }>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isStandalone()) return;
-    if (recentlyDismissed()) { setDismissed(true); return; }
+
+    const state = readState();
+    if (state.snoozedUntil && Date.now() < state.snoozedUntil) {
+      setSnoozed(true);
+      // Schedule an auto-un-snooze so returning long-lived tabs re-prompt.
+      const t = window.setTimeout(() => setSnoozed(false), Math.min(state.snoozedUntil - Date.now(), 2_147_483_000));
+      return () => window.clearTimeout(t);
+    }
 
     const onBip = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
+      setFailure(null);
     };
     window.addEventListener("beforeinstallprompt", onBip);
 
     const onInstalled = () => {
       setDeferred(null);
       setShowIos(false);
+      setFailure(null);
+      writeState({ snoozedUntil: 0, declines: 0, failures: 0, lastOutcome: undefined });
     };
     window.addEventListener("appinstalled", onInstalled);
 
-    // iOS Safari never fires beforeinstallprompt — show manual card after a short delay
     let t: ReturnType<typeof setTimeout> | undefined;
     if (isIos() && isSafari()) {
       t = setTimeout(() => setShowIos(true), 4000);
@@ -78,11 +116,21 @@ export function InstallPrompt() {
     };
   }, []);
 
-  function dismiss() {
-    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignore */ }
-    setDismissed(true);
+  function snooze(reason: Outcome) {
+    const prev = readState();
+    const next: InstallState = {
+      ...prev,
+      declines: reason === "failed" ? prev.declines : prev.declines + 1,
+      failures: reason === "failed" ? prev.failures + 1 : prev.failures,
+      lastOutcome: reason,
+      snoozedUntil: 0,
+    };
+    next.snoozedUntil = Date.now() + backoffMs(next, reason);
+    writeState(next);
+    setSnoozed(true);
     setDeferred(null);
     setShowIos(false);
+    setFailure(null);
   }
 
   async function install() {
@@ -92,20 +140,65 @@ export function InstallPrompt() {
       const { outcome } = await deferred.userChoice;
       if (outcome === "accepted") {
         setDeferred(null);
+        // appinstalled handler will clear state.
       } else {
-        dismiss();
+        // User picked "not now" — re-prompt sooner than a hard dismiss.
+        snooze("dismissed");
       }
-    } catch {
-      dismiss();
+    } catch (err) {
+      // Prompt threw (already used, user-gesture missing, browser refused).
+      // Show a fallback card with retry + manual guide.
+      setDeferred(null);
+      setFailure({ reason: err instanceof Error ? err.message : "The browser refused the install prompt." });
     }
   }
 
-  if (dismissed) return null;
+  function retryFromFailure() {
+    setFailure(null);
+    // The captured event is single-use; nudge the browser to fire a fresh one.
+    // Most browsers refire on the next user gesture / navigation.
+    window.dispatchEvent(new Event("pointerdown"));
+  }
 
-  // Android / Chromium — native prompt
+  if (snoozed) return null;
+
+  // Fallback: prompt() failed — offer retry + link to the manual guide.
+  if (failure) {
+    return (
+      <Card onClose={() => snooze("failed")}>
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-amber-500/15 text-amber-300">
+            <AlertTriangle className="size-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-foreground">Install didn’t start</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Your browser blocked the install prompt. Try again, or follow the manual steps.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={retryFromFailure}
+                className="inline-flex items-center gap-1 h-7 rounded-md border border-border px-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground hover:bg-accent"
+              >
+                <RefreshCw className="size-3" /> Try again
+              </button>
+              <Link
+                to="/install"
+                className="inline-flex items-center h-7 rounded-md bg-primary px-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-primary-foreground hover:opacity-90"
+              >
+                Manual steps
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   if (deferred) {
     return (
-      <Card onClose={dismiss}>
+      <Card onClose={() => snooze("manual-close")}>
         <div className="flex items-center gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
             <Download className="size-4" />
@@ -129,10 +222,9 @@ export function InstallPrompt() {
     );
   }
 
-  // iOS Safari — manual instructions
   if (showIos) {
     return (
-      <Card onClose={dismiss}>
+      <Card onClose={() => snooze("manual-close")}>
         <div className="flex items-start gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
             <Download className="size-4" />
