@@ -10,6 +10,7 @@ import { formatRelative } from "@/lib/mock-data";
 import { DataSourceBadge } from "@/lib/data-classification";
 import { BrandMark } from "@/components/brand-mark";
 import { OfflineBanner } from "@/components/offline-banner";
+import { InstallPrompt } from "@/components/install-prompt";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm: Permission };
 const NAV: NavItem[] = [
@@ -191,6 +192,7 @@ export function AppShell() {
           <OfflineBanner />
           <Outlet />
         </main>
+        <InstallPrompt />
       </div>
 
       {/* Slide-out navigation drawer */}
