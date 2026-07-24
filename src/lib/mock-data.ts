@@ -451,57 +451,24 @@ const OUTCOMES = ["On track", "Above expectation", "Below expectation", "Needs f
 const FOLLOWUPS = ["Schedule video review", "Send technical drill pack", "Set up call with coach", "Plan club visit", "No action required"];
 const ITYPES: InteractionType[] = ["Live Match Observation", "Training Ground Visit", "Coffee Catch Up", "Phone Call"];
 
-// One illustrative interaction per demo goalkeeper. Real interactions
-// arrive through the interactions store; do not seed more here.
-export const interactions: Interaction[] = goalkeepers.map((gk, i) => ({
-  id: `int-${gk.id}-demo`,
-  gkId: gk.id,
-  mentorId: gk.mentorId,
-  type: ITYPES[i % ITYPES.length],
-  date: daysFromNow(-14 - i * 7),
-  notes: NOTES[i % NOTES.length],
-  outcome: OUTCOMES[i % OUTCOMES.length],
-  followUp: FOLLOWUPS[i % FOLLOWUPS.length],
-}));
+// Interactions are sourced from the live interactions store. No demo rows
+// are seeded here — screens render empty states until real data arrives.
+export const interactions: Interaction[] = [];
 
 // ---------- Reports ----------
 const REPORT_TYPES: ReportType[] = ["Goalkeeper Development", "Match Report", "Training Report", "Opposition GK", "Recruitment"];
-// One illustrative report per demo goalkeeper. Real reports come from the
-// Match Reports store; empty states are shown when none exist.
-export const reports: Report[] = goalkeepers.map((gk, i) => ({
-  id: `r-demo-${gk.id}`,
-  type: REPORT_TYPES[i % REPORT_TYPES.length],
-  gkId: gk.id,
-  authorId: gk.mentorId,
-  date: daysFromNow(-10 - i * 5),
-  rating: 82 - i * 3,
-  summary: gk.bio?.split(".")[0] ?? NOTES[i % NOTES.length],
-  scores: { handling: 8, distribution: 8, aerial: 8, oneVone: 8, communication: 9 },
-}));
+void REPORT_TYPES;
+// Reports come from the Match Reports store. No demo rows seeded here.
+export const reports: Report[] = [];
 
 // ---------- Media ----------
-// One illustrative media item per demo goalkeeper.
-export const media: MediaItem[] = goalkeepers.map((gk, i) => ({
-  id: `med-${gk.id}-demo`,
-  gkId: gk.id,
-  kind: (i === 0 ? "video" : "pdf") as MediaItem["kind"],
-  title: i === 0 ? "Match highlights (demo)" : "Scout pack (demo)",
-  uploadedBy: mentors.find((m) => m.id === gk.mentorId)?.name ?? "RPM",
-  date: daysFromNow(-5 - i * 4),
-  size: `${12 + i * 30}MB`,
-}));
+// Media items are sourced from the gk-media bucket / media_assets table.
+export const media: MediaItem[] = [];
 
 // ---------- Calendar ----------
-// Two illustrative events — one upcoming, one recent. Real events sync
-// externally; the calendar renders an empty state until then.
-export const calendarEvents: CalendarEvent[] = goalkeepers.slice(0, 2).map((gk, i) => ({
-  id: `cal-demo-${i + 1}`,
-  date: daysFromNow(i === 0 ? 3 : -2),
-  title: i === 0 ? `Observation: ${gk.name}` : `Mentor visit — ${gk.club}`,
-  type: i === 0 ? "Observation" : "Mentor Visit",
-  gkId: gk.id,
-  mentorId: gk.mentorId,
-}));
+// Calendar events sync from external sources. No demo rows seeded here.
+export const calendarEvents: CalendarEvent[] = [];
+
 
 // ---------- Alerts ----------
 export interface Alert {
